@@ -51,6 +51,11 @@ test('cache: fresh copies skip the network; stale ones are the last resort', asy
   assert.equal(res.source, 'stale cache'); assert.equal(stale.calls.length, 2);
 });
 
+test('a group with no TLE-format data anywhere (404 everywhere) is a calm error, not an outage', async () => {
+  const err = await rig().src.load('stations').catch(e => e);
+  assert.equal(err.calm, true); assert.match(err.message, /no TLE-format data/);
+});
+
 test('failures: CelesTrak 403 gets a plain explanation; HTML instead of TLEs is rejected', async () => {
   await assert.rejects(rig({ responses: { [celestrakUrl('stations')]: new Error('HTTP 403') } }).src.load('stations'), /once|one download per group/);
   const html = rig({ responses: { [celestrakUrl('stations')]: '<html>blocked</html>' } });

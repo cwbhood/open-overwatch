@@ -5,7 +5,7 @@ Detail that used to live in CLAUDE.md. Read the section you need before touching
 ## Files and per-view lessons
 - `index.html` — the landing page (GitHub Pages root). Hero clip/stills from brand/tools/lander_hero.py, feature icons
   from brand/tools/feature_icons.py, phone clips from the capture footage; live ISS (wheretheiss.at) + USGS in the hero.
-- `open-overwatch.html` — the entire app: CSS (18-342), HTML skeleton (344-414), one inline script (416-2116).
+- `open-overwatch.html` — the 2D map's markup and styles; its code is ES modules in src/map/ (see below).
   Lines 417-418 are giant data tables (COUNTRY, COUNTRY_ALIAS); don't read them in full.
 - `globe.html` — 3D view on CesiumJS 1.146 (CDN), needs the helper. Satellites: CelesTrak TLEs (Cache Storage, 2 h),
   SGP4 in a worker for the dots; the nearest 40 within 4,000 km get glTF models (brand/models/*.glb, Blender-built,
@@ -68,10 +68,14 @@ the archived app 404s on it (v0.7-v0.8 globe crashed that way until v0.8.1). Eac
 `open-overwatch.zip` (the download the lander links to via releases/latest/download). Keep the zip file list in that
 workflow in sync when the app starts needing new files. gh CLI (portable): ~/bin/gh-cli/bin/gh.exe.
 
-## 2D map: script sections (line numbers drift as the file changes)
-helpers 421 · store 460 · log/toast 467 · network+relay 498 · map 549 · canvas renderer (Glyphs.draw) 597 ·
-layer registry 732 · feed scheduler 784 · detail panel 809 · tabs 848 · AIRCRAFT 859 ·
-SATELLITES 1105 · point/vector layers 1269 · PRESETS 1606 · BRIEF 1667 · AUDIO 1782 · SETUP 1950 · SEARCH 2052 · INIT 2069
+## 2D map: modules (src/map/)
+util (helpers, Store, Log/toast/Sound, Net + Relay, clock; `late` registry) · mapview (Leaflet map, base maps, Sun) ·
+engine (Glyphs canvas renderer, Points, Layers registry + panel, feed scheduler) · detail (Detail panel, tracks, hover,
+tabs/sheets) · aircraft · satellites (TLEs via src/core/tle.js) · feeds (all point/vector layers) · presets (views,
+legend, Locate, Fun/ISS follow) · brief (Brief, Welcome) · audio · setup (Setup tab, Probe, search) · main (INIT, OW).
+Modules import only from earlier ones; the five names used before they are defined (Sats, cableHit, Probe, Brief, Keys)
+are read through `late.X`. OW_VERSION stays a classic <script> const in the HTML (Publish Update.bat edits that line).
+A hidden tab pauses feeds by design: drive them with OW.Sats.reload() etc. when testing in a background pane.
 
 ## 2D map: adding a layer (the contract the code enforces)
 1. `Layers.add({id, group, name, desc, color, default, points})` before INIT. `group` must be one of `UI.groups`

@@ -11,9 +11,9 @@ programmer would enjoy reading, not three big HTML files.
 - [x] `src/core/`: time, units & frames, Kepler, planets + Moon, IAU rotation, small-body format, assets, formatting
 - [x] Tests for the core (`node --test`), checked against JPL Horizons fixtures
 - [x] Solar System view moved onto `src/core` + `src/solar/` modules (solar.html = markup + styles only)
-- [x] Satellite feed (TLE fetch, mirror, cache, parse) as `src/core/tle.js` (globe uses it; the 2D map switches when it is split)
+- [x] Satellite feed (TLE fetch, mirror, cache, parse) as `src/core/tle.js` (globe and 2D map)
 - [x] 3D globe moved onto modules (`src/globe/`), aircraft dead reckoning shared via `src/core/geo.js`
-- [ ] 2D map split into modules (`src/map/`), keeping its layer contract
+- [x] 2D map split into modules (`src/map/`, generated from an AST analysis of the old script), keeping its layer contract; satellites via `src/core/tle.js`
 - [ ] CI: lint-free syntax check + tests on every push (runs only once we publish)
 - [ ] `docs/DATA_SOURCES.md` (every feed: what, licence, refresh, accuracy), honest README with a demo clip
 

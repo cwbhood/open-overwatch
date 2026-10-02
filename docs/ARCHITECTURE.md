@@ -6,7 +6,7 @@ Third-party libraries come from a CDN through an import map, pinned to exact ver
 
 ```
 index.html            landing page
-open-overwatch.html   2D map (Leaflet)            -> src/map/     (planned)
+open-overwatch.html   2D map (Leaflet)            -> src/map/
 globe.html            3D Earth (CesiumJS)         -> src/globe/
 solar.html            Solar System -> Local Group (three.js) -> src/solar/
 src/core/             shared, DOM-free, tested: time, frames, orbits, data formats

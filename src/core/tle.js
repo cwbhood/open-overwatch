@@ -37,7 +37,9 @@ export function tleEpochJd(l1) {
  *   fetchText(url, { timeout }) -> Promise<string>   (throws Error('HTTP 403') etc. on failure)
  *   cache: { get(key) -> {t, txt} | null, set(key, value) -> boolean }   (sync or async)
  *   onSite: true when running on the published website
- * load(group) resolves to { txt, source: 'cache' | 'celestrak' | 'mirror' | 'stale cache', ageMs } or throws.
+ * load(group) resolves to { txt, source: 'cache' | 'celestrak' | 'mirror' | 'stale cache', ageMs } or throws. An error with
+ * `calm: true` means every source answered 404: CelesTrak lists the group but has no TLE-format copy right now (new
+ * objects whose catalogue numbers no longer fit a TLE), which is not an outage.
  */
 export function createTleSource({ fetchText, cache, onSite = false, now = () => Date.now() }) {
   let celestrakDown = false;   // after one network failure, stop waiting on CelesTrak for the other groups
@@ -52,16 +54,17 @@ export function createTleSource({ fetchText, cache, onSite = false, now = () => 
   async function load(group) {
     const key = 'tle.' + group, cached = await cache.get(key);
     if (cached && now() - cached.t < CACHE_MS) return { txt: cached.txt, source: 'cache', ageMs: now() - cached.t };
-    let firstError = null;
+    let firstError = null, notFound = 0;
     for (const [source, get] of order) {
       try {
         const txt = await get(group);
         if (!looksLikeTle(txt)) throw new Error('unexpected response');
         await cache.set(key, { t: now(), txt });
         return { txt, source, ageMs: 0 };
-      } catch (e) { firstError = firstError || e; }
+      } catch (e) { firstError = firstError || e; if (/^HTTP 404/.test(e.message)) notFound++; }
     }
     if (cached) return { txt: cached.txt, source: 'stale cache', ageMs: now() - cached.t }; // orbits stay usable for days
+    if (notFound === order.length) throw Object.assign(new Error(`${group}: no TLE-format data on CelesTrak right now; it is retried with the next refresh`), { calm: true });
     throw firstError.message.includes('403')
       ? new Error(`${group}: CelesTrak allows one download per group every 2 h; it will appear after their next update`)
       : new Error(`${group}: ${firstError.message}`);
