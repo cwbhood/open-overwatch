@@ -19,7 +19,8 @@ step-down is for. *Still* samples 8 s with the camera at rest; *moving* samples 
 |---|---|---|---|---|
 | Globe · desktop | 41 | 1,254 ms | 73–77 | 640–870 ms (one-off shader compiles) |
 | Globe · phone | 8.6 | 1,533 ms | 69 | 490 ms |
-| Solar System · desktop | 85 | 146 ms | 85 | 139 ms (GPU bound: see the Graphics levels) |
+| Solar System · desktop | 85 | 146 ms | 165 | 139 ms |
+| Solar System · zoomed out (light-years+) | 16 | | 165 | |
 | 2D map · both | 157–164 | 24 ms | unchanged | |
 
 Every page runs at the display's refresh rate with the camera at rest.
@@ -37,6 +38,8 @@ Every page runs at the display's refresh rate with the camera at rest.
   - Globe levers: tile detail (screen-space error 2/3/4), model counts (aircraft 200/80/30, satellites 40/25/12),
     cloud noise octaves (4/2/1), 30 fps cap on Low.
   - Solar levers: pixel ratio (2/1.25/1), and all 1.57M asteroids or only the brightest 300k.
+- **Faded point clouds still drawn (Solar System).** From light-years out the 1.57M asteroids land on a few pixels
+  and additive blending serialises them: 60 ms frames at any zoom past the Oort cloud. Faded clouds are now hidden.
 - **Software WebGL** (hardware acceleration off): detected from the renderer string (`src/core/gpu.js`). The page
   explains how to turn acceleration on, because no quality level makes software rendering usable.
 

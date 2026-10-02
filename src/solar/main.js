@@ -13,6 +13,7 @@ import { createMoons } from './moons.js';
 import { createSmallBodies, CLASS_LAYERS } from './smallbodies.js';
 import { createSpacecraft } from './spacecraft.js';
 import { createDeepSpace } from './deepspace.js';
+import { createCosmicWeb } from './cosmic.js';
 import { createStory } from './story.js';
 import { createUI } from './ui.js';
 import { createEmbed, EMBED } from './embed.js';
@@ -30,7 +31,7 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 1e-9, 1e15);  // 150 m .. 16 billion light-years
 camera.up.set(0, 0, 1);
 const controls = new OrbitControls(camera, renderer.domElement);
-Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, zoomSpeed: 2.2, rotateSpeed: 0.6, enablePan: false, minDistance: 1e-6, maxDistance: 6e11 });
+Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, zoomSpeed: 2.2, rotateSpeed: 0.6, enablePan: false, minDistance: 1e-6, maxDistance: 2.5e14 });   // out to ~4 billion light-years
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
 // planet formulae: 1800-2200 (good to 2050, plausible beyond)
@@ -51,6 +52,7 @@ const moons = createMoons({ scene, sunView, renderer });
 const small = createSmallBodies({ scene, renderer });
 const craft = createSpacecraft({ scene });
 const deep = createDeepSpace({ scene, camera, renderer });
+const web = createCosmicWeb({ scene, renderer });
 
 // ---- navigation: focus a body and fly there (log-interpolated distance), then keep riding along with it
 const nav = {
@@ -103,7 +105,7 @@ function frame(t) {
   controls.update(); camera.updateMatrixWorld();
   view.camSun = camera.position.length(); view.camFocus = camera.position.distanceTo(controls.target);
   sunView.set(0, 0, 0).applyMatrix4(camera.matrixWorldInverse);
-  sky.frame(view); planets.frame(view); moons.frame(view); small.frame(view); craft.frame(view); deep.frame(view);
+  sky.frame(view); planets.frame(view); moons.frame(view); small.frame(view); craft.frame(view); deep.frame(view); web.frame(view);
   story.updatePulse(); ui.frame(view);
   renderer.render(scene, camera);
   embed.api.ready = true;
@@ -128,7 +130,7 @@ if (EMBED) {   // inside the globe: no splash, no opening flight; render one fra
   }, 700);
 }
 const settle = p => p.catch(e => console.warn(e)).finally(() => { applyLayers(); ui.renderLayers(); });
-settle(moons.load()); settle(small.load()); settle(craft.load()); settle(deep.loadStars());
+settle(moons.load()); settle(small.load()); settle(craft.load()); settle(deep.loadStars()); settle(web.load());
 applyLayers();
 
-window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, moons, quality, nav, story, renderer, LY: LY_AU, embed: embed.api, loop };
+window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, moons, quality, web, nav, story, renderer, LY: LY_AU, embed: embed.api, loop };

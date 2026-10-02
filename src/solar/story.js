@@ -19,14 +19,15 @@ export const BANDS = [
   [60 * LY_AU, 'Nearest stars', 'The nearest stars', 'Proxima Centauri is 4.24 light-years away: 268,000 times the Earth–Sun distance. Voyager 1 would need about 75,000 years to get there.', 'Basketball Sun: Proxima would be another basketball 7,000 km away.'],
   [3000 * LY_AU, 'Stellar neighbourhood', 'Our stellar neighbourhood', 'Every dot is a real star from the HYG catalogue, placed in 3D at its measured distance. Almost all the stars you can see at night are within a few thousand light-years.', ''],
   [6e5 * LY_AU, 'Milky Way', 'The Milky Way', '100,000 light-years across with 100–400 billion stars. The Sun sits 26,000 light-years from the centre and takes about 230 million years to go round once.', 'At light speed it would take 100,000 years to cross.'],
-  [Infinity, 'Local Group', 'The Local Group', 'Andromeda is 2.5 million light-years away: the light we see from it left before our species existed. Over 80 galaxies belong to this group.', 'Andromeda and the Milky Way will merge in about 4.5 billion years.'],
+  [2.5e7 * LY_AU, 'Local Group', 'The Local Group', 'Andromeda is 2.5 million light-years away: the light we see from it left before our species existed. Over 80 galaxies belong to this group.', 'Andromeda and the Milky Way will merge in about 4.5 billion years.'],
+  [Infinity, 'Cosmic web', 'The cosmic web', 'Each dot is a real galaxy (2MASS Redshift Survey, 43,480 of them) placed by its redshift. They gather in clusters, walls and filaments around near-empty voids. The empty band is the sky hidden behind the Milky Way.', 'Light from the farthest dots here left them over 2 billion years ago.'],
 ];
 
 // [ladder label, focus key, distance (AU)]; the label matches a band name so the ladder can light up
 export const RUNGS = [
   ['Earth & Moon', 'earth', 0.008], ['Inner Solar System', 'sun', 4.2], ['Asteroid belt', 'sun', 10], ['Outer planets', 'sun', 85],
   ['Kuiper belt & heliopause', 'sun', 190], ['Voyager', 'craft:Voyager 1', 60], ['Oort cloud', 'sun', 2.6e5], ['Nearest stars', 'sun', 22 * LY_AU],
-  ['Stellar neighbourhood', 'sun', 400 * LY_AU], ['Milky Way', 'gc', 1.7e5 * LY_AU], ['Local Group', 'gc', 4.2e6 * LY_AU],
+  ['Stellar neighbourhood', 'sun', 400 * LY_AU], ['Milky Way', 'gc', 1.7e5 * LY_AU], ['Local Group', 'gc', 4.2e6 * LY_AU], ['Cosmic web', 'sun', 7e8 * LY_AU],
 ];
 export const RUNG_SHORT = { 'Inner Solar System': 'Inner planets', 'Kuiper belt & heliopause': 'Kuiper belt', 'Stellar neighbourhood': 'Neighbourhood' };
 
@@ -43,6 +44,7 @@ const TOUR = [ // focus key, distance (AU), title, text, hold (ms)
   ['sun', 22 * LY_AU, 'The nearest stars', 'Proxima Centauri, 4.24 light-years away. Light from it left more than four years ago.', 7000],
   ['gc', 1.7e5 * LY_AU, 'The Milky Way', 'Our galaxy: we orbit 26,000 light-years from its centre.', 8000],
   ['gc', 4.2e6 * LY_AU, 'The Local Group', 'Andromeda, 2.5 million light-years away, and our other neighbours.', 8000],
+  ['sun', 7e8 * LY_AU, 'The cosmic web', '43,480 real galaxies placed by their redshift: clusters, walls and voids, out to about 2 billion light-years. Every dot is a galaxy like ours.', 10000],
 ];
 
 export function createStory({ scene, clock, nav, caption, onTourChange }) {

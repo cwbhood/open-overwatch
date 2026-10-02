@@ -8,7 +8,7 @@ Third-party libraries come from a CDN through an import map, pinned to exact ver
 index.html            landing page
 open-overwatch.html   2D map (Leaflet)            -> src/map/
 globe.html            3D Earth (CesiumJS)         -> src/globe/
-solar.html            Solar System -> Local Group (three.js) -> src/solar/
+solar.html            Solar System -> Local Group -> cosmic web (three.js) -> src/solar/
 src/core/             shared, DOM-free, tested: time, frames, orbits, data formats
 test/                 node --test, fixtures from JPL Horizons
 data/solar/           pre-built binary/JSON data (scripts in brand/tools/)
@@ -77,7 +77,8 @@ gitignored `brand/source/`), compress and write `data/solar/`:
 
 - `asteroids_a.bin` / `asteroids_b.bin` — all 1.57M SBDB asteroids, 15 bytes each, propagated on the GPU
 - `small_bodies.json` — named objects and comets · `stars.bin` / `stars.json` — HYG v4.1 in ecliptic light-years
-- `spacecraft.json` — JPL Horizons trajectories at fixed steps
+- `spacecraft.json` — JPL Horizons trajectories at fixed steps · `moons.json` — 20 moon orbits fitted to Horizons
+- `galaxies.bin` / `galaxies.json` — 43,480 2MASS Redshift Survey galaxies (Mpc, equatorial, Hubble-law distances)
 
 Live feeds (satellites, aircraft, quakes, …) are fetched by the page; satellite TLEs come from a copy the site build
 refreshes every 6 hours, so visitors never hit CelesTrak directly.
@@ -89,6 +90,9 @@ refreshes every 6 hours, so visitors never hit CelesTrak directly.
   objects stay steady even 1e11 AU from the origin.
 - 1.57M asteroids: one `Points` draw per file; each vertex solves Kepler's equation in the shader from packed
   elements (Float32 a, five Uint16 angles/eccentricity, Uint8 class). 165 fps on an RTX 3060.
+- Point clouds that have faded out are set invisible, not just transparent: from light-years away the asteroids all
+  land on a few pixels and additive blending serialises them (42 ms a frame on an RTX 3060 before this).
+- Graphics levels (`quality.js` in both 3D views) and the measurements are in `docs/PERFORMANCE.md`.
 - The star map is sampled by direction in a shader (ecliptic → equatorial → RA/Dec), so there are no cube-map
   orientation conventions to get wrong.
 

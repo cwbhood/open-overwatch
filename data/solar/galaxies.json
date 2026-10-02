@@ -1,0 +1,30 @@
+{
+ "count": 43480,
+ "H0": 70.0,
+ "frame": "equatorial J2000",
+ "units": "Mpc",
+ "origin": "Sun",
+ "record": "little-endian Float32 x4 = 16 bytes: [x, y, z, M_K]",
+ "fields": {
+  "x": "Mpc toward RA 0, Dec 0",
+  "y": "Mpc toward RA 90 deg, Dec 0",
+  "z": "Mpc toward the north celestial pole",
+  "M_K": "absolute Ks magnitude (Ktmag - 5 log10(d/10 pc)); lower = brighter; records sorted by it"
+ },
+ "distance": "cz_CMB / H0 (Hubble law, no peculiar-velocity correction); cz_CMB = barycentric cz + 369.82 km/s toward l=264.021, b=48.253 (Sun vs CMB, Planck 2018)",
+ "cuts": "skipped 1066 without redshift and 53 with cz_CMB < 300 km/s, of 44599",
+ "distance_Mpc": {
+  "min": 4.5,
+  "median": 120.1,
+  "max": 735.6
+ },
+ "M_K_range": [
+  -29.24,
+  -18.04
+ ],
+ "source": "2MASS Redshift Survey (2MRS), Huchra et al. 2012, ApJS 199, 26; VizieR J/ApJS/199/26 table3 (Ks <= 11.75, |b| > 5 deg, 8 deg near the Galactic centre)",
+ "source_url": "https://vizier.cds.unistra.fr/viz-bin/asu-tsv?-source=J/ApJS/199/26/table3&-out.max=unlimited&-out=ID,RAJ2000,DEJ2000,GLON,GLAT,Ktmag,cz",
+ "licence": "free use with citation (CDS VizieR terms; cite Huchra et al. 2012)",
+ "credit": "Huchra et al. 2012 (2MRS), 2MASS (UMass/IPAC-Caltech, NASA/NSF); VizieR, CDS Strasbourg",
+ "build": "brand/tools/make_galaxies.py"
+}

@@ -173,6 +173,9 @@ export function createSmallBodies({ scene, renderer }) {
     frame({ camera, camSun, fade }) {
       uniforms.uPR.value = renderer.getPixelRatio();
       uniforms.uFade.value = (1 - fade(600, 6000, camSun)) * (1 - 0.88 * fade(12, 120, camSun)); // the belt piles into a blob from far out
+      // faded out = not drawn: from light-years away 1.57M additive points land on the same few pixels (42 ms a frame)
+      const drawn = uniforms.uFade.value > 0.002 && layerOn('asteroids');
+      S.files.forEach((f, i) => { if (f) f.points.visible = drawn && (i === 0 || S.full); });
       for (const b of bodies) {
         if (b.orbit) b.orbit.material.opacity = b.orbit.userData.opacity * (1 - fade(2000, 3e4, camSun));
         if (b.kind !== 'comet') continue;

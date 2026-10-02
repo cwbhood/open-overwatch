@@ -77,7 +77,8 @@ export function createUI({ camera, controls, clock, nav, story, small, deep, qua
     if (!layerOn('labels') || !bodyVisible(b) || b.launched === false) return false;
     if (b.star) return camSun > 0.3 * LY_AU && b.vis;                              // the brightest few, once out among them
     if (b.here) return camSun > 30 * LY_AU;
-    if (b.far) return camSun > 3000 * LY_AU || (b.key === 'gc' && camSun > 800 * LY_AU);
+    if (b.web) return camSun > 2.5e7 * LY_AU;                                    // galaxy clusters
+    if (b.far) return (camSun > 3000 * LY_AU || (b.key === 'gc' && camSun > 800 * LY_AU)) && camSun < 4e7 * LY_AU;
     if (b.key === 'sun') return camSun < 30 * LY_AU;
     if (b.kind === 'moon') return b.parent ? !!byKey[b.parent] && camera.position.distanceTo(byKey[b.parent].pos) < b.near : camera.position.distanceTo(byKey.earth.pos) < 0.05;
     if (b.kind === 'planet') return camSun < 3000;

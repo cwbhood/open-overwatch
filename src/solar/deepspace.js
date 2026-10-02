@@ -114,7 +114,8 @@ export function createDeepSpace({ scene, camera, renderer }) {
     frame({ camSun, fade }) {
       starUniforms.uPR.value = renderer.getPixelRatio();
       starUniforms.uFade.value = fade(0.02, 0.4, camSun, 'ly') * (1 - fade(2e4, 8e4, camSun, 'ly'));
-      oort.material.opacity = 0.55 * fade(1500, 2e4, camSun) * (1 - fade(3, 30, camSun, 'ly'));
+      if (starPoints) starPoints.visible = layerOn('stars') && starUniforms.uFade.value > 0.002;
+      oort.material.opacity = 0.55 * fade(1500, 2e4, camSun) * (1 - fade(3, 30, camSun, 'ly')); oort.visible = oort.material.opacity > 0.002;
       helio.material.uniforms.k.value = 0.22 * fade(40, 250, camSun) * (1 - fade(3000, 3e4, camSun));
       milky.material.opacity = 0.95 * fade(1500, 3e4, camSun, 'ly');
       for (const g of galaxies) g.material.opacity = fade(1e5, 6e5, camSun, 'ly');
