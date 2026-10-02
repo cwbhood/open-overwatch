@@ -112,7 +112,7 @@ hooks.reselect = select;
 export function closeCard() { state.selected = null; orbitLines.removeAll(); $('#card').classList.remove('show'); }
 function flyToObject(o) {
   release();
-  if (o.kind === 'sat') { const p = o.pt.position, h = C.Cartesian3.magnitude(p) - 6371000; camera.flyToBoundingSphere(new C.BoundingSphere(p, 1), { offset: new C.HeadingPitchRange(0, -0.6, Math.max(2.5e6, h * 0.6)), duration: 2.5 }); }
+  if (o.kind === 'sat') { const st = SatModels.state(o), p = st.ok ? st.pos : o.pt.position, h = C.Cartesian3.magnitude(p) - 6371000; camera.flyToBoundingSphere(new C.BoundingSphere(p, 1), { offset: new C.HeadingPitchRange(0, -0.6, Math.max(2.5e6, h * 0.6)), duration: 2.5 }); }
   else if (o.kind === 'air') flyDeg(o.cur?.lon ?? o.lon, (o.cur?.lat ?? o.lat) - 0.35, 45000, -50);
   else flyDeg(o.lon, o.lat - 1.2, 3.5e5, -60);
 }

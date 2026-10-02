@@ -74,7 +74,7 @@ export const Sats = {
     const st = this.state; if (!st) return; const dt = (now - st.t) / 1000, b = st.buf, P = this.scratch, curve = Math.abs(dt) > 3;
     for (const s of this.list) {
       const i = s.idx * 6, x = b[i]; if (Number.isNaN(x)) { s.pt.show = false; continue; }
-      s.pt.show = L[s.layer].on && !s.ent && !s.docked;
+      s.pt.show = L[s.layer].on && !s.ent && !s.docked; if (!s.pt.show) continue;   // hidden dots: no position work
       const y = b[i + 1], z = b[i + 2], vx = b[i + 3], vy = b[i + 4], vz = b[i + 5];
       if (!curve) { P.x = (x + vx * dt) * 1000; P.y = (y + vy * dt) * 1000; P.z = (z + vz * dt) * 1000; }
       else { // rotate about the orbit normal k = r x v at the mean angular rate |r x v| / r^2 (near-circular orbits)
