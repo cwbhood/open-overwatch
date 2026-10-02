@@ -75,7 +75,7 @@ export function createUI({ camera, controls, clock, nav, story, small, deep }) {
     if (b.here) return camSun > 30 * LY_AU;
     if (b.far) return camSun > 3000 * LY_AU || (b.key === 'gc' && camSun > 800 * LY_AU);
     if (b.key === 'sun') return camSun < 30 * LY_AU;
-    if (b.kind === 'moon') return camera.position.distanceTo(byKey.earth.pos) < 0.05;
+    if (b.kind === 'moon') return b.parent ? !!byKey[b.parent] && camera.position.distanceTo(byKey[b.parent].pos) < b.near : camera.position.distanceTo(byKey.earth.pos) < 0.05;
     if (b.kind === 'planet') return camSun < 3000;
     return camSun < 600 && (b === nav.focus || camera.position.distanceTo(b.pos) < Math.max(10 * camFocus, 3));  // close in: none from far behind
   }

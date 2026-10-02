@@ -9,6 +9,7 @@ import { smoothLog } from './util.js';
 import { bodies, byKey, defineLayer, applyLayers } from './world.js';
 import { createSky } from './sky.js';
 import { createPlanets } from './planets.js';
+import { createMoons } from './moons.js';
 import { createSmallBodies, CLASS_LAYERS } from './smallbodies.js';
 import { createSpacecraft } from './spacecraft.js';
 import { createDeepSpace } from './deepspace.js';
@@ -36,7 +37,7 @@ const sunView = new THREE.Vector3();   // the Sun in view space: every lit shade
 
 // ---- layers (order = the panel's order)
 [{ id: 'orbits', name: 'Planet orbits', c: '#7dffa6', on: true }, { id: 'labels', name: 'Labels', c: '#e6edf3', on: true },
-  { id: 'dwarfs', name: 'Dwarf planets', c: '#e8cfb0', on: true }, { id: 'asteroids', name: 'Asteroids', c: '#c8b89e', on: true, n: 0 },
+  { id: 'moons', name: 'Moons', c: '#cfd3da', on: true, n: 0 }, { id: 'dwarfs', name: 'Dwarf planets', c: '#e8cfb0', on: true }, { id: 'asteroids', name: 'Asteroids', c: '#c8b89e', on: true, n: 0 },
   ...CLASS_LAYERS, { id: 'comets', name: 'Comets', c: '#bfe3ff', on: true }, { id: 'craft', name: 'Spacecraft', c: '#ffb44d', on: true, n: 0 },
   { id: 'stars', name: 'Stars near the Sun (HYG)', c: '#fff3d6', on: true, n: 0 }, { id: 'galaxy', name: 'Milky Way & galaxies', c: '#b6c6ff', on: true },
 ].forEach(defineLayer);
@@ -44,6 +45,7 @@ const sunView = new THREE.Vector3();   // the Sun in view space: every lit shade
 // ---- the world
 const sky = createSky(scene);
 const planets = createPlanets({ scene, sunView, renderer });
+const moons = createMoons({ scene, sunView, renderer });
 const small = createSmallBodies({ scene, renderer });
 const craft = createSpacecraft({ scene });
 const deep = createDeepSpace({ scene, camera, renderer });
@@ -53,7 +55,7 @@ const nav = {
   focus: byKey.earth, fly: null,
   focusOn(b, dist = null, dur = 2.2, card = true) {
     if (!b) return;
-    const d1 = dist ?? Math.max(b.radius * 4, b.kind === 'planet' ? b.radius * 3.2 : 0.002);
+    const d1 = dist ?? Math.max(b.radius * 4, b.kind === 'planet' ? b.radius * 3.2 : b.parent ? b.radius * 5 : 0.002);
     this.fly = { from: controls.target.clone(), d0: camera.position.distanceTo(controls.target), d1, t0: performance.now(), dur: dur * 1000 };
     this.focus = b; controls.minDistance = Math.max(b.radius * 1.15, 1e-7);
     ui.showCard(card ? b : null);
@@ -80,6 +82,7 @@ function update(jd) {
   planets.update(jd); small.update(jd);
   for (const b of bodies) if (b.update && b.key !== 'moon') b.update(jd);
   byKey.moon.update(jd);                                      // after Earth
+  moons.update(jd);                                           // after their planets (Pluto included)
 }
 // the render loop can pause: inside the globe page this view sleeps while the globe is showing
 const loop = {
@@ -96,7 +99,7 @@ function frame(t) {
   controls.update(); camera.updateMatrixWorld();
   view.camSun = camera.position.length(); view.camFocus = camera.position.distanceTo(controls.target);
   sunView.set(0, 0, 0).applyMatrix4(camera.matrixWorldInverse);
-  sky.frame(view); planets.frame(view); small.frame(view); craft.frame(view); deep.frame(view);
+  sky.frame(view); planets.frame(view); moons.frame(view); small.frame(view); craft.frame(view); deep.frame(view);
   story.updatePulse(); ui.frame(view);
   renderer.render(scene, camera);
   embed.api.ready = true;
@@ -121,7 +124,7 @@ if (EMBED) {   // inside the globe: no splash, no opening flight; render one fra
   }, 700);
 }
 const settle = p => p.catch(e => console.warn(e)).finally(() => { applyLayers(); ui.renderLayers(); });
-settle(small.load()); settle(craft.load()); settle(deep.loadStars());
+settle(moons.load()); settle(small.load()); settle(craft.load()); settle(deep.loadStars());
 applyLayers();
 
-window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, nav, story, renderer, LY: LY_AU, embed: embed.api, loop };
+window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, moons, nav, story, renderer, LY: LY_AU, embed: embed.api, loop };

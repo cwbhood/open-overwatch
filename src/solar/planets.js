@@ -1,4 +1,4 @@
-// The Sun, the eight planets and the Moon: real-size textured globes, lit by the Sun, spinning by the IAU models.
+// The Sun, the eight planets and the Moon (other moons: moons.js): real-size textured globes, lit by the Sun, spinning by the IAU models.
 import * as THREE from 'three';
 import { KM_AU, DEG } from '../core/units.js';
 import { PLANET_KEYS, PHYSICAL, planetElements, planetPosition, earthPosition, moonGeocentric } from '../core/planets.js';
@@ -29,7 +29,7 @@ const axes = { x: {}, y: {}, z: {} }, _x = new THREE.Vector3(), _y = new THREE.V
 function orient(key, jd, q) { bodyAxes(key, jd, axes); return q.setFromRotationMatrix(_m.makeBasis(toVector3(axes.x, _x), toVector3(axes.y, _y), toVector3(axes.z, _z))); }
 
 /** Lit globe: day map (+ optional night lights), soft atmosphere rim, optional ring shadow (Saturn). */
-function globeMaterial(sunView, { atm = [0, 0, 0], atmK = 0, wrap = 0, ring = false }) {
+export function globeMaterial(sunView, { atm = [0, 0, 0], atmK = 0, wrap = 0, ring = false }) {
   return surfaceMaterial({
     uniforms: { map: { value: null }, night: { value: null }, hasNight: { value: 0 }, uSun: { value: sunView }, atm: { value: new THREE.Vector3(...atm) }, atmK: { value: atmK }, wrap: { value: wrap },
       hasRing: { value: 0 }, ringN: { value: new THREE.Vector3() }, ringC: { value: new THREE.Vector3() }, ringIn: { value: 0 }, ringOut: { value: 0 }, ringTex: { value: null } },

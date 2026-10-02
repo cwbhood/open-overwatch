@@ -38,6 +38,7 @@ same code runs in Node tests and in the render loop without allocating.
 | `time.js` | Julian Date conversions, a simulation clock (rate, live/paused), UTC formatting |
 | `kepler.js` | Kepler's equation (Newton, robust start for high e), elements → position |
 | `planets.js` | JPL "approximate positions" elements (1800–2050), the Moon (Schlyter + main perturbations), physical data |
+| `moons.js` | 20 major moons (Mars → Pluto): orbits fitted to Horizons over 2026, with node, periapsis and mean-longitude rates |
 | `rotation.js` | IAU rotation models → body-fixed axes in the ecliptic frame (texture longitude 0 = +x) |
 | `smallbodies.js` | the 15-byte-per-object asteroid format, decoding, comet elements |
 | `assets.js` | fetch with a fallback to the published site (archived versions don't carry big data) |
@@ -46,7 +47,8 @@ same code runs in Node tests and in the render loop without allocating.
 | `geo.js` | great-circle destination, haversine, dead reckoning for aircraft and ships |
 
 Accuracy, checked by the tests against JPL Horizons on 2026-10-02: planets within arcminutes (JPL's own stated
-error for these formulas), main-belt asteroids within ~3×10⁻⁴ AU, the Moon within ~0.3°.
+error for these formulas), main-belt asteroids within ~3×10⁻⁴ AU, the Moon within ~0.3°, the other moons within 0.4° of their orbit.
+The moon fits drift slowly away from 2026 (no short-period terms); rerun `make_moons.py` with a new window then.
 
 ## The 3D globe (`src/globe/`)
 

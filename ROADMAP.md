@@ -25,7 +25,8 @@ to `APP_PATHS` in `.github/build_site.py` and to the release zip list (archived 
 - [x] Seamless globe ↔ Solar System hand-off (matched camera and field of view, cross-fade, roll to the ecliptic, both directions)
 - [x] One time control for everything: globe time bar (satellites follow it, aircraft hide off-live), carried across the hand-off both ways
 - [ ] Every tracked object in orbit (full public catalogue incl. debris) + close-approach finder
-- [ ] Moons of Jupiter and Saturn; cosmic-web finale beyond the Local Group
+- [x] Major moons (Mars to Pluto, 20): Horizons-fitted orbits, tidally locked, orbit lines and labels near their planet
+- [ ] Cosmic-web finale beyond the Local Group
 
 ## Stage 3 — launch like engineers
 - [ ] Performance budget + numbers in the README (fps, memory, load size), phone pass
