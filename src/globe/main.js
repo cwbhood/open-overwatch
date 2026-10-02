@@ -52,9 +52,12 @@ updateBand(); applyVisibility();
 (async () => {
   const [lon, lat] = sunlitView(), t0 = Date.now();
   const until = (ms, cond = () => false) => new Promise(res => { const id = setInterval(() => { if (cond() || Date.now() - t0 > ms) { clearInterval(id); res(); } }, 100); });
+  const say = t => { const el = $('#boot div'); if (el) el.textContent = t; };
+  say('Preparing the 3D models…');
   camera.setView({ destination: C.Cartesian3.fromDegrees(lon, lat, 6.0e5) });
   await Promise.race([Promise.all([warmModels([...AIR_WARM, ...SAT_WARM]), until(4000, () => globe.tilesLoaded)]), until(5000)]);
   camera.setView({ destination: C.Cartesian3.fromDegrees(lon, lat, 2.0e7) });
+  say('Loading the Earth…');
   const high = warmAgain();
   await until(10000, () => globe.tilesLoaded);
   $('#boot').classList.add('out'); setTimeout(() => $('#boot').remove(), 900);
