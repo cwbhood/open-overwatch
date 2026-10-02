@@ -18,7 +18,12 @@ Made with Blender 5.2 (headless, scripted), a little Python, and the app itself.
   rocketbody` (tools/sat_models_stations.py, tools/sat_models_fleet.py; previews/ has 2x2 review sheets) and
   `aircraft/<shape>_<civ|mil>.glb` (tools/plane_models.py, same geometry as the sprites). Axes: +X forward, +Z up,
   metres; `solar_*` nodes turn about Y; the helicopter's `rotor` node spins. `test/axes.glb` is an axis-marker model.
-- `textures/night/` — city-lights tile pyramid for the globe's night side (tools/make_night.py).
+- `textures/night/` — city-lights tile pyramid for the globe's night side (tools/make_night.py). No longer used by globe.html (it streams NASA's
+  500 m Black Marble instead); kept for older archived versions.
+- `textures/earth_fx_8k.jpg` / `_4k.jpg` — globe effects texture: R clouds, G water, B soft clouds (tools/make_earth_fx.py,
+  from NASA Blue Marble clouds + Natural Earth). `tools/globe_shot.mjs` renders globe views headless for look-dev.
+- `textures/sky/` (2048 px) and `textures/sky_1k/` — the globe's star field: NASA SVS Deep Star Maps 2020 as cube faces
+  (tools/exr_dump.py in headless Blender decodes `source/starmap_2020_4k.exr`, then tools/make_skybox.py).
 - `blend/` — `emblem.blend`, `globe.blend` (textures load from `textures/`).
 - `textures/` — 8k Earth maps made by `tools/make_textures.py` from `source/`.
 - `source/` — downloaded public-domain Earth data (see Credits).

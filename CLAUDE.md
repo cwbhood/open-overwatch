@@ -19,6 +19,22 @@ Leaflet 1.9.4 + satellite.js 5.0.0 from CDNs. No build step, no dependencies.
   hides night lights so it is off; below 300 km the scene light is an overhead fill (globe unlit there anyway);
   satellites in Earth's shadow get a CustomShader ambient term. A hidden Browser pane runs 0 fps: drive frames with
   viewer.render() when testing. MODEL_FIX = -90° about Z undoes Cesium's glTF forward-axis turn.
+  Earth look (the `Earth` block): NASA GIBS Blue Marble NG (day, far, kept down to ~150 km) over Esri imagery (near), GIBS VIIRS Black Marble
+  (night, gamma 0.4 then brightness, compensated for the lighting fade), ground atmosphere ON with nightFadeOut=1 /
+  nightFadeIn=0 (else the night side turns black), lightingFade at R+20 km / R+200 km, no HDR (washes night purple).
+  Two EllipsoidGeometry shells read brand/textures/earth_fx_*.jpg (make_earth_fx.py; rolled 180° because the shell's st
+  starts at lon 0): glint + cloud shadows (premultiplied blend; needs orderIndependentTranslucency:false AND an
+  appearance.getRenderState override, Cesium otherwise forces ALPHA_BLEND) plus open-ocean blue over Esri's seafloor
+  shading; the GIBS layers use the EPSG:4326 set (pole to pole; 512 px tiles, 288° level 0) — don't paint polar caps,
+  GlobeFS's day/night + ground atmosphere can't be matched by hand; clouds 9 km up (procedural detail + relief, dissolve below 250 km); a limb shell at
+  115 km (additive; tangent-height layers: day blue, sunset bands, airglow). Shells need compressVertices:false. Cloud
+  noise needs a float-safe hash (the classic fract(p*p*p) one makes zigzags at Earth-scale coordinates). Look-dev:
+  render with brand/tools/globe_shot.mjs (headless Edge on the RTX GPU) — the Browser pane can't screenshot when the
+  app is hidden. Pin the clock (clockStep TICK_DEPENDENT, multiplier 0) for repeatable lighting.
+  Stars: NASA SVS Deep Star Maps 2020 cube faces (brand/textures/sky, sky_1k for phones) from make_skybox.py (EXR
+  decoded by headless Blender via exr_dump.py; source EXR is gitignored). Cesium.SkyBox reads each face vertically
+  flipped vs the OpenGL convention (verified with direction-coded faces; star positions checked against Orion/Sgr).
+  camera.setView({orientation:{direction, up}}) far out in space can come back upside down; check camera.upWC.
 - `serve.js` / `serve.py` — twin local helpers: serve the folder on http://127.0.0.1:8787 and relay an https host
   allowlist at `/proxy?url=…` for sources that send no CORS header. Keep the two in sync.
 - `Start Open Overwatch.bat` / `.vbs` — Windows launchers.
@@ -28,7 +44,10 @@ Leaflet 1.9.4 + satellite.js 5.0.0 from CDNs. No build step, no dependencies.
   notes, verified issues (with line numbers) and a feed-liveness check of every external endpoint.
 
 ## Publishing
-Repo github.com/cwbhood/open-overwatch (public); Pages serves `main` root at https://cwbhood.github.io/open-overwatch/.
+Repo github.com/cwbhood/open-overwatch (public); site https://cwbhood.github.io/open-overwatch/, built by the "Website"
+workflow (.github/workflows/pages.yml -> .github/build_site.py): main at the root, every annotated v* tag frozen under
+/v/<tag>/, and versions.json for the landing page's version picker and history (#launch). Each archived version costs
+~25 MB of the 1 GB Pages limit.
 `Publish Update.bat` bumps OW_VERSION, commits, tags vX and pushes; .github/workflows/release.yml then builds
 `open-overwatch.zip` (the download the lander links to via releases/latest/download). Keep the zip file list in that
 workflow in sync when the app starts needing new files. gh CLI (portable): ~/bin/gh-cli/bin/gh.exe.

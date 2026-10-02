@@ -11,3 +11,6 @@ brand/tools/_*.log
 brand/models/previews/
 brand/hero/*.png
 brand/lander/hero-*.png
+# NASA source rasters (regenerate textures with brand/tools/make_earth_fx.py)
+brand/source/*.tif
+brand/source/*.exr

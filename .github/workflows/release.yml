@@ -23,6 +23,8 @@ jobs:
           cp brand/hero/*.webp "$D/brand/hero/"
           cp brand/social/og-1200x630.png "$D/brand/social/"
           cp -r brand/textures/night "$D/brand/textures/"
+          cp brand/textures/earth_fx_8k.jpg brand/textures/earth_fx_4k.jpg "$D/brand/textures/"   # globe clouds/glint
+          cp -r brand/textures/sky brand/textures/sky_1k "$D/brand/textures/"                     # globe star field
           cp -r brand/models/. "$D/brand/models/"   # satellites, aircraft/ and test/ (3D planes need aircraft/)
           rm -rf "$D/brand/models/previews"
           echo "$GITHUB_REF_NAME" > "$D/VERSION.txt"
