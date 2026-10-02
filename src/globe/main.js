@@ -37,8 +37,13 @@ setInterval(() => AirModels.refresh(), 500);
 setInterval(() => Air.update(Date.now()), 250);
 setInterval(() => Air.prune(), 30e3);
 
-/** Run a feed now and every `ms`; failures become a toast, not an exception. */
-function every(ms, fn, label) { const run = () => fn().catch(e => { console.warn(label, e); toast(`${label}: ${e.message}`); }); run(); return setInterval(run, ms); }
+/** Run a feed now and every `ms`. A failure is logged and retried on the next run; only one that keeps failing
+ *  (three in a row) is mentioned, and not as a scary "Failed to fetch" on a first visit. */
+function every(ms, fn, label) {
+  let fails = 0;
+  const run = () => fn().then(() => { fails = 0; }, e => { console.warn(label, e); if (++fails === 3) toast(`${label} is unavailable right now; retrying`, 3500); });
+  run(); return setInterval(run, ms);
+}
 
 // boot: a mostly sunlit Earth, held behind the boot screen until the globe has something to show. Behind that screen the
 // camera first dips to 600 km for a moment: below ~800 km Cesium switches on fog and atmosphere in the globe's and the
