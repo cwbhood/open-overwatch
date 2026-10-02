@@ -7,6 +7,7 @@ import { state, hooks } from './state.js';
 import { Follow, MODEL_FIX, SOLAR_AXIS } from './follow.js';
 import { sunDirection } from './earth.js';
 import { createTleSource, parseTle } from '../core/tle.js';
+import { Time } from './time.js';
 
 const satellite = window.satellite;
 const tles = createTleSource({ fetchText: (url, o) => getText(url, o), cache: bigStore, onSite: ON_SITE });
@@ -63,29 +64,36 @@ export const Sats = {
     this.worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' })));
     this.worker.onmessage = e => { this.state = { t: e.data.t, buf: e.data.buf }; };
     this.worker.postMessage({ type: 'load', tles: elements });
-    const tick = () => this.worker.postMessage({ type: 'tick', t: Date.now() });
-    tick(); setInterval(tick, 1000);
+    // ask for positions at the clock's time: once a second live, more often when the clock runs fast
+    const tick = () => { this.worker.postMessage({ type: 'tick', t: Time.nowMs() }); setTimeout(tick, Math.max(150, Math.min(1000, 20000 / Math.max(1, Math.abs(Time.rate))))); };
+    tick();
     hooks.updateStats();
   },
   scratch: new C.Cartesian3(),
-  update(now) { // extrapolate from the last worker tick: p + v*dt (ECF, km)
-    const st = this.state; if (!st) return; const dt = (now - st.t) / 1000, b = st.buf;
+  update(now) { // extrapolate from the last worker tick (ECF, km): straight along v for a few seconds, else round the orbit
+    const st = this.state; if (!st) return; const dt = (now - st.t) / 1000, b = st.buf, P = this.scratch, curve = Math.abs(dt) > 3;
     for (const s of this.list) {
       const i = s.idx * 6, x = b[i]; if (Number.isNaN(x)) { s.pt.show = false; continue; }
       s.pt.show = L[s.layer].on && !s.ent && !s.docked;
-      this.scratch.x = (x + b[i + 3] * dt) * 1000; this.scratch.y = (b[i + 1] + b[i + 4] * dt) * 1000; this.scratch.z = (b[i + 2] + b[i + 5] * dt) * 1000;
-      s.pt.position = this.scratch;
+      const y = b[i + 1], z = b[i + 2], vx = b[i + 3], vy = b[i + 4], vz = b[i + 5];
+      if (!curve) { P.x = (x + vx * dt) * 1000; P.y = (y + vy * dt) * 1000; P.z = (z + vz * dt) * 1000; }
+      else { // rotate about the orbit normal k = r x v at the mean angular rate |r x v| / r^2 (near-circular orbits)
+        const nx = y * vz - z * vy, ny = z * vx - x * vz, nz = x * vy - y * vx, nl = Math.hypot(nx, ny, nz), a = nl / (x * x + y * y + z * z) * dt;
+        const kx = nx / nl, ky = ny / nl, kz = nz / nl, c = Math.cos(a), sn = Math.sin(a);
+        P.x = (x * c + (ky * z - kz * y) * sn) * 1000; P.y = (y * c + (kz * x - kx * z) * sn) * 1000; P.z = (z * c + (kx * y - ky * x) * sn) * 1000;
+      }
+      s.pt.position = P;
     }
   },
   info(s) {
-    const rec = satellite.twoline2satrec(s.l1, s.l2), now = new Date(), pv = satellite.propagate(rec, now);
+    const rec = satellite.twoline2satrec(s.l1, s.l2), now = new Date(Time.nowMs()), pv = satellite.propagate(rec, now);
     const gd = satellite.eciToGeodetic(pv.position, satellite.gstime(now));
     const v = pv.velocity ? Math.hypot(pv.velocity.x, pv.velocity.y, pv.velocity.z) : null;
     return { alt: gd.height, lat: satellite.degreesLat(gd.latitude), lon: satellite.degreesLong(gd.longitude), speed: v * 3600, period: 2 * Math.PI / rec.no, incl: rec.inclo * 180 / Math.PI };
   },
   orbit(s) { // one inertial orbit, drawn in the current Earth-fixed frame so it passes through the satellite
     orbitLines.removeAll();
-    const rec = satellite.twoline2satrec(s.l1, s.l2), now = new Date(), g = satellite.gstime(now), per = 2 * Math.PI / rec.no, pts = [];
+    const rec = satellite.twoline2satrec(s.l1, s.l2), now = new Date(Time.nowMs()), g = satellite.gstime(now), per = 2 * Math.PI / rec.no, pts = [];
     for (let k = 0; k <= 180; k++) {
       const pv = satellite.propagate(rec, new Date(now.getTime() + k / 180 * per * 60000)); if (!pv.position) continue;
       const f = satellite.eciToEcf(pv.position, g); pts.push(new C.Cartesian3(f.x * 1000, f.y * 1000, f.z * 1000));

@@ -6,7 +6,8 @@ import { hooks } from './state.js';
 import { Earth, BASES, setBase, currentBase, sunlitView, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, moonPosition } from './earth.js';
 import { Follow, MODEL_FIX, SOLAR_AXIS } from './follow.js';
 import { Sats, SatModels } from './satellites.js';
-import { Air, AirModels } from './aircraft.js';
+import { Air, AirModels, airShown } from './aircraft.js';
+import { Time } from './time.js';
 import { Quakes } from './quakes.js';
 import { updateStats, updateBand, PRESETS, Lighting, select } from './ui.js';
 import { Space } from './space.js';
@@ -14,7 +15,7 @@ import { Space } from './space.js';
 function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
   airPts.show = airIcons.show = true;
-  for (const a of Air.map.values()) { const on = L[a.mil ? 'mil' : 'air'].on; a.pt.show = on && !a.ent; a.icon.show = on && !a.ent; if (!on && a.ent) AirModels.drop(a); }
+  for (const a of Air.map.values()) { const on = airShown(a); a.pt.show = on && !a.ent; a.icon.show = on && !a.ent; if (!on && a.ent) AirModels.drop(a); }
   qkPts.show = L.quakes.on;
   Earth.apply(); updateBand(); updateStats();
 }
@@ -24,7 +25,7 @@ initDock({ bases: BASES, currentBase, onBase: setBase });
 
 // before each frame: follow camera, model lighting; before rendering: sun direction, satellite dots, Earth fades
 scene.preUpdate.addEventListener((sc, time) => { Follow.track(time); Lighting.update(); });
-scene.preRender.addEventListener((sc, time) => { SatModels.updateSun(time); Sats.update(Date.now()); Earth.update(camHeight()); Space.update(); });
+scene.preRender.addEventListener((sc, time) => { SatModels.updateSun(time); Sats.update(Time.nowMs()); Earth.update(camHeight()); Space.update(); });
 PRESETS.space = () => Space.go();
 setInterval(() => SatModels.refresh(), 400);
 setInterval(() => AirModels.refresh(), 500);
@@ -48,7 +49,7 @@ every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
 
 window.OO3D = {
-  viewer, space: Space, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
+  viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {
     const pos = C.Cartesian3.fromDegrees(lon, lat, h), R = C.Matrix4.getMatrix3(C.Transforms.eastNorthUpToFixedFrame(pos), new C.Matrix3());

@@ -8,6 +8,7 @@ import { Sats, SatModels } from './satellites.js';
 import { Air, AirModels } from './aircraft.js';
 import { Quakes } from './quakes.js';
 import { sunlitView, moonPosition, showPlaceNames } from './earth.js';
+import { Time } from './time.js';
 
 // ---- stats + altitude band
 export function updateStats() {
@@ -15,7 +16,18 @@ export function updateStats() {
   $('#sAir').textContent = fmt(air); $('#sMil').textContent = fmt(mil);
   $('#sSat').textContent = fmt(Sats.list.filter(s => L[s.layer].on).length); $('#sQk').textContent = fmt(Quakes.list.length);
 }
-setInterval(() => { $('#sUtc').textContent = new Date().toISOString().slice(11, 16); }, 1000);
+// ---- time bar
+const RATE_TEXT = { '-3600': '1 h/s backwards', 0: 'paused', 1: 'live', 60: '1 min/s', 600: '10 min/s', 3600: '1 h/s' };
+function syncTime() {
+  const ms = Time.nowMs(), k = Time.live ? 1 : Time.rate;
+  $('#tNow').textContent = new Date(ms).toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  const mode = Time.live ? 'live' : Time.offLive() ? (RATE_TEXT[k] || k + '×') + ' · not live' : RATE_TEXT[k] || k + '×';
+  $('#tMode').textContent = mode; $('#tMode').classList.toggle('off', Time.offLive());
+  document.querySelectorAll('#timebar [data-rate]').forEach(b => b.classList.toggle('on', +b.dataset.rate === (Time.live ? 1 : Time.rate)));
+}
+document.querySelectorAll('#timebar [data-rate]').forEach(b => { b.onclick = () => Time.setRate(+b.dataset.rate); });
+$('#tLive').onclick = () => Time.goLive();
+Time.onChange(syncTime); setInterval(syncTime, 500); syncTime();
 const BANDS = [[1.0e8, 'Cislunar'], [3.0e7, 'Deep space'], [8.0e6, 'High orbit'], [1.2e6, 'Low orbit'], [1.5e5, 'Airspace'], [8.0e3, 'Region'], [-Infinity, 'Street']];
 export function updateBand() {
   const h = camHeight(), name = (BANDS.find(([min]) => h >= min) || BANDS[BANDS.length - 1])[1];

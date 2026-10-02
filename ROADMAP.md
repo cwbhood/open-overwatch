@@ -23,7 +23,7 @@ to `APP_PATHS` in `.github/build_site.py` and to the release zip list (archived 
 
 ## Stage 2 — the signature: one zoom from street to galaxy
 - [x] Seamless globe ↔ Solar System hand-off (matched camera and field of view, cross-fade, roll to the ecliptic, both directions)
-- [ ] One time control for everything (satellites, planets, asteroids)
+- [x] One time control for everything: globe time bar (satellites follow it, aircraft hide off-live), carried across the hand-off both ways
 - [ ] Every tracked object in orbit (full public catalogue incl. debris) + close-approach finder
 - [ ] Moons of Jupiter and Saturn; cosmic-web finale beyond the Local Group
 

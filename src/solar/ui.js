@@ -22,11 +22,10 @@ export function createUI({ camera, controls, clock, nav, story, small, deep }) {
   }
 
   // ---- time
-  const rateKeyOf = r => Object.keys(RATES).find(k => RATES[k] === r) ?? '0';
   function syncRate() {
-    const k = rateKeyOf(clock.rate);
+    const k = Object.keys(RATES).find(x => RATES[x] === clock.rate);
     document.querySelectorAll('#time [data-rate]').forEach(b => b.classList.toggle('on', b.dataset.rate === k));
-    $('#tRate').textContent = RATE_TEXT[k];
+    $('#tRate').textContent = k !== undefined ? RATE_TEXT[k] : Math.round(clock.rate * 86400).toLocaleString('en-US') + '× speed';   // a rate set by the globe
   }
   document.querySelectorAll('#time [data-rate]').forEach(b => { b.onclick = () => { clock.setRate(RATES[b.dataset.rate]); syncRate(); }; });
   $('#now').onclick = () => { clock.goLive(); syncRate(); };

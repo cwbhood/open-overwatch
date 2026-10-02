@@ -6,6 +6,7 @@ import { L, setCount } from './layers.js';
 import { state, hooks } from './state.js';
 import { Follow, MODEL_FIX } from './follow.js';
 import { deadReckon } from '../core/geo.js';
+import { Time } from './time.js';
 
 const DR_MAX_S = 900;              // dead-reckoning horizon: the global snapshot refreshes every 15 min
 export const AIR_ICON_RANGE = 2.5e6; // planes become heading icons below ~2,500 km camera distance
@@ -36,6 +37,8 @@ export function aircraftAt(r, ms) {
 }
 
 const layerOf = r => L[r.mil ? 'mil' : 'air'];
+/** Shown: its layer is on and the clock is at the live moment (aircraft feeds have no history). */
+export const airShown = r => layerOf(r).on && !Time.offLive();
 export const Air = {
   map: new Map(),
   upsert(a) {
@@ -54,7 +57,7 @@ export const Air = {
     r.pt.color = C.Color.fromCssColorString(r.emerg ? '#ff4d5e' : r.mil ? '#ffb44d' : '#5fd3ff'); r.icon.rotation = -C.Math.toRadians(r.track || 0);
     const shape = airShape(r), img = `brand/sprites/${shape}_${r.emerg ? 'emg' : r.mil ? 'mil' : 'civ'}.png`;
     if (r.sprite !== img) { r.sprite = img; r.shape = shape; r.icon.image = img; r.icon.width = r.icon.height = SPRITE_SIZE[shape]; }
-    const on = layerOf(r).on; r.pt.show = on && !r.ent; r.icon.show = on && !r.ent;
+    const on = airShown(r); r.pt.show = on && !r.ent; r.icon.show = on && !r.ent;
     if (r.ent) AirModels.restyle(r);
   },
   async opensky() {
@@ -89,7 +92,7 @@ export const Air = {
   },
   update(now) {
     for (const r of this.map.values()) {
-      if (!layerOf(r).on) continue;
+      if (!airShown(r)) continue;
       const { lat, lon } = aircraftAt(r, now), pos = C.Cartesian3.fromDegrees(lon, lat, Math.max(0, r.alt || 0) + 60);
       r.pt.position = pos; r.icon.position = pos; r.cur = { lat, lon };
     }
@@ -143,14 +146,14 @@ export const AirModels = {
     if (!r.ent || (!force && (r === Follow.obj || r === state.selected))) return;
     if (r === Follow.obj) Follow.stop();
     viewer.entities.remove(r.ent); r.ent = null; this.pool.delete(r.hex);
-    const on = layerOf(r).on; r.pt.show = on; r.icon.show = on;
+    const on = airShown(r); r.pt.show = on; r.icon.show = on;
   },
   refresh() {
     const want = new Set();
     if (camHeight() < this.ceiling) {
       const cam = camera.positionWC, near = [];
       for (const r of Air.map.values()) {
-        if (!layerOf(r).on || !r.cur) continue;
+        if (!airShown(r) || !r.cur) continue;
         const d = C.Cartesian3.distance(C.Cartesian3.fromDegrees(r.cur.lon, r.cur.lat, r.alt || 0, C.Ellipsoid.WGS84, this._p), cam);
         if (d < this.range) near.push([d, r]);
       }

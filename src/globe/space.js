@@ -6,6 +6,7 @@ import { viewer, scene, camera, camHeight } from './viewer.js';
 import { state } from './state.js';
 import { Follow } from './follow.js';
 import { eqToEcl, eclToEq } from '../core/units.js';
+import { Time } from './time.js';
 
 const PRELOAD_M = 8.0e7;   // start loading the Solar System view (its first load is the asteroid data)
 const ENTER_M = 3.0e8;     // hand over beyond this (the Moon is at ~3.8e8 m); solar hands back below 2.2e8
@@ -32,23 +33,24 @@ function enter() {
   const S = solar(); if (!S || !S.embed || !S.embed.ready || busy) return false;
   busy = true; active = true; wantEnter = false;
   const M = fixedMatrix(viewer.clock.currentTime);
-  S.embed.enterFromGlobe({ offset: toEcliptic(camera.positionWC, M), dir: toEcliptic(camera.directionWC, M), up: toEcliptic(camera.upWC, M), fovy: camera.frustum.fovy });
+  S.embed.enterFromGlobe({ offset: toEcliptic(camera.positionWC, M), dir: toEcliptic(camera.directionWC, M), up: toEcliptic(camera.upWC, M), fovy: camera.frustum.fovy,
+    live: Time.live, jd: Time.jd(), rate: Time.rate / 86400 });   // the Solar System's clock runs in days per second
   frame.style.pointerEvents = 'auto'; frame.style.opacity = '1'; frame.focus();
   setTimeout(() => { viewer.useDefaultRenderLoop = false; busy = false; }, FADE_MS);   // only one renderer draws at a time
   return true;
 }
 
-/** Called by the Solar System view when you zoom into Earth: { offset, dir, up } ecliptic (m), live. */
+/** Called by the Solar System view when you zoom into Earth: { offset, dir, up } ecliptic (m), and its clock. */
 function leave(s) {
   if (!active) return;
   busy = true; active = false;
+  if (s.live) Time.goLive(); else Time.setJd(s.jd, Math.round(s.rate * 86400));   // carry the time back
   viewer.useDefaultRenderLoop = true;
   const M = fixedMatrix(viewer.clock.currentTime);
   camera.setView({ destination: toFixed(s.offset, M), orientation: { direction: toFixed(s.dir, M), up: toFixed(s.up, M) } });
   scene.requestRender();
   frame.style.opacity = '0'; frame.style.pointerEvents = 'none';
   setTimeout(() => { solar()?.embed.pause(); busy = false; }, FADE_MS);
-  if (!s.live) toast('Back on Earth: the globe always shows the live moment', 3500);
 }
 
 /** Every frame: preload when climbing, hand over when past the Moon and looking back at Earth. */

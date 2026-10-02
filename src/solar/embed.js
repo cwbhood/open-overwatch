@@ -24,7 +24,8 @@ export function createEmbed({ camera, controls, nav, clock, loop, update }) {
     get active() { return active; },
     /** From the globe: { offset, dir, up } (ecliptic, metres from Earth's centre), fovy (radians). */
     enterFromGlobe(s) {
-      clock.goLive(); update(clock.jd);
+      if (s.live) clock.goLive(); else { clock.setJd(s.jd); clock.setRate(s.rate); }
+      update(clock.jd);
       const earth = byKey.earth, off = new THREE.Vector3(s.offset.x, s.offset.y, s.offset.z).divideScalar(AU_M);
       nav.focus = earth; nav.fly = null;
       camera.fov = THREE.MathUtils.radToDeg(s.fovy); camera.updateProjectionMatrix();
@@ -58,7 +59,7 @@ export function createEmbed({ camera, controls, nav, clock, loop, update }) {
         offset: v.copy(camera.position).sub(earth).multiplyScalar(AU_M).clone(),
         dir: camera.getWorldDirection(new THREE.Vector3()),
         up: new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion),
-        live: clock.live,
+        live: clock.live, jd: clock.jd, rate: clock.rate,
       });
     }
     return false;
