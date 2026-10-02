@@ -45,3 +45,14 @@ for N, OUT in ((2048, TEX / 'sky'), (1024, TEX / 'sky_1k')):
         srgb = np.where(lin <= 0.0031308, lin * 12.92, 1.055 * np.power(lin, 1 / 2.4) - 0.055)
         Image.fromarray((np.clip(srgb, 0, 1)[::-1] * 255 + 0.5).astype(np.uint8)).save(OUT / f'{name}.jpg', quality=90, optimize=True)
         print(OUT.name, name, (OUT / f'{name}.jpg').stat().st_size // 1024, 'KB')
+
+# The same sky as one equirectangular image for solar.html, which samples it by direction in its own shader
+# (RA 0h at the centre, RA increasing to the left, Dec +90 at the top: the source layout, just tone-mapped).
+for w, name in ((4096, 'sky_equirect.jpg'), (2048, 'sky_equirect_2k.jpg')):
+    lin = np.clip(src * EXPOSURE - FLOOR, 0, None)
+    srgb = np.where(lin <= 0.0031308, lin * 12.92, 1.055 * np.power(lin, 1 / 2.4) - 0.055)
+    im = Image.fromarray((np.clip(srgb, 0, 1) * 255 + 0.5).astype(np.uint8))
+    if im.width != w:
+        im = im.resize((w, w // 2), Image.LANCZOS)
+    im.save(TEX / name, quality=90, optimize=True)
+    print(name, (TEX / name).stat().st_size // 1024, 'KB')

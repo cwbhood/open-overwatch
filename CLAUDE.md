@@ -39,6 +39,17 @@ Leaflet 1.9.4 + satellite.js 5.0.0 from CDNs. No build step, no dependencies.
   workflow also runs every 6 h). Both apps read that copy first on cwbhood.github.io and fall back to it elsewhere.
   CelesTrak firewalled this PC's network on 2026-10-01 after many headless renders (fresh profile = no cache each run);
   globe_shot.mjs now blocks the live feed hosts. Never point automated runs at CelesTrak.
+- `solar.html` — Solar System → Local Group view on Three.js 0.186 (importmap, CDN), one scene in AU with a log depth
+  buffer; camera rides along with the focused body. Planets: JPL approximate elements (1800-2050) + IAU rotation models;
+  textures brand/textures/planets (make_planet_textures.py, Solar System Scope CC BY 4.0). Small bodies: data/solar/
+  asteroids_a.bin (brightest 300k; phones load only this) + asteroids_b.bin (rest, 1.57M total) + small_bodies.json
+  (named, comets) from make_small_bodies.py (JPL SBDB); Kepler is solved per point in the vertex shader (15-byte
+  records, see the script). Stars: data/solar/stars.bin (HYG v4.1, CC BY-SA) via make_stars.py; spacecraft:
+  data/solar/spacecraft.json (JPL Horizons) via make_spacecraft.py. Sky: brand/textures/sky_equirect*.jpg sampled by
+  direction in a shader (no cube-map conventions). Milky Way: NASA/JPL-Caltech R. Hurt top-down image on the galactic
+  plane (115,000 ly square, Sun 26,000 ly from the centre). Big assets load relative first, then from the site root, so
+  /v/<tag>/ copies only carry solar.html itself. window.OOSS is the console handle; globe_shot.mjs renders it with
+  OO_URL=http://localhost:8787/solar.html.
 - `serve.js` / `serve.py` — twin local helpers: serve the folder on http://127.0.0.1:8787 and relay an https host
   allowlist at `/proxy?url=…` for sources that send no CORS header. Keep the two in sync.
 - `Start Open Overwatch.bat` / `.vbs` — Windows launchers.
@@ -50,7 +61,9 @@ Leaflet 1.9.4 + satellite.js 5.0.0 from CDNs. No build step, no dependencies.
 ## Publishing
 Repo github.com/cwbhood/open-overwatch (public); site https://cwbhood.github.io/open-overwatch/, built by the "Website"
 workflow (.github/workflows/pages.yml -> .github/build_site.py): main at the root, every annotated v* tag frozen under
-/v/<tag>/, and versions.json for the landing page's version picker and history (#launch). Each archived version costs
+/v/<tag>/, and versions.json for the landing page's version picker and history (#launch). The /v/<tag>/ copies only
+contain build_site.py's APP_PATHS: add every new runtime asset there (the Launch button opens /v/<latest>/), or
+the archived app 404s on it (v0.7-v0.8 globe crashed that way until v0.8.1). Each archived version costs
 ~25 MB of the 1 GB Pages limit.
 `Publish Update.bat` bumps OW_VERSION, commits, tags vX and pushes; .github/workflows/release.yml then builds
 `open-overwatch.zip` (the download the lander links to via releases/latest/download). Keep the zip file list in that

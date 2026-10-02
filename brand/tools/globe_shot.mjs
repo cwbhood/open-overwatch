@@ -21,7 +21,7 @@ try {
   await p.send('Page.navigate', { url: process.env.OO_URL || 'http://localhost:8787/globe.html' }); // OO_URL: e.g. the live site
   await loaded;
   await sleep(6000);
-  const gpu = await p.eval(`(() => { const gl = OO3D.viewer.scene.context._gl; const e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); })()`);
+  const gpu = await p.eval(`(() => { try { const gl = window.OO3D ? OO3D.viewer.scene.context._gl : OOSS.renderer.getContext(); const e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (e) { return 'unknown: ' + e.message; } })()`);
   console.log('renderer:', gpu);
   for (let i = 0; i < steps.length; i += 2) {
     const js = steps[i], settle = +(steps[i + 1] || 6);

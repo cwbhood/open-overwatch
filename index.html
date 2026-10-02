@@ -325,6 +325,7 @@ footer a{color:var(--ink-dim)}
       <div class="lbtns">
         <a class="btn primary" id="goMap" href="open-overwatch.html">Launch the live map</a>
         <a class="btn" id="goGlobe" href="globe.html">Launch the 3D globe <span class="mono" style="color:var(--ink-faint)">beta</span></a>
+        <a class="btn" id="goSolar" href="solar.html">Explore the Solar System <span class="mono" style="color:var(--ink-faint)">new</span></a>
         <p class="lnote">Runs right here, no install: satellites, quakes, storms, ships, news and cameras. Live aircraft need the <a href="#get">download</a> (a tiny local helper).</p>
       </div>
     </div>
@@ -459,6 +460,7 @@ footer a{color:var(--ink-dim)}
     <div class="cta rv">
       <a class="btn primary" href="open-overwatch.html">Launch the live map</a>
       <a class="btn" href="globe.html">Try the 3D globe <span class="mono" style="color:var(--ink-faint)">beta</span></a>
+      <a class="btn" href="solar.html">Explore the Solar System <span class="mono" style="color:var(--ink-faint)">new</span></a>
     </div>
   </div>
 </section>
@@ -589,6 +591,7 @@ fetch('versions.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : Promis
     const v = byTag[sel.value];
     $('#goMap').href = v.map;
     const g = $('#goGlobe'); if (v.globe) { g.href = v.globe; g.removeAttribute('aria-disabled'); g.title = ''; } else { g.removeAttribute('href'); g.setAttribute('aria-disabled', 'true'); g.title = 'The 3D globe arrived in a later version'; }
+    const so = $('#goSolar'); if (v.solar) { so.href = v.solar; so.removeAttribute('aria-disabled'); so.title = ''; } else { so.removeAttribute('href'); so.setAttribute('aria-disabled', 'true'); so.title = 'The Solar System view arrived in a later version'; }
     $('#verNotes').innerHTML = `<b>${esc(v.title)}</b>${v.notes ? '\n' + esc(v.notes) : ''}`;
   };
   sel.addEventListener('change', apply); apply();

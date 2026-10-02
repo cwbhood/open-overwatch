@@ -14,3 +14,9 @@ brand/lander/hero-*.png
 # NASA source rasters (regenerate textures with brand/tools/make_earth_fx.py)
 brand/source/*.tif
 brand/source/*.exr
+brand/source/planets/
+# JPL SBDB raw query cache (rebuild data/solar with brand/tools/make_small_bodies.py)
+brand/source/sbdb/
+# downloaded catalogues / ephemerides (rebuild with brand/tools/make_stars.py, make_spacecraft.py)
+brand/source/hyg/
+brand/source/horizons/

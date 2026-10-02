@@ -15,8 +15,10 @@ import io, json, os, subprocess, sys, tarfile, time, urllib.request
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 OUT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, '_site'))
 SKIP_ROOT = ('brand/source/', 'brand/blend/', '.github/', 'brand/models/previews/')
-# everything an archived app loads at run time (missing ones are skipped per tag); keep in sync with what the pages fetch
-APP_PATHS = ['open-overwatch.html', 'globe.html', 'README.txt', 'brand/emblem', 'brand/hero', 'brand/sprites',
+# everything an archived app loads at run time (missing ones are skipped per tag); keep in sync with what the pages fetch.
+# solar.html's big data/textures (data/solar, brand/textures/planets, sky_equirect) are NOT copied per version: the page
+# falls back to the site root for them, which keeps each archived version small.
+APP_PATHS = ['open-overwatch.html', 'globe.html', 'solar.html', 'README.txt', 'brand/emblem', 'brand/hero', 'brand/sprites',
              'brand/models', 'brand/textures/night', 'brand/textures/earth_fx_8k.jpg', 'brand/textures/earth_fx_4k.jpg',
              'brand/textures/sky', 'brand/textures/sky_1k', 'brand/social/og-1200x630.png']
 SKIP_VERSION = ('brand/models/previews/', 'brand/sprites/raw/')
@@ -85,6 +87,7 @@ def main():
             'notes': '\n'.join(lines[1:]),
             'map': f'v/{tag}/open-overwatch.html',
             'globe': f'v/{tag}/globe.html' if 'globe.html' in paths else None,
+            'solar': f'v/{tag}/solar.html' if 'solar.html' in paths else None,
         })
         print(f'{tag}: {n} entries ({", ".join(paths)})')
     with open(os.path.join(OUT, 'versions.json'), 'w', encoding='utf-8') as f:

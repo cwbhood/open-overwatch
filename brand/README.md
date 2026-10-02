@@ -24,6 +24,9 @@ Made with Blender 5.2 (headless, scripted), a little Python, and the app itself.
   from NASA Blue Marble clouds + Natural Earth). `tools/globe_shot.mjs` renders globe views headless for look-dev.
 - `textures/sky/` (2048 px) and `textures/sky_1k/` — the globe's star field: NASA SVS Deep Star Maps 2020 as cube faces
   (tools/exr_dump.py in headless Blender decodes `source/starmap_2020_4k.exr`, then tools/make_skybox.py).
+- `textures/planets/` — Solar System view maps (tools/make_planet_textures.py from Solar System Scope, CC BY 4.0, plus the NASA/JPL-Caltech
+  Milky Way); `textures/sky_equirect*.jpg` — the NASA star map as one image for it (tools/make_skybox.py). Data for it lives in `../data/solar/`
+  (tools/make_small_bodies.py, make_stars.py, make_spacecraft.py). Downloaded sources stay in `source/` (gitignored).
 - `blend/` — `emblem.blend`, `globe.blend` (textures load from `textures/`).
 - `textures/` — 8k Earth maps made by `tools/make_textures.py` from `source/`.
 - `source/` — downloaded public-domain Earth data (see Credits).
