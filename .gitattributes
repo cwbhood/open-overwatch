@@ -1,0 +1,13 @@
+# LF everywhere; the Windows launchers need CRLF (the release zip is built on Linux)
+* text=auto eol=lf
+*.bat text eol=crlf
+*.vbs text eol=crlf
+*.png binary
+*.jpg binary
+*.webp binary
+*.glb binary
+*.bin binary
+*.exr binary
+*.mp4 binary
+*.wav binary
+*.ogg binary

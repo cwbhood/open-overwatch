@@ -1,0 +1,24 @@
+# Tests and syntax checks on every push and pull request. No dependencies: Node's own test runner and parser.
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check every module and tool
+        run: |
+          for f in src/*/*.js brand/tools/*.mjs serve.js; do node --check "$f" || exit 1; done
+          python3 -m py_compile serve.py .github/build_site.py brand/tools/*.py
+      - name: Every module a page loads exists
+        run: |
+          for page in open-overwatch.html globe.html solar.html; do
+            grep -o 'src="src/[^"]*"' "$page" | sed 's/src="//; s/"$//' | while read -r f; do test -f "$f" || { echo "$page -> missing $f"; exit 1; }; done
+          done
+      - name: Tests (orbital maths against JPL Horizons, TLE source, geodesy)
+        run: node --test

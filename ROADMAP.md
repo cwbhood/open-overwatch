@@ -14,10 +14,11 @@ programmer would enjoy reading, not three big HTML files.
 - [x] Satellite feed (TLE fetch, mirror, cache, parse) as `src/core/tle.js` (globe and 2D map)
 - [x] 3D globe moved onto modules (`src/globe/`), aircraft dead reckoning shared via `src/core/geo.js`
 - [x] 2D map split into modules (`src/map/`, generated from an AST analysis of the old script), keeping its layer contract; satellites via `src/core/tle.js`
-- [ ] CI: lint-free syntax check + tests on every push (runs only once we publish)
-- [ ] `docs/DATA_SOURCES.md` (every feed: what, licence, refresh, accuracy), honest README with a demo clip
+- [x] CI: syntax check, page→module links, tests on every push (`.github/workflows/ci.yml`; runs once we publish)
+- [x] `docs/DATA_SOURCES.md` (every feed: what, licence, refresh, accuracy)
+- [ ] Honest README with a demo clip (do with Stage 3, once the zoom exists)
 
-Housekeeping to do before publishing: `.gitattributes` (LF everywhere, CRLF for .bat/.vbs) + renormalize; add `src`
+Housekeeping to do before publishing: add `src`
 to `APP_PATHS` in `.github/build_site.py` and to the release zip list (archived versions import modules from `src/`).
 
 ## Stage 2 — the signature: one zoom from street to galaxy
