@@ -1,0 +1,5 @@
+{
+  "type": "module",
+  "private": true,
+  "description": "Browser ES modules for Open Overwatch. This file only tells Node (used by the tests) that src/ is ESM."
+}

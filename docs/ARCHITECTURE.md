@@ -1,0 +1,74 @@
+# Architecture
+
+Open Overwatch is a static site: every view is an HTML page that loads ES modules straight from `src/` — no bundler,
+no framework, no server you have to run (the optional local helper only relays a few feeds that send no CORS headers).
+Third-party libraries come from a CDN through an import map, pinned to exact versions.
+
+```
+index.html            landing page
+open-overwatch.html   2D map (Leaflet)            -> src/map/     (planned)
+globe.html            3D Earth (CesiumJS)         -> src/globe/   (planned)
+solar.html            Solar System -> Local Group (three.js) -> src/solar/
+src/core/             shared, DOM-free, tested: time, frames, orbits, data formats
+test/                 node --test, fixtures from JPL Horizons
+data/solar/           pre-built binary/JSON data (scripts in brand/tools/)
+brand/                textures, models, promo assets and the scripts that make them
+serve.js / serve.py   optional local helper: static files + a locked-down relay
+```
+
+## Conventions
+
+**Units.** Distances in the Solar System are astronomical units (AU); interstellar ones are light-years converted to
+AU (`LY_AU`). Angles are radians inside functions, degrees only in tables and UI. Time is a Julian Date (`jd`, days,
+TT ≈ UTC — the 69 s difference is below anything we draw).
+
+**Frames.** One frame for everything in space: heliocentric **ecliptic J2000** (x toward the March equinox, z toward
+the ecliptic north pole). Equatorial inputs (RA/Dec, star catalogues, galaxies) are rotated once with
+`eqToEcl`. Earth-fixed data (the globe) stays in Cesium's ECEF; the hand-off between the two goes through the Sun
+direction and Earth's IAU rotation, both in `src/core`.
+
+**Vectors.** Core functions write into an `out` object with `x, y, z` (a `THREE.Vector3` or a plain object), so the
+same code runs in Node tests and in the render loop without allocating.
+
+## The core (`src/core/`)
+
+| module | what it does |
+|---|---|
+| `units.js` | constants (AU, light-year, parsec, c), obliquity, `eqToEcl`, `radecToEcl`, galactic axes |
+| `time.js` | Julian Date conversions, a simulation clock (rate, live/paused), UTC formatting |
+| `kepler.js` | Kepler's equation (Newton, robust start for high e), elements → position |
+| `planets.js` | JPL "approximate positions" elements (1800–2050), the Moon (Schlyter + main perturbations), physical data |
+| `rotation.js` | IAU rotation models → body-fixed axes in the ecliptic frame (texture longitude 0 = +x) |
+| `smallbodies.js` | the 15-byte-per-object asteroid format, decoding, comet elements |
+| `assets.js` | fetch with a fallback to the published site (archived versions don't carry big data) |
+| `format.js` | distances, light time, durations, HTML escaping |
+
+Accuracy, checked by the tests against JPL Horizons on 2026-10-02: planets within arcminutes (JPL's own stated
+error for these formulas), main-belt asteroids within ~3×10⁻⁴ AU, the Moon within ~0.3°.
+
+## Data that is built offline
+
+The browser never queries catalogues with millions of rows. Scripts in `brand/tools/` download once (cached in the
+gitignored `brand/source/`), compress and write `data/solar/`:
+
+- `asteroids_a.bin` / `asteroids_b.bin` — all 1.57M SBDB asteroids, 15 bytes each, propagated on the GPU
+- `small_bodies.json` — named objects and comets · `stars.bin` / `stars.json` — HYG v4.1 in ecliptic light-years
+- `spacecraft.json` — JPL Horizons trajectories at fixed steps
+
+Live feeds (satellites, aircraft, quakes, …) are fetched by the page; satellite TLEs come from a copy the site build
+refreshes every 6 hours, so visitors never hit CelesTrak directly.
+
+## Rendering notes (solar)
+
+- One three.js scene in AU with a **logarithmic depth buffer** (near 1e-9 AU, far 1e15 AU): 26 orders of magnitude.
+- The camera rides along with its focus body; model-view matrices are composed in double precision on the CPU, so
+  objects stay steady even 1e11 AU from the origin.
+- 1.57M asteroids: one `Points` draw per file; each vertex solves Kepler's equation in the shader from packed
+  elements (Float32 a, five Uint16 angles/eccentricity, Uint8 class). 165 fps on an RTX 3060.
+- The star map is sampled by direction in a shader (ecliptic → equatorial → RA/Dec), so there are no cube-map
+  orientation conventions to get wrong.
+
+## Testing
+
+`node --test` (from the repo root) — no dependencies. Fixtures in `test/fixtures/` are real JPL Horizons vectors, so a regression in
+the orbital maths shows up as a distance error in AU, not as a vague visual change.
