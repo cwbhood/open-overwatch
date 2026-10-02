@@ -7,7 +7,7 @@ Third-party libraries come from a CDN through an import map, pinned to exact ver
 ```
 index.html            landing page
 open-overwatch.html   2D map (Leaflet)            -> src/map/     (planned)
-globe.html            3D Earth (CesiumJS)         -> src/globe/   (planned)
+globe.html            3D Earth (CesiumJS)         -> src/globe/
 solar.html            Solar System -> Local Group (three.js) -> src/solar/
 src/core/             shared, DOM-free, tested: time, frames, orbits, data formats
 test/                 node --test, fixtures from JPL Horizons
@@ -42,9 +42,20 @@ same code runs in Node tests and in the render loop without allocating.
 | `smallbodies.js` | the 15-byte-per-object asteroid format, decoding, comet elements |
 | `assets.js` | fetch with a fallback to the published site (archived versions don't carry big data) |
 | `format.js` | distances, light time, durations, HTML escaping |
+| `tle.js` | satellite element sets: CelesTrak / site-copy order, 2 h cache, parsing, epochs |
+| `geo.js` | great-circle destination, haversine, dead reckoning for aircraft and ships |
 
 Accuracy, checked by the tests against JPL Horizons on 2026-10-02: planets within arcminutes (JPL's own stated
 error for these formulas), main-belt asteroids within ~3×10⁻⁴ AU, the Moon within ~0.3°.
+
+## The 3D globe (`src/globe/`)
+
+Cesium and satellite.js load as classic scripts (globals); the app is ES modules on top: `env` (DOM, storage, network,
+relay), `viewer` (viewer, camera limits, shared primitive collections, star box), `earth` (imagery, the three shader
+shells, Sun/Moon directions), `layers` (switches + dock), `follow` (follow camera, glTF axis conventions),
+`satellites` (TLEs via core, SGP4 worker, models), `aircraft` (feeds, dead reckoning, models), `quakes`, `ui` (stats,
+band, presets, picking, card, lighting) and `main` (wiring, timers, boot). `state.js` holds the selection and late-bound
+hooks so feature modules never import the UI. `window.OO3D` is the console handle.
 
 ## Data that is built offline
 
