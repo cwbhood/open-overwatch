@@ -23,8 +23,9 @@ QUICK START (Windows)
 WHY THE HELPER
   Most sources allow requests straight from a web page. A few do not (they send no CORS header):
   the ADS-B aggregators (adsb.lol, airplanes.live, adsb.fi), OpenSky, NYC DOT cameras, NOAA NHC
-  and GDELT. The helper serves the page from localhost and relays only those hosts, adding the
-  missing header. It has no dependencies and talks to nothing else. Every public CORS proxy we
+  and the live TeleGeography submarine-cable data, plus NASA FIRMS and Windy for the keyed layers.
+  The helper serves the page from localhost and relays only those hosts, and only for its own pages.
+  It has no dependencies and talks to nothing else. Every public CORS proxy we
   tried is dead or paywalled, which is why it is bundled.
 
   You can also open open-overwatch.html directly as a file: everything except those feeds works,
@@ -48,7 +49,7 @@ OPTIONAL KEYS (Setup tab in the map)
   Windy webcams (webcams anywhere), aisstream.io (global ships), NASA FIRMS (active fires).
 
 CHECKING FEEDS
-  Sources tab -> "Test all feeds" lists every source with ok / blocked / error and the response time.
+  Setup tab -> "Test all feeds" lists every source with ok / blocked / error and the response time.
   The Log tab shows each feed's errors as they happen. The Brief tab (default) summarises what is notable now.
 
 FAIR USE

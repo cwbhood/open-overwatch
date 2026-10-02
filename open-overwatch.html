@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
 <style>
 /* Open Overwatch — a dark ops-room console. Layout: nameplate bar, layer rail left, intel panel right, full-bleed map.
    Phones fold the rails into a bottom sheet. One committed dark look, film grain and vignette over everything. */
@@ -328,8 +328,8 @@ details.setup[open] > summary::before{transform:rotate(90deg)}
   .brand .tag,.clocks{display:none}
   .stats{margin-left:0;flex-wrap:wrap}
   #search{flex:1 1 100%;order:5}
-  #audioPop{right:8px;left:8px;width:auto}
-  #rail,#panel{position:absolute;left:0;right:0;bottom:0;width:auto;height:min(62vh,560px);border:0;border-top:1px solid var(--line-strong);border-radius:10px 10px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  #audioPop{right:8px;left:8px;width:auto;top:calc(100% + 6px)} /* --top-h is auto here, so the desktop calc() would be invalid */
+  #rail,#panel{position:absolute;left:0;right:0;bottom:0;width:auto;height:min(62vh,560px);z-index:1001;border:0;border-top:1px solid var(--line-strong);border-radius:10px 10px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
   #rail.hidden,#panel.hidden{display:none}
   #mobilebar{display:flex;flex:0 0 auto;border-top:1px solid var(--line);background:var(--panel-solid);padding-bottom:env(safe-area-inset-bottom,0px);z-index:1300}
   #mobilebar button{flex:1;background:none;border:0;padding:10px 4px;font-family:var(--font-display);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:12.5px;color:var(--ink-dim)}
@@ -411,13 +411,20 @@ details.setup[open] > summary::before{transform:rotate(90deg)}
   <div class="enter"><button class="btn vibe" id="enterAudio">▶ Enter with audio</button><button class="btn" id="enterSilent">Enter silent</button><span class="hint">Audio is optional and stays off until you say so.</span></div>
 </div></div>
 <div id="toast" role="status"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js" integrity="sha384-e6V1JVpc+kVNTxT0gEOla7yL4c92Romsw7itPoipfzHbEjzUwPhTv6oeVDMHHzqT" crossorigin="anonymous"></script>
 <script>
 const COUNTRY = {"AD":[42.55,1.6,"Andorra"],"AE":[23.42,53.85,"United Arab Emirates"],"AF":[33.94,67.71,"Afghanistan"],"AG":[17.06,-61.8,"Antigua and Barbuda"],"AI":[18.22,-63.07,"Anguilla"],"AL":[41.15,20.17,"Albania"],"AM":[40.07,45.04,"Armenia"],"AN":[12.23,-69.06,"Netherlands Antilles"],"AO":[-11.2,17.87,"Angola"],"AQ":[-75.25,-0.07,"Antarctica"],"AR":[-38.42,-63.62,"Argentina"],"AS":[-14.27,-170.13,"American Samoa"],"AT":[47.52,14.55,"Austria"],"AU":[-25.27,133.78,"Australia"],"AW":[12.52,-69.97,"Aruba"],"AZ":[40.14,47.58,"Azerbaijan"],"BA":[43.92,17.68,"Bosnia and Herzegovina"],"BB":[13.19,-59.54,"Barbados"],"BD":[23.68,90.36,"Bangladesh"],"BE":[50.5,4.47,"Belgium"],"BF":[12.24,-1.56,"Burkina Faso"],"BG":[42.73,25.49,"Bulgaria"],"BH":[25.93,50.64,"Bahrain"],"BI":[-3.37,29.92,"Burundi"],"BJ":[9.31,2.32,"Benin"],"BM":[32.32,-64.76,"Bermuda"],"BN":[4.54,114.73,"Brunei"],"BO":[-16.29,-63.59,"Bolivia"],"BR":[-14.24,-51.93,"Brazil"],"BS":[25.03,-77.4,"Bahamas"],"BT":[27.51,90.43,"Bhutan"],"BV":[-54.42,3.41,"Bouvet Island"],"BW":[-22.33,24.68,"Botswana"],"BY":[53.71,27.95,"Belarus"],"BZ":[17.19,-88.5,"Belize"],"CA":[56.13,-106.35,"Canada"],"CC":[-12.16,96.87,"Cocos Islands"],"CD":[-4.04,21.76,"Congo"],"CF":[6.61,20.94,"Central African Republic"],"CG":[-0.23,15.83,"Congo"],"CH":[46.82,8.23,"Switzerland"],"CI":[7.54,-5.55,"Côte d'Ivoire"],"CK":[-21.24,-159.78,"Cook Islands"],"CL":[-35.68,-71.54,"Chile"],"CM":[7.37,12.35,"Cameroon"],"CN":[35.86,104.2,"China"],"CO":[4.57,-74.3,"Colombia"],"CR":[9.75,-83.75,"Costa Rica"],"CU":[21.52,-77.78,"Cuba"],"CV":[16.0,-24.01,"Cape Verde"],"CX":[-10.45,105.69,"Christmas Island"],"CY":[35.13,33.43,"Cyprus"],"CZ":[49.82,15.47,"Czech Republic"],"DE":[51.17,10.45,"Germany"],"DJ":[11.83,42.59,"Djibouti"],"DK":[56.26,9.5,"Denmark"],"DM":[15.41,-61.37,"Dominica"],"DO":[18.74,-70.16,"Dominican Republic"],"DZ":[28.03,1.66,"Algeria"],"EC":[-1.83,-78.18,"Ecuador"],"EE":[58.6,25.01,"Estonia"],"EG":[26.82,30.8,"Egypt"],"EH":[24.22,-12.89,"Western Sahara"],"ER":[15.18,39.78,"Eritrea"],"ES":[40.46,-3.75,"Spain"],"ET":[9.14,40.49,"Ethiopia"],"FI":[61.92,25.75,"Finland"],"FJ":[-16.58,179.41,"Fiji"],"FK":[-51.8,-59.52,"Falkland Islands"],"FM":[7.43,150.55,"Micronesia"],"FO":[61.89,-6.91,"Faroe Islands"],"FR":[46.23,2.21,"France"],"GA":[-0.8,11.61,"Gabon"],"GB":[55.38,-3.44,"United Kingdom"],"GD":[12.26,-61.6,"Grenada"],"GE":[42.32,43.36,"Georgia"],"GF":[3.93,-53.13,"French Guiana"],"GG":[49.47,-2.59,"Guernsey"],"GH":[7.95,-1.02,"Ghana"],"GI":[36.14,-5.35,"Gibraltar"],"GL":[71.71,-42.6,"Greenland"],"GM":[13.44,-15.31,"Gambia"],"GN":[9.95,-9.7,"Guinea"],"GP":[17.0,-62.07,"Guadeloupe"],"GQ":[1.65,10.27,"Equatorial Guinea"],"GR":[39.07,21.82,"Greece"],"GS":[-54.43,-36.59,"South Georgia and the South Sandwich Islands"],"GT":[15.78,-90.23,"Guatemala"],"GU":[13.44,144.79,"Guam"],"GW":[11.8,-15.18,"Guinea-Bissau"],"GY":[4.86,-58.93,"Guyana"],"GZ":[31.35,34.31,"Gaza Strip"],"HK":[22.4,114.11,"Hong Kong"],"HM":[-53.08,73.5,"Heard Island and McDonald Islands"],"HN":[15.2,-86.24,"Honduras"],"HR":[45.1,15.2,"Croatia"],"HT":[18.97,-72.29,"Haiti"],"HU":[47.16,19.5,"Hungary"],"ID":[-0.79,113.92,"Indonesia"],"IE":[53.41,-8.24,"Ireland"],"IL":[31.05,34.85,"Israel"],"IM":[54.24,-4.55,"Isle of Man"],"IN":[20.59,78.96,"India"],"IO":[-6.34,71.88,"British Indian Ocean Territory"],"IQ":[33.22,43.68,"Iraq"],"IR":[32.43,53.69,"Iran"],"IS":[64.96,-19.02,"Iceland"],"IT":[41.87,12.57,"Italy"],"JE":[49.21,-2.13,"Jersey"],"JM":[18.11,-77.3,"Jamaica"],"JO":[30.59,36.24,"Jordan"],"JP":[36.2,138.25,"Japan"],"KE":[-0.02,37.91,"Kenya"],"KG":[41.2,74.77,"Kyrgyzstan"],"KH":[12.57,104.99,"Cambodia"],"KI":[-3.37,-168.73,"Kiribati"],"KM":[-11.88,43.87,"Comoros"],"KN":[17.36,-62.78,"Saint Kitts and Nevis"],"KP":[40.34,127.51,"North Korea"],"KR":[35.91,127.77,"South Korea"],"KW":[29.31,47.48,"Kuwait"],"KY":[19.51,-80.57,"Cayman Islands"],"KZ":[48.02,66.92,"Kazakhstan"],"LA":[19.86,102.5,"Laos"],"LB":[33.85,35.86,"Lebanon"],"LC":[13.91,-60.98,"Saint Lucia"],"LI":[47.17,9.56,"Liechtenstein"],"LK":[7.87,80.77,"Sri Lanka"],"LR":[6.43,-9.43,"Liberia"],"LS":[-29.61,28.23,"Lesotho"],"LT":[55.17,23.88,"Lithuania"],"LU":[49.82,6.13,"Luxembourg"],"LV":[56.88,24.6,"Latvia"],"LY":[26.34,17.23,"Libya"],"MA":[31.79,-7.09,"Morocco"],"MC":[43.75,7.41,"Monaco"],"MD":[47.41,28.37,"Moldova"],"ME":[42.71,19.37,"Montenegro"],"MG":[-18.77,46.87,"Madagascar"],"MH":[7.13,171.18,"Marshall Islands"],"MK":[41.61,21.75,"Macedonia"],"ML":[17.57,-4.0,"Mali"],"MM":[21.91,95.96,"Myanmar"],"MN":[46.86,103.85,"Mongolia"],"MO":[22.2,113.54,"Macau"],"MP":[17.33,145.38,"Northern Mariana Islands"],"MQ":[14.64,-61.02,"Martinique"],"MR":[21.01,-10.94,"Mauritania"],"MS":[16.74,-62.19,"Montserrat"],"MT":[35.94,14.38,"Malta"],"MU":[-20.35,57.55,"Mauritius"],"MV":[3.2,73.22,"Maldives"],"MW":[-13.25,34.3,"Malawi"],"MX":[23.63,-102.55,"Mexico"],"MY":[4.21,101.98,"Malaysia"],"MZ":[-18.67,35.53,"Mozambique"],"NA":[-22.96,18.49,"Namibia"],"NC":[-20.9,165.62,"New Caledonia"],"NE":[17.61,8.08,"Niger"],"NF":[-29.04,167.95,"Norfolk Island"],"NG":[9.08,8.68,"Nigeria"],"NI":[12.87,-85.21,"Nicaragua"],"NL":[52.13,5.29,"Netherlands"],"NO":[60.47,8.47,"Norway"],"NP":[28.39,84.12,"Nepal"],"NR":[-0.52,166.93,"Nauru"],"NU":[-19.05,-169.87,"Niue"],"NZ":[-40.9,174.89,"New Zealand"],"OM":[21.51,55.92,"Oman"],"PA":[8.54,-80.78,"Panama"],"PE":[-9.19,-75.02,"Peru"],"PF":[-17.68,-149.41,"French Polynesia"],"PG":[-6.31,143.96,"Papua New Guinea"],"PH":[12.88,121.77,"Philippines"],"PK":[30.38,69.35,"Pakistan"],"PL":[51.92,19.15,"Poland"],"PM":[46.94,-56.27,"Saint Pierre and Miquelon"],"PN":[-24.7,-127.44,"Pitcairn Islands"],"PR":[18.22,-66.59,"Puerto Rico"],"PS":[31.95,35.23,"Palestinian Territories"],"PT":[39.4,-8.22,"Portugal"],"PW":[7.51,134.58,"Palau"],"PY":[-23.44,-58.44,"Paraguay"],"QA":[25.35,51.18,"Qatar"],"RE":[-21.12,55.54,"Réunion"],"RO":[45.94,24.97,"Romania"],"RS":[44.02,21.01,"Serbia"],"RU":[61.52,105.32,"Russia"],"RW":[-1.94,29.87,"Rwanda"],"SA":[23.89,45.08,"Saudi Arabia"],"SB":[-9.65,160.16,"Solomon Islands"],"SC":[-4.68,55.49,"Seychelles"],"SD":[12.86,30.22,"Sudan"],"SE":[60.13,18.64,"Sweden"],"SG":[1.35,103.82,"Singapore"],"SH":[-24.14,-10.03,"Saint Helena"],"SI":[46.15,15.0,"Slovenia"],"SJ":[77.55,23.67,"Svalbard and Jan Mayen"],"SK":[48.67,19.7,"Slovakia"],"SL":[8.46,-11.78,"Sierra Leone"],"SM":[43.94,12.46,"San Marino"],"SN":[14.5,-14.45,"Senegal"],"SO":[5.15,46.2,"Somalia"],"SR":[3.92,-56.03,"Suriname"],"ST":[0.19,6.61,"São Tomé and Príncipe"],"SV":[13.79,-88.9,"El Salvador"],"SY":[34.8,39.0,"Syria"],"SZ":[-26.52,31.47,"Swaziland"],"TC":[21.69,-71.8,"Turks and Caicos Islands"],"TD":[15.45,18.73,"Chad"],"TF":[-49.28,69.35,"French Southern Territories"],"TG":[8.62,0.82,"Togo"],"TH":[15.87,100.99,"Thailand"],"TJ":[38.86,71.28,"Tajikistan"],"TK":[-8.97,-171.86,"Tokelau"],"TL":[-8.87,125.73,"Timor-Leste"],"TM":[38.97,59.56,"Turkmenistan"],"TN":[33.89,9.54,"Tunisia"],"TO":[-21.18,-175.2,"Tonga"],"TR":[38.96,35.24,"Turkey"],"TT":[10.69,-61.22,"Trinidad and Tobago"],"TV":[-7.11,177.65,"Tuvalu"],"TW":[23.7,120.96,"Taiwan"],"TZ":[-6.37,34.89,"Tanzania"],"UA":[48.38,31.17,"Ukraine"],"UG":[1.37,32.29,"Uganda"],"US":[37.09,-95.71,"United States"],"UY":[-32.52,-55.77,"Uruguay"],"UZ":[41.38,64.59,"Uzbekistan"],"VA":[41.9,12.45,"Vatican City"],"VC":[12.98,-61.29,"Saint Vincent and the Grenadines"],"VE":[6.42,-66.59,"Venezuela"],"VG":[18.42,-64.64,"British Virgin Islands"],"VI":[18.34,-64.9,"U.S. Virgin Islands"],"VN":[14.06,108.28,"Vietnam"],"VU":[-15.38,166.96,"Vanuatu"],"WF":[-13.77,-177.16,"Wallis and Futuna"],"WS":[-13.76,-172.1,"Samoa"],"XK":[42.6,20.9,"Kosovo"],"YE":[15.55,48.52,"Yemen"],"YT":[-12.83,45.17,"Mayotte"],"ZA":[-30.56,22.94,"South Africa"],"ZM":[-13.13,27.85,"Zambia"],"ZW":[-19.02,29.15,"Zimbabwe"],"SS":[7.86,29.69,"South Sudan"],"CW":[12.17,-68.99,"Curaçao"],"SX":[18.04,-63.05,"Sint Maarten"]};
 const COUNTRY_ALIAS = {"burma":"MM","myanmar":"MM","cote d ivoire":"CI","ivory coast":"CI","czechia":"CZ","czech republic":"CZ","macedonia":"MK","north macedonia":"MK","swaziland":"SZ","eswatini":"SZ","cabo verde":"CV","cape verde":"CV","congo":"CG","republic of congo":"CG","republic of the congo":"CG","congo brazzaville":"CG","democratic republic of the congo":"CD","democratic republic of congo":"CD","congo kinshasa":"CD","drc":"CD","dr congo":"CD","laos":"LA","lao people s democratic republic":"LA","syria":"SY","syrian arab republic":"SY","iran":"IR","islamic republic of iran":"IR","vietnam":"VN","viet nam":"VN","moldova":"MD","republic of moldova":"MD","tanzania":"TZ","united republic of tanzania":"TZ","bolivia":"BO","venezuela":"VE","brunei":"BN","brunei darussalam":"BN","macau":"MO","macao":"MO","west bank":"PS","gaza strip":"PS","gaza":"PS","palestine":"PS","palestinian territory":"PS","palestinian territories":"PS","state of palestine":"PS","holy see":"VA","vatican city":"VA","vatican":"VA","timor leste":"TL","east timor":"TL","micronesia":"FM","federated states of micronesia":"FM","bahamas":"BS","gambia":"GM","united states":"US","united states of america":"US","usa":"US","us":"US","america":"US","united kingdom":"GB","uk":"GB","great britain":"GB","britain":"GB","england":"GB","scotland":"GB","wales":"GB","northern ireland":"GB","south korea":"KR","korea south":"KR","republic of korea":"KR","korea":"KR","north korea":"KP","korea north":"KP","democratic people s republic of korea":"KP","taiwan":"TW","republic of china":"TW","hong kong":"HK","uae":"AE","united arab emirates":"AE","south sudan":"SS","kosovo":"XK","russia":"RU","russian federation":"RU","turkey":"TR","turkiye":"TR","serbia":"RS","montenegro":"ME","bosnia and herzegovina":"BA","bosnia herzegovina":"BA","bosnia":"BA","libya":"LY","kyrgyzstan":"KG","kyrgyz republic":"KG","slovakia":"SK","slovak republic":"SK","sao tome and principe":"ST","saint vincent and the grenadines":"VC","st vincent and the grenadines":"VC","saint kitts and nevis":"KN","st kitts and nevis":"KN","saint lucia":"LC","st lucia":"LC","trinidad and tobago":"TT","antigua and barbuda":"AG","netherlands":"NL","the netherlands":"NL","holland":"NL","curacao":"CW","sint maarten":"SX","reunion":"RE","falkland islands":"FK","faroe islands":"FO","isle of man":"IM","virgin islands":"VI","us virgin islands":"VI","british virgin islands":"VG","cayman islands":"KY","turks and caicos islands":"TC","marshall islands":"MH","solomon islands":"SB","cook islands":"CK","northern mariana islands":"MP","french polynesia":"PF","new caledonia":"NC","papua new guinea":"PG","equatorial guinea":"GQ","guinea bissau":"GW","central african republic":"CF","dominican republic":"DO","el salvador":"SV","costa rica":"CR","sri lanka":"LK","saudi arabia":"SA","south africa":"ZA","new zealand":"NZ","burkina faso":"BF","sierra leone":"SL","cabo verde islands":"CV","western sahara":"EH","french guiana":"GF","wallis and futuna":"WF","saint helena":"SH","st helena":"SH","saint pierre and miquelon":"PM","american samoa":"AS","aland islands":"AX","svalbard":"SJ","svalbard and jan mayen":"SJ","bouvet island":"BV","heard island and mcdonald islands":"HM","norfolk island":"NF","christmas island":"CX","cocos islands":"CC","pitcairn islands":"PN","tokelau":"TK","niue":"NU","tuvalu":"TV","nauru":"NR","vanuatu":"VU","samoa":"WS","tonga":"TO","fiji":"FJ","kiribati":"KI","palau":"PW","guam":"GU","puerto rico":"PR","greenland":"GL","bermuda":"BM","gibraltar":"GI","jersey":"JE","guernsey":"GG","anguilla":"AI","montserrat":"MS","aruba":"AW","martinique":"MQ","guadeloupe":"GP","mayotte":"YT","saint barthelemy":"BL","saint martin":"MF","antarctica":"AQ"};
 'use strict';
-const OW_VERSION = '0.7.2';
+const OW_VERSION = '0.8';
+// boot guard: a top-level exception (or Leaflet missing from the CDN) stops INIT, so say why on the splash instead of
+// leaving it on "booting"; window.OW is only set once INIT has finished
+window.addEventListener('error', e => {
+  const b = document.getElementById('boot'); if (window.OW || !b) return;
+  const d = document.createElement('div'); d.innerHTML = '<span>startup failed</span><span class="bad"></span>';
+  d.lastChild.textContent = typeof L === 'undefined' ? 'the map library (Leaflet) did not load from cdnjs. Check the internet connection, then reload.' : (e.message || 'script error'); b.appendChild(d);
+});
 /* ============================================================ helpers */
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
@@ -448,6 +455,7 @@ function hexA(hex, a) { const h = hex.replace('#', ''); const n = parseInt(h.len
 function safeHost(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } }
 function isHttp(u) { return /^https?:\/\//i.test(String(u || '')); }
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+const PHONE = matchMedia('(max-width:900px)'); // the CSS phone layout (bottom sheets); keep in sync with the @media rules
 
 /* Named regions for "near …" / "over the …" phrasing: nearest reference point wins */
 const REGIONS = [['North Atlantic', 45, -35], ['Mid-Atlantic', 25, -45], ['South Atlantic', -25, -15], ['North Pacific', 40, -160], ['Central Pacific', 10, -160], ['South Pacific', -25, -140], ['Eastern Pacific', 15, -110], ['Indian Ocean', -15, 75], ['Arabian Sea', 15, 63], ['Bay of Bengal', 13, 88], ['Southern Ocean', -62, 20], ['Arctic Ocean', 82, 0], ['Antarctica', -80, 60],
@@ -498,22 +506,31 @@ const Log = {
 /* ============================================================ network + relay
    Some sources refuse browser requests (no CORS headers). When the page is served by the bundled
    helper (serve.py / serve.js) those go through its /proxy route; otherwise they are reported as blocked. */
-const NEEDS_RELAY = ['api.adsb.lol', 'api.airplanes.live', 'opendata.adsb.fi', 'api.adsb.one', 'www.nhc.noaa.gov', 'webcams.nyctmc.org', 'opensky-network.org', 'api.gdeltproject.org', 'firms.modaps.eosdis.nasa.gov', 'api.windy.com'];
+const NEEDS_RELAY = ['api.adsb.lol', 'api.airplanes.live', 'opendata.adsb.fi', 'api.adsb.one', 'www.nhc.noaa.gov', 'webcams.nyctmc.org', 'opensky-network.org', 'firms.modaps.eosdis.nasa.gov', 'api.windy.com', 'www.submarinecablemap.com'];
 const Relay = {
   local: /^https?:$/.test(location.protocol) && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname),
-  custom: Store.get('proxy', ''), available: false, checked: false,
-  base() { return this.custom || (this.local ? location.origin + '/proxy?url=' : ''); },
+  custom: Store.get('proxy', ''), customOk: null, available: false, checked: false, // customOk: null = not tested yet
+  base() { return (this.custom && this.customOk !== false) ? this.custom : (this.local ? location.origin + '/proxy?url=' : ''); },
   needs(url) { try { return NEEDS_RELAY.includes(new URL(url).hostname); } catch (e) { return false; } },
-  wrap(url) { const b = this.base(); if (!b) return null; return b.includes('{url}') ? b.replace('{url}', encodeURIComponent(url)) : b + encodeURIComponent(url); },
-  async check() {
-    this.checked = true;
-    if (this.custom) { this.available = true; return true; }
+  wrap(url, b = this.base()) { if (!b) return null; return b.includes('{url}') ? b.replace('{url}', encodeURIComponent(url)) : b + encodeURIComponent(url); },
+  async check() { // a custom relay is test-fetched with one small file; if it fails, the local helper (if any) takes over
+    this.checked = true; this.customOk = null;
+    if (this.custom) {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 12000);
+      try { const r = await fetch(this.wrap('https://www.nhc.noaa.gov/CurrentStorms.json', this.custom), { signal: ctl.signal, cache: 'no-store' }); this.customOk = r.ok; }
+      catch (e) { this.customOk = false; } finally { clearTimeout(t); }
+      if (this.customOk) { this.available = true; return true; }
+    }
     if (!this.local) { this.available = false; return false; }
     try { const r = await fetch(location.origin + '/proxy?ping=1', { cache: 'no-store' }); this.available = r.ok && (await r.text()).trim() === 'ok'; }
     catch (e) { this.available = false; }
     return this.available;
   },
-  status() { return this.available ? (this.local ? 'helper running' : 'custom relay set') : (this.local ? 'helper not answering' : 'no helper — open the page through serve.py / serve.js / the .bat file'); },
+  usingCustom() { return !!(this.custom && this.customOk); },
+  status() {
+    if (this.custom && this.customOk !== false) return this.customOk ? 'custom relay answering' : 'custom relay set (not tested yet)';
+    return (this.custom ? 'custom relay not answering · ' : '') + (this.available ? 'local helper running' : this.local ? 'helper not answering' : 'no helper — open the page through serve.py / serve.js / the .bat file');
+  },
 };
 const Net = {
   queues: {},
@@ -547,15 +564,20 @@ function tickClock() { const d = new Date(); $('#clockUtc').textContent = d.toIS
 setInterval(tickClock, 1000); tickClock();
 
 /* ============================================================ map */
-const savedView = Store.get('view', { lat: 34, lon: -20, z: 3 });
+const savedView = (v => v && [v.lat, v.lon, v.z].every(Number.isFinite) && Math.abs(v.lat) <= 85 ? v : { lat: 34, lon: -20, z: 3 })(Store.get('view', null));
 const map = L.map('map', { zoomControl: true, worldCopyJump: true, preferCanvas: true, minZoom: 2, maxZoom: 19, zoomSnap: 0.5, wheelPxPerZoomLevel: 90 })
   .setView([savedView.lat, savedView.lon], savedView.z);
 L.control.scale({ imperial: true, metric: true, position: 'bottomleft' }).addTo(map);
 map.on('moveend', debounce(() => { const c = map.getCenter(); Store.set('view', { lat: c.lat, lon: c.lng, z: map.getZoom() }); }, 400));
 const vecRenderer = L.canvas({ padding: 0.3 });
 
-const imgDate = (() => { const d = new Date(Date.now() - 36 * 3600e3); return d.toISOString().slice(0, 10); })();
+const gibsDate = () => new Date(Date.now() - 36 * 3600e3).toISOString().slice(0, 10); // newest complete GIBS day
+let imgDate = gibsDate();
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+const gibsBasemaps = d => ({ // dated NASA layers; rebuilt when the day rolls over (see below) so a long-open tab stays current
+  viirs: { name: `NASA VIIRS true color · ${d}`, layers: [[`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${d}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`, { maxNativeZoom: 9, maxZoom: 13, attribution: 'NASA GIBS / Worldview (VIIRS SNPP)' }], [ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 13, opacity: .7 }]] },
+  night: { name: `NASA night lights · ${d}`, layers: [[`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_DayNightBand_At_Sensor_Radiance/default/${d}/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png`, { maxNativeZoom: 8, maxZoom: 13, attribution: 'NASA GIBS / Worldview (VIIRS DNB)' }], [ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 13, opacity: .6 }]] },
+});
 const BASEMAPS = { // no API keys anywhere (CARTO's free tiles started demanding one)
   esridark: { name: 'Dark gray (Esri)', layers: [[ESRI + 'Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 16, maxZoom: 19, attribution: 'Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }], [ESRI + 'Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 16, maxZoom: 19, opacity: .8 }]] },
   osmdark: { name: 'Dark streets (OSM, inverted)', layers: [['https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, className: 'tiles-invert', attribution: '&copy; OpenStreetMap contributors' }]] },
@@ -563,8 +585,7 @@ const BASEMAPS = { // no API keys anywhere (CARTO's free tiles started demanding
   osm: { name: 'Streets (OpenStreetMap)', layers: [['https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }]] },
   topo: { name: 'Terrain (OpenTopoMap)', layers: [['https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxZoom: 17, attribution: '&copy; OpenStreetMap contributors, SRTM · OpenTopoMap (CC-BY-SA)' }]] },
   esritopo: { name: 'Topographic (Esri)', layers: [[ESRI + 'World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Esri, HERE, Garmin, USGS, NGA, &copy; OpenStreetMap contributors' }]] },
-  viirs: { name: `NASA VIIRS true color · ${imgDate}`, layers: [[`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${imgDate}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`, { maxNativeZoom: 9, maxZoom: 13, attribution: 'NASA GIBS / Worldview (VIIRS SNPP)' }], [ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 13, opacity: .7 }]] },
-  night: { name: `NASA night lights · ${imgDate}`, layers: [[`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_DayNightBand_At_Sensor_Radiance/default/${imgDate}/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png`, { maxNativeZoom: 8, maxZoom: 13, attribution: 'NASA GIBS / Worldview (VIIRS DNB)' }], [ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 13, opacity: .6 }]] },
+  ...gibsBasemaps(imgDate),
 };
 let baseLayer = null;
 function setBasemap(id) {
@@ -574,6 +595,11 @@ function setBasemap(id) {
   Store.set('basemap', id); $('#basemap').value = id;
 }
 (function initBasemapSelect() { const s = $('#basemap'); for (const [id, b] of Object.entries(BASEMAPS)) { const o = document.createElement('option'); o.value = id; o.textContent = b.name; s.appendChild(o); } s.addEventListener('change', () => setBasemap(s.value)); setBasemap(Store.get('basemap', 'esridark')); })();
+setInterval(() => { // day rollover: re-date the NASA layers, their menu labels and, if one is showing, the tiles
+  const d = gibsDate(); if (d === imgDate) return; imgDate = d; Object.assign(BASEMAPS, gibsBasemaps(d));
+  for (const o of $('#basemap').options) if (BASEMAPS[o.value]) o.textContent = BASEMAPS[o.value].name;
+  if (['viirs', 'night'].includes($('#basemap').value)) setBasemap($('#basemap').value);
+}, 3600e3);
 
 /* ============================================================ sun + terminator */
 function sunPosition(date) {
@@ -613,12 +639,15 @@ const Glyphs = L.Layer.extend({
   onRemove(m) { L.DomUtil.remove(this._canvas); m.off('moveend zoomend resize viewreset', this._reset, this); },
   _reset() {
     const m = this._map, size = m.getSize(), dpr = Math.min(2, window.devicePixelRatio || 1), c = this._canvas;
-    c.width = size.x * dpr; c.height = size.y * dpr; c.style.width = size.x + 'px'; c.style.height = size.y + 'px'; c.style.display = '';
-    this._dpr = dpr; L.DomUtil.setPosition(c, m.containerPointToLayerPoint([0, 0])); this.draw();
+    if (c.width !== size.x * dpr || c.height !== size.y * dpr) { c.width = size.x * dpr; c.height = size.y * dpr; c.style.width = size.x + 'px'; c.style.height = size.y + 'px'; } // reallocate only on a real size change
+    c.style.display = ''; this._dpr = dpr; this.draw();
   },
-  hitTest(pt) { let best = null, bd = 14; const h = this._hits; for (let i = h.length - 1; i >= 0; i--) { const x = h[i]; const d = Math.hypot(x.x - pt.x, x.y - pt.y); if (d < bd + x.r) { bd = d; best = x; } } return best; },
+  // the cursor inside a glyph beats being near one; among glyphs it is inside, the closest centre wins (ties go to the
+  // top-most, which is scanned first); otherwise the nearest edge within 14 px
+  hitTest(pt) { let best = null, bs = Infinity; const h = this._hits; for (let i = h.length - 1; i >= 0; i--) { const x = h[i]; const d = Math.hypot(x.x - pt.x, x.y - pt.y); if (d >= x.r + 14) continue; const s = d <= x.r ? d : 1e4 + d - x.r; if (s < bs) { bs = s; best = x; } } return best; },
   draw() {
     const m = this._map; if (!m || !this._canvas) return;
+    L.DomUtil.setPosition(this._canvas, m.containerPointToLayerPoint([0, 0])); // the pane moves during a drag; we paint in container coords
     const ctx = this._ctx, dpr = this._dpr || 1, size = m.getSize(), z = m.getZoom(), now = Date.now();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, size.x, size.y);
     const hits = this._hits = [];
@@ -634,7 +663,8 @@ const Glyphs = L.Layer.extend({
       const s = Points.sets[id]; if (!s.items.length || !Layers.on(s.layerId) || z < s.minZoom) continue;
       for (const it of s.items) {
         for (const p of toPt(it.lat, it.lon)) {
-          const sel = Sel.obj === it.obj; const r = typeof it.r === 'function' ? it.r(z) : it.r;
+          const sel = Sel.obj === it.obj || (Sel.id != null && it.kind === Sel.kind && it.obj != null && (it.obj.id ?? it.obj.hex) === Sel.id); // by id too: feeds rebuild their objects each poll
+          const r = typeof it.r === 'function' ? it.r(z) : it.r;
           ctx.globalAlpha = it.alpha ?? .85;
           if (it.shape === 'tri') { ctx.beginPath(); ctx.moveTo(p.x, p.y - r - 1); ctx.lineTo(p.x + r, p.y + r * .7); ctx.lineTo(p.x - r, p.y + r * .7); ctx.closePath(); ctx.fillStyle = hexA(it.color, .5); ctx.fill(); ctx.strokeStyle = it.color; ctx.lineWidth = 1.2; ctx.stroke(); }
           else if (it.shape === 'sq') { ctx.fillStyle = it.color; ctx.fillRect(p.x - r, p.y - r, r * 2, r * 2); }
@@ -664,9 +694,12 @@ const Glyphs = L.Layer.extend({
       }
     }
     // ---- ships: glyphs from zoom 5, one cluster bubble per source below that
+    const SHIP_LAYERS = { Digitraffic: 'ships_fi', 'aisstream.io': 'ships_ws' }; // ship src -> the layer that owns it
+    const shipOn = s => !SHIP_LAYERS[s.src] || Layers.on(SHIP_LAYERS[s.src]);
     if (Dyn.ships.size && Layers.on('ships_fi') || Dyn.ships.size && Layers.on('ships_ws')) {
       if (z >= 5) {
         for (const s of Dyn.ships.values()) {
+          if (!shipOn(s)) continue;
           for (const p of toPt(s.lat, s.lon)) {
             const sel = Sel.kind === 'ship' && Sel.id === s.id;
             const hd = (s.heading != null && s.heading < 360) ? s.heading : (s.cog || 0);
@@ -677,12 +710,13 @@ const Glyphs = L.Layer.extend({
           }
         }
       } else {
-        const groups = {}; for (const s of Dyn.ships.values()) { const g = groups[s.src] || (groups[s.src] = { n: 0, lat: 0, lon: 0 }); g.n++; g.lat += s.lat; g.lon += s.lon; }
-        for (const [src, g] of Object.entries(groups)) { const lat = g.lat / g.n, lon = g.lon / g.n; for (const p of toPt(lat, lon)) { ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI * 2); ctx.fillStyle = hexA(C.ship, .25); ctx.fill(); ctx.strokeStyle = C.ship; ctx.lineWidth = 1.5; ctx.stroke(); label(p.x, p.y, `${fmt.n(g.n)} ships · zoom in`, hexA(C.ship, .95)); hits.push({ x: p.x, y: p.y, r: 10, kind: 'cluster', obj: { lat, lon, z: 6, text: `${g.n} vessels from ${src}` }, tip: `${g.n} vessels · click to zoom` }); } }
+        // the bubble sits on the source's busiest 5° cell: the mean of a worldwide feed can land on empty ocean or land
+        const groups = {}; for (const s of Dyn.ships.values()) { if (!shipOn(s)) continue; const g = groups[s.src] || (groups[s.src] = { n: 0, cells: new Map() }); g.n++; const k = Math.floor(s.lat / 5) * 1000 + Math.floor(s.lon / 5); const c = g.cells.get(k) || { n: 0, lat: 0, lon: 0 }; c.n++; c.lat += s.lat; c.lon += s.lon; g.cells.set(k, c); }
+        for (const [src, g] of Object.entries(groups)) { let c = null; for (const x of g.cells.values()) if (!c || x.n > c.n) c = x; const lat = c.lat / c.n, lon = c.lon / c.n; for (const p of toPt(lat, lon)) { ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI * 2); ctx.fillStyle = hexA(C.ship, .25); ctx.fill(); ctx.strokeStyle = C.ship; ctx.lineWidth = 1.5; ctx.stroke(); label(p.x, p.y, `${fmt.n(g.n)} ships · zoom in`, hexA(C.ship, .95)); hits.push({ x: p.x, y: p.y, r: 10, kind: 'cluster', obj: { lat, lon, z: 6, text: `${g.n} vessels from ${src}` }, tip: `${g.n} vessels · click to zoom` }); } }
       }
     }
     // ---- balloons
-    if (Dyn.balloons.size && z >= 4) {
+    if (Dyn.balloons.size && z >= 4 && Layers.on('balloons')) {
       for (const s of Dyn.balloons.values()) {
         for (const p of toPt(s.lat, s.lon)) {
           const sel = Sel.kind === 'balloon' && Sel.id === s.id;
@@ -697,8 +731,12 @@ const Glyphs = L.Layer.extend({
     if (Dyn.air.size) {
       const size0 = z >= 9 ? 9 : z >= 6 ? 7 : 5.5;
       const labelsOn = Layers.opt('air_labels'); const cands = [];
+      // draw only what an enabled layer owns (ingest tags each record with the feeds that saw it); a disable() purge can
+      // race an in-flight fetch that re-adds the aircraft. Search hits, unknown tags and the selection always show.
+      const AIR_TAGS = { local: 'air_local', mil: 'air_mil', sqk: 'air_emg', opensky: 'air_opensky' };
+      const airOn = a => { if ((Sel.kind === 'air' && Sel.id === a.hex) || (a.emerg && Layers.on('air_emg')) || !a.tags) return true; for (const t of a.tags) { const ly = AIR_TAGS[t]; if (!ly || Layers.on(ly)) return true; } return !a.tags.size; };
       for (const a of Dyn.air.values()) {
-        if (a.lat == null) continue;
+        if (a.lat == null || !airOn(a)) continue;
         let lat = a.lat, lon = a.lon;
         const dt = Math.min(150, (now - a.ts) / 1000 + (a.seen_pos || 0));
         if (a.gs > 30 && a.track != null && dt > 0 && !a.ground) { [lat, lon] = destination(a.lat, a.lon, a.track, a.gs * 0.514444 * dt); }
@@ -738,7 +776,7 @@ const Layers = {
   on(id) { const d = this.byId[id]; return !!(d && d.on); },
   opt(k) { return this.opts[k]; },
   setOpt(k, v) { this.opts[k] = v; Store.set('opts', this.opts); },
-  set(id, on) { const d = this.byId[id]; if (!d || d.on === on) return; d.on = on; this.state[id] = on; Store.set('layers', this.state); if (on) { d.enable && d.enable(); if (d.feed) { d.feed.nextAt = 0; } } else { d.disable && d.disable(); if (d.points) Points.clear(d.points); if (d.feed) { d.feed.status = 'idle'; d.feed.count = 0; } } UI.refreshLayer(d); glyphs.draw(); },
+  set(id, on) { const d = this.byId[id]; if (!d || d.on === on) return; d.on = on; this.state[id] = on; Store.set('layers', this.state); if (on) { d.enable && d.enable(); if (d.feed) { d.feed.nextAt = 0; d.feed.fails = 0; } } else { d.disable && d.disable(); if (d.points) Points.clear(d.points); if (d.feed) { d.feed.status = 'idle'; d.feed.count = 0; } } UI.refreshLayer(d); glyphs.draw(); },
   apply(onIds) { for (const d of this.defs) this.set(d.id, onIds.includes(d.id)); },
 };
 const UI = {
@@ -788,20 +826,29 @@ function requestDraw() { if (drawQueued) return; drawQueued = true; requestAnima
 setInterval(() => { if (!document.hidden && (Dyn.air.size || Dyn.sats.length)) requestDraw(); }, 500);
 const Feeds = { list: [], paused: false };
 function feed(layerDef, { interval, fetch, errorInterval, viewDependent = false, minZoom = 0, startDelay = 0 }) {
-  const f = { id: layerDef.id, interval, errorInterval: errorInterval || Math.max(interval, 30), fetch, status: 'idle', count: 0, lastOk: 0, err: '', nextAt: Date.now() + startDelay * 1000, running: false, viewDependent, minZoom, layer: layerDef };
+  // errors retry after errorInterval (default 30 s-2 min), doubling per consecutive failure up to the normal interval
+  // (at least 5 min, at most 30 min): a daily feed doesn't sit red for a day, a rate-limited fast one backs off
+  const f = { id: layerDef.id, interval, errorInterval: errorInterval || Math.min(Math.max(interval, 30), 120), fetch, status: 'idle', count: 0, lastOk: 0, err: '', fails: 0, retry: 0, nextAt: Date.now() + startDelay * 1000, running: false, viewDependent, minZoom, layer: layerDef };
   layerDef.feed = f; Feeds.list.push(f); return f;
 }
 async function runFeed(f, force = false) {
-  const d = f.layer; if (!d.on || f.running) return;
+  const d = f.layer; if (!d.on) return;
+  if (f.running) { if (force) { f.nextAt = 0; f.forceNext = true; } return; } // forced while busy: run again right after
+  force = force || !!f.forceNext; f.forceNext = false;
   if (map.getZoom() < f.minZoom) { f.status = 'idle'; f.err = ''; UI.refreshLayer(d); f.nextAt = Date.now() + 5000; return; }
   f.running = true; f.status = 'loading'; UI.refreshLayer(d);
-  try { await f.fetch(force); f.status = 'ok'; f.lastOk = Date.now(); f.err = ''; f.nextAt = Date.now() + f.interval * 1000; }
-  catch (e) { const msg = e.message || String(e); f.status = 'error'; f.nextAt = Date.now() + f.errorInterval * 1000; if (msg !== f.err) Log.error(`${d.name}: ${msg}`); f.err = msg; }
+  f.nextAt = Infinity; // a reschedule made during the fetch (pan nudge, re-enable, the fetch itself) lowers this and is kept below
+  try { await f.fetch(force); f.status = 'ok'; f.lastOk = Date.now(); f.err = ''; f.fails = 0; f.nextAt = Math.min(f.nextAt, Date.now() + f.interval * 1000); }
+  catch (e) {
+    const msg = e.message || String(e); f.status = 'error'; f.fails++;
+    f.retry = Math.min(f.errorInterval * 2 ** (f.fails - 1), Math.max(f.errorInterval, Math.min(Math.max(f.interval, 300), 1800)));
+    f.nextAt = Math.min(f.nextAt, Date.now() + f.retry * 1000); if (msg !== f.err) Log.error(`${d.name}: ${msg}`); f.err = msg;
+  }
   finally { f.running = false; if (d.on) UI.refreshLayer(d); requestDraw(); }
 }
 setInterval(() => { // hidden tab: keep polling at a third of the cadence so alerts still arrive; visible tab: full cadence
   if (Feeds.paused) return; const now = Date.now(), hidden = document.hidden;
-  for (const f of Feeds.list) if (f.layer.on && !f.running && now >= f.nextAt + (hidden ? 2 * f.interval * 1000 : 0)) runFeed(f);
+  for (const f of Feeds.list) if (f.layer.on && !f.running && now >= f.nextAt + (hidden ? 2 * (f.status === 'error' ? f.retry : f.interval) * 1000 : 0)) runFeed(f);
 }, 1000);
 map.on('moveend', debounce(() => { for (const f of Feeds.list) if (f.viewDependent && f.layer.on) f.nextAt = Math.min(f.nextAt, Date.now() + 1500); }, 600));
 $('#btnPause').addEventListener('click', () => { Feeds.paused = !Feeds.paused; $('#btnPause').textContent = Feeds.paused ? 'Resume' : 'Pause'; $('#btnPause').classList.toggle('primary', Feeds.paused); Log.warn(Feeds.paused ? 'All feeds paused' : 'Feeds resumed'); });
@@ -809,15 +856,27 @@ $('#btnPause').addEventListener('click', () => { Feeds.paused = !Feeds.paused; $
 /* ============================================================ selection + detail panel */
 const Detail = {
   el: null,
-  show(kind, obj, id) { Sel.kind = kind; Sel.obj = obj; Sel.id = id ?? obj.id ?? obj.hex; this.render(); showTab('detail'); if (window.innerWidth <= 860) openSheet('panel'); requestDraw(); },
+  show(kind, obj, id) { Sel.kind = kind; Sel.obj = obj; Sel.id = id ?? obj.id ?? obj.hex; this.render(); showTab('detail'); if (PHONE.matches) openSheet('panel'); requestDraw(); },
+  live() { // moving-object feeds replace their objects on each update: follow the selection to the newest copy (kept if it is gone)
+    const id = Sel.id, o = Sel.obj; let n = null;
+    if (Sel.kind === 'air') n = Dyn.air.get(id);
+    else if (Sel.kind === 'sat') n = Sats.byId.get(id);
+    else if (Sel.kind === 'balloon') n = Dyn.balloons.get(id);
+    else if (Sel.kind === 'ship') { for (const s of Dyn.ships.values()) if (s.id === id && s.src === o.src) { n = s; break; } }
+    if (n) Sel.obj = n; return Sel.obj;
+  },
   clear() { Sel.kind = null; Sel.obj = null; Sel.id = null; this.el.innerHTML = '<div class="empty"><b>Nothing selected.</b><br>Tap an aircraft, satellite, ship, camera, quake or event on the map. Tap open ground for a probe: weather, place, sun and an OSM scan of the area.</div>'; requestDraw(); Tracks.clear(); },
-  render() { if (!Sel.kind) return; const r = Detail.renderers[Sel.kind]; if (r) this.el.innerHTML = `<a class="backlink" href="#" onclick="showTab('brief');return false">← Brief</a>` + r(Sel.obj); },
+  render() { if (!Sel.kind) return; const r = Detail.renderers[Sel.kind]; if (r) this.el.innerHTML = `<a class="backlink" href="#" onclick="showTab('brief');return false">← Brief</a>` + r(this.live()); },
   renderers: {},
-  head(color, kicker, title, sub, flags = []) { return `<div class="kicker"><span class="sw" style="background:${color}"></span><span class="label">${esc(kicker)}</span></div><h2>${esc(title)}</h2>${sub ? `<div class="sub">${sub}</div>` : ''}${flags.length ? `<div class="flags">${flags.map(f => `<span class="flag ${f.cls || ''}">${esc(f.t)}</span>`).join('')}</div>` : ''}`; },
+  head(color, kicker, title, sub, flags = []) { if (!/^[#\w(),.%\s-]+$/.test(String(color))) color = C.ink_faint; // a plain CSS colour only: it goes into a style attribute
+    return `<div class="kicker"><span class="sw" style="background:${color}"></span><span class="label">${esc(kicker)}</span></div><h2>${esc(title)}</h2>${sub ? `<div class="sub">${sub}</div>` : ''}${flags.length ? `<div class="flags">${flags.map(f => `<span class="flag ${f.cls || ''}">${esc(f.t)}</span>`).join('')}</div>` : ''}`; },
   kv(rows) { return `<dl class="kv">${rows.filter(r => r && r[1] != null && r[1] !== '' && r[1] !== '—').map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`; }, // values are plain text, escaped here
   links(items) { return `<ul class="links">${items.filter(i => isHttp(i.url)).map(i => `<li><a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.text)}</a>${i.sub ? `<small>${esc(i.sub)}</small>` : ''}</li>`).join('')}</ul>`; },
 };
-setInterval(() => { if (Sel.kind && ['air', 'sat', 'ship', 'balloon'].includes(Sel.kind) && $('#tab-detail').classList.contains('on') && !document.hidden) Detail.render(); }, 2000);
+setInterval(() => { // live panels refresh every 2 s, but not while the user is selecting text in them (a re-render would drop it)
+  const ts = getSelection(); if (ts && !ts.isCollapsed && Detail.el.contains(ts.anchorNode)) return;
+  if (Sel.kind && ['air', 'sat', 'ship', 'balloon'].includes(Sel.kind) && $('#tab-detail').classList.contains('on') && !document.hidden) Detail.render();
+}, 2000);
 window.flyTo = (lat, lon, z) => { map.flyTo([lat, lon], Math.max(map.getZoom(), z || 6), { duration: 0.8 }); };
 const Tracks = { group: L.layerGroup().addTo(map), clear() { this.group.clearLayers(); } };
 
@@ -846,11 +905,11 @@ map.on('click', e => {
 });
 
 /* ============================================================ tabs + sheets */
-function showTab(id) { $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === id)); $$('.tab').forEach(t => t.classList.toggle('on', t.id === 'tab-' + id)); if (id === 'log') { Log.unread = 0; $('#logCount').textContent = ''; } if (id === 'brief' && window.Brief) Brief.render(); }
+function showTab(id) { $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === id)); $$('.tab').forEach(t => t.classList.toggle('on', t.id === 'tab-' + id)); if (id === 'log') { Log.unread = 0; $('#logCount').textContent = ''; } if (id === 'brief' && window.OW) Brief.render(); } // Brief is a const (never a window property); window.OW = INIT done
 $$('.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 function openSheet(which) { $('#rail').classList.toggle('hidden', which !== 'rail'); $('#panel').classList.toggle('hidden', which !== 'panel'); $$('#mobilebar button').forEach(b => b.classList.toggle('on', b.dataset.sheet === which)); setTimeout(() => map.invalidateSize(), 50); }
 $$('#mobilebar button').forEach(b => b.addEventListener('click', () => openSheet(b.dataset.sheet)));
-function applyLayoutMode() { if (window.innerWidth <= 860) { openSheet('none'); } else { $('#rail').classList.remove('hidden'); $('#panel').classList.remove('hidden'); } setTimeout(() => map.invalidateSize(), 50); }
+function applyLayoutMode() { if (PHONE.matches) { openSheet('none'); } else { $('#rail').classList.remove('hidden'); $('#panel').classList.remove('hidden'); } setTimeout(() => map.invalidateSize(), 50); }
 window.addEventListener('resize', debounce(applyLayoutMode, 150));
 try { new ResizeObserver(debounce(() => { map.invalidateSize(); requestDraw(); }, 100)).observe($('#map')); } catch (e) { } // embedded panes can size the map after load
 setInterval(() => { const el = $('#map'); const sz = map._size; if (!sz || el.clientWidth !== sz.x || el.clientHeight !== sz.y) { map.invalidateSize({ pan: false }); requestDraw(); } }, 1500); // belt and braces for webviews that skip resize events
@@ -901,10 +960,11 @@ const Air = {
     Log.alert(`${why}: ${[(rec.flight || rec.r || hex).trim(), rec.t].filter(Boolean).join(' ')} near ${regionOf(rec.lat, rec.lon)}`, { onclick: () => { const r = Dyn.air.get(hex) || rec; flyTo(r.lat, r.lon, 7); if (Dyn.air.has(hex)) Detail.show('air', r, hex); } });
   },
   ingest(data, tag) {
-    const list = data.ac || data.aircraft || []; const now = Date.now(); const src = data._src || 'adsb'; let n = 0;
+    const list = data.ac || data.aircraft || []; const now = Date.now(); const src = data._src || 'adsb'; let n = 0; this.lastHexes = []; // hexes stored by this call, for lookups
     for (const a of list) {
-      if (a.lat == null || a.lon == null || !a.hex) continue; n++;
-      const hex = String(a.hex).toLowerCase(); let rec = Dyn.air.get(hex);
+      const hex = String(a.hex || '').toLowerCase().replace(/[^0-9a-f~]/g, ''); // hex also lands in onclick handlers: keep it to its real charset
+      if (a.lat == null || a.lon == null || !hex) continue; n++; this.lastHexes.push(hex);
+      let rec = Dyn.air.get(hex);
       if (!rec) { rec = { hex, trail: [], first: now, tags: new Set() }; Dyn.air.set(hex, rec); }
       const wasEmerg = !!rec.emerg;
       const ground = a.alt_baro === 'ground';
@@ -939,7 +999,8 @@ const Air = {
     ['ISR / recon', /^(R135|P8|P3|U2|Q4|RQ4|MQ9|Q9|MQ4|E8|E6|E11|CL60|SF34|SB20|SW4|AT72|EC35|ISR)$/],
     ['AEW / AWACS', /^(E3TF|E3CF|E767|E737|E2|E3|E7)$/],
     ['tanker', /^(K35R|K35E|K35A|KC46|K46A|DC10|A310|A332|IL78|VC10|TRIS|C135)$/],
-    ['fighter / attack', /^(F16|F15|F18S|F18H|F18|F35|F22|F14|F4|F5|F2|F1|EUFI|RFAL|GRIP|TORN|A10|MG29|MG31|SU27|SU30|SU34|SU35|SU24|SU25|MIR2|MIRA|HAR|AV8B|AJET|AMX|JH7|J10|J11|J20|EA6|FA50|T50|EA18|F117|B1|B2|B52|TU95|TU22|TU16)$/],
+    ['bomber', /^(B1|B2|B52|TU95|TU22|TU16|T160|H6)$/],
+    ['fighter / attack', /^(F16|F15|F18S|F18H|F18|F35|F22|F14|F4|F5|F2|F1|EUFI|RFAL|GRIP|TORN|A10|MG29|MG31|SU27|SU30|SU34|SU35|SU24|SU25|MIR2|MIRA|HAR|AV8B|AJET|AMX|JH7|J10|J11|J20|EA6|T50|EA18|F117)$/], // FA50 is the Falcon 50 (bizjet), not the KAI FA-50
     ['trainer', /^(HAWK|T38|T45|TEX2|T6|PC21|PC9|PC7|M346|L39|L159|BE40|T7|G120|GROB|T34|TUCA|A29|AT6|T1|T2|T4|C101|MB33|MB39|SF26|DA40|DA42|PA28|C172|C182)$/],
     ['helicopter', /^(H60|H64|H47|V22|H53|S92|A139|EC45|H145|EC35|EC55|AS32|AS50|AS65|EH10|NH90|PUMA|LYNX|UH1|H1|B412|B212|B429|B505|B06|B407|H500|R44|R22|MI8|MI17|MI24|KA52|TIGR|EC25|EC75|A109|A189|S61|S70|S76|S64|H135|H160|H175|BK17|EC30|EC20|AS55|LYNX|A129|CH53|MH60)$/],
     ['airlift / transport', /^(C17|C130|C30J|L100|C5M|C5|A400|C27J|C295|CN35|A124|IL76|AN12|AN26|AN72|AN70|C160|C2|C1|C212|C23|DHC6|DH8[ABCD]|B752|B763|B744|B742|B738|B737|B739|B39M|A319|A320|A321|A343|A359|E135|E145|E190|A20N|Y8|Y9|Y20|KC1|C12|C26|BE20|B350|PC12|PC24|G222)$/],
@@ -955,7 +1016,11 @@ setInterval(() => {
   const ce = $('#chipEmg'); $('b', ce).textContent = c.emg; ce.classList.toggle('hot', c.emg > 0);
   Air.history.push([Date.now(), c.all, c.mil]); if (Air.history.length > 120) Air.history.shift();
   const hs = $('#hudSweep'); if (hs) hs.textContent = lyAirLocal.on && AirSweep.tiles.length ? `sweep ${AirSweep.tiles.length} tiles${AirSweep.passMs ? ' · ' + (AirSweep.passMs / 1000).toFixed(0) + ' s/pass' : ''}` : '';
-  if (Air.following) { const a = Dyn.air.get(Air.following); if (a) map.panTo([a.lat, a.lon], { animate: true, duration: .5 }); else Air.following = null; }
+  if (Air.following) { // pan to the dead-reckoned spot the icon is drawn at (same formula as Glyphs.draw), not the last raw fix
+    const a = Dyn.air.get(Air.following);
+    if (a) { const dt = Math.min(150, (Date.now() - a.ts) / 1000 + (a.seen_pos || 0)); const p = (a.gs > 30 && a.track != null && dt > 0 && !a.ground) ? destination(a.lat, a.lon, a.track, a.gs * 0.514444 * dt) : [a.lat, a.lon]; map.panTo(p, { animate: true, duration: .5 }); }
+    else Air.following = null;
+  }
 }, 3000);
 map.on('dragstart', () => { Air.following = null; });
 
@@ -1006,7 +1071,7 @@ const AirSweep = {
       for (let k = c0; k <= c1; k++) { const lon = k * dLon + off; if (lon < west - dLon * .6 || lon > east + dLon * .6) continue; if (lat < south - dLat * .6 || lat > north + dLat * .6) continue; cand.push({ lat: +lat.toFixed(3), lon: +(((lon + 540) % 360) - 180).toFixed(3), d: haversine(c.lat, c.lng, lat, lon) }); }
     }
     cand.sort((a, b) => a.d - b.d); this.partial = cand.length > this.MAX_TILES; this.tiles = cand.slice(0, this.MAX_TILES);
-    this.key = this.tiles.map(t => `${t.lat},${t.lon}`).join('|'); this.drawCover(); return this.tiles;
+    this.key = this.tiles.map(t => `${t.lat},${t.lon}`).sort().join('|'); this.drawCover(); return this.tiles; // sorted: a pan that only reorders the same tiles keeps the pass going
   },
   drawCover() {
     this.cover.clearLayers(); if (!this.showCover || !lyAirLocal.on) return;
@@ -1014,23 +1079,29 @@ const AirSweep = {
     if (!map.hasLayer(this.cover)) this.cover.addTo(map);
   },
   async pass() {
-    const tiles = this.plan(); const key = this.key; const t0 = Date.now(); let n = 0, done = 0, errs = [], next = 0;
+    const tiles = this.plan(); const key = this.key; const t0 = Date.now(); let n = 0, done = 0, errs = [];
     const srcs = Air.order(); if (!srcs.length) throw new Error('no aircraft source available');
-    const worker = async (src) => { // each source pulls the next tile from a shared queue, so if one source is rate-limited the other covers everything
-      while (next < tiles.length) {
+    const queue = tiles.slice(); // shared: each source pulls the next tile, so if one source fails the others cover everything
+    const worker = async (src) => {
+      while (queue.length) {
         if (this.key !== key) return; // the map moved: stop this pass, the next one starts fresh
-        const t = tiles[next++];
+        const t = queue.shift();
         try { const d = await Air.getFrom(src, 'point', t.lat, t.lon, 250); n += Air.ingest(d, 'local'); done++; }
-        catch (e) { errs.push(`${src}: ${e.message}`); if (/blocked by browser|no helper|cooling down|pausing/.test(e.message)) { next--; return; } }
+        catch (e) {
+          errs.push(`${src}: ${e.message}`);
+          if (/blocked by browser|no helper|cooling down|pausing|HTTP 40[13]/.test(e.message)) { queue.unshift(t); return; } // this source is out for the pass: hand the tile back
+          if (!t.retried) { t.retried = true; queue.push(t); } // a one-off failure (timeout, 5xx): one more try at the end, by whichever source gets there
+        }
         requestDraw(); lyAirLocal.feed.count = Dyn.air.size; UI.refreshLayer(lyAirLocal);
       }
     };
     await Promise.all(srcs.map(worker));
-    this.passMs = Date.now() - t0;
     if (!done && errs.length) throw new Error(errs[0]);
-    if (this.key !== key) { lyAirLocal.feed.nextAt = 0; } // moved mid-pass: sweep again right away
+    if (this.key !== key) { setTimeout(() => { lyAirLocal.feed.nextAt = 0; }, 0); return n; } // moved mid-pass: sweep again right away (after runFeed has set its own nextAt)
+    this.passMs = Date.now() - t0; // only whole passes feed the civil-aircraft TTL in prune()
     const cooling = Object.entries(Air.cooldown).filter(([, v]) => v > Date.now()).map(([k]) => k);
-    lyAirLocal.desc = `${done}/${tiles.length} tiles · pass ${(this.passMs / 1000).toFixed(0)} s${this.partial ? ' · zoom in to cover the whole view' : ''}${cooling.length ? ' · ' + cooling.join(', ') + ' rate-limited, using the other source' : ''}`;
+    const refused = srcs.filter(s => errs.some(e => e.startsWith(s + ': HTTP 403')));
+    lyAirLocal.desc = `${done}/${tiles.length} tiles · pass ${(this.passMs / 1000).toFixed(0)} s${this.partial ? ' · zoom in to cover the whole view' : ''}${cooling.length ? ' · ' + cooling.join(', ') + ' rate-limited, using the other source' : ''}${refused.length ? ' · ' + refused.join(', ') + ' refused (HTTP 403, needs their permission), using the others' : ''}`;
     return n;
   },
 };
@@ -1075,7 +1146,7 @@ feed(lyOpenSky, {
     const d = await Net.json('https://opensky-network.org/api/states/all', { timeout: 45000 }); const now = Date.now(); let n = 0;
     for (const s of (d.states || [])) {
       const [icao, cs, country, tpos, , lon, lat, balt, onground, vel, trk, vr, , , squawk] = s; if (lat == null || lon == null) continue;
-      const hex = String(icao).toLowerCase(); const ex = Dyn.air.get(hex); if (ex && ex.src !== 'opensky') continue;
+      const hex = String(icao || '').toLowerCase().replace(/[^0-9a-f~]/g, ''); if (!hex) continue; const ex = Dyn.air.get(hex); if (ex && ex.src !== 'opensky') continue;
       const rec = ex || { hex, trail: [], first: now, tags: new Set(['opensky']) }; Dyn.air.set(hex, rec); const wasEmerg = !!rec.emerg;
       Object.assign(rec, { lat, lon, alt: onground ? 0 : (balt != null ? balt / 0.3048 : null), ground: !!onground, gs: vel != null ? vel / 0.514444 : null, track: trk, vr: vr != null ? vr / 0.3048 * 60 : null, squawk, flight: (cs || '').trim(), country, ts: now, seen_pos: tpos ? Math.max(0, now / 1000 - tpos) : 0, src: 'opensky', mil: false, emerg: ['7500', '7600', '7700'].includes(squawk), lowNic: false, dbFlags: 0 });
       if (rec.emerg && !wasEmerg) Air.raiseEmergency(rec);
@@ -1090,16 +1161,16 @@ const Photos = {
   cache: new Map(), pending: new Set(),
   html(hex) {
     const c = this.cache.get(hex);
-    if (c === undefined) { this.fetch(hex); return `<div class="photo"><div class="cap">Looking for a photo of this airframe…</div></div>`; }
-    if (!c) return '';
+    if (c === undefined || (c && c.failAt && Date.now() - c.failAt > 120e3)) { this.fetch(hex); if (c === undefined) return `<div class="photo"><div class="cap">Looking for a photo of this airframe…</div></div>`; }
+    if (!c || c.failAt) return ''; // null = no photo exists; failAt = lookup failed, retried after 2 min
     return `<div class="photo"><a href="${esc(c.link)}" target="_blank" rel="noopener"><img src="${esc(c.src)}" alt="Photo of this aircraft" referrerpolicy="no-referrer"></a><div class="cap">© ${esc(c.by)} · <a href="${esc(c.link)}" target="_blank" rel="noopener">Planespotters.net</a></div></div>`;
   },
   async fetch(hex) {
     if (this.pending.has(hex)) return; this.pending.add(hex);
     try { const d = await Net.json(`https://api.planespotters.net/pub/photos/hex/${hex}`, { throttle: 'planespotters', gap: 700, timeout: 15000 }); const p = (d.photos || [])[0];
       this.cache.set(hex, p ? { src: (p.thumbnail_large || p.thumbnail).src, link: p.link, by: p.photographer } : null); }
-    catch (e) { this.cache.set(hex, null); }
-    finally { this.pending.delete(hex); if (Sel.kind === 'air' && Sel.id === hex) Detail.render(); }
+    catch (e) { this.cache.set(hex, { failAt: Date.now() }); }
+    finally { this.pending.delete(hex); if (this.cache.size > 500) this.cache.delete(this.cache.keys().next().value); if (Sel.kind === 'air' && Sel.id === hex) Detail.render(); }
   },
 };
 /* ============================================================ SATELLITES (CelesTrak GP data + SGP4 in a worker) */
@@ -1127,13 +1198,13 @@ const Sats = {
   GROUPS: [
     { id: 'stations', name: 'Stations', title: 'ISS, Tiangong, visiting vehicles' }, { id: 'visual', name: 'Brightest' }, { id: 'last-30-days', name: 'Recent launches' },
     { id: 'military', name: 'Military' }, { id: 'radar', name: 'Radar' }, { id: 'gps-ops', name: 'GPS' }, { id: 'glo-ops', name: 'GLONASS' }, { id: 'galileo', name: 'Galileo' }, { id: 'beidou', name: 'BeiDou' },
-    { id: 'weather', name: 'Weather' }, { id: 'noaa', name: 'NOAA' }, { id: 'goes', name: 'GOES' }, { id: 'resource', name: 'Earth obs' }, { id: 'science', name: 'Science' },
+    { id: 'weather', name: 'Weather', title: 'Weather satellites, NOAA POES/JPSS included (CelesTrak retired its separate NOAA group)' }, { id: 'goes', name: 'GOES' }, { id: 'resource', name: 'Earth obs' }, { id: 'science', name: 'Science' },
     { id: 'iridium-NEXT', name: 'Iridium' }, { id: 'geo', name: 'GEO belt', heavy: true }, { id: 'oneweb', name: 'OneWeb', heavy: true }, { id: 'starlink', name: 'Starlink', heavy: true, title: 'Thousands of objects, drawn dimmed. CelesTrak permits one download per 2 h — cached.' },
     { id: 'cosmos-2251-debris', name: 'Cosmos-2251 debris', heavy: true }, { id: 'iridium-33-debris', name: 'Iridium-33 debris', heavy: true },
   ],
   STARS: ['ISS (ZARYA)', 'CSS (TIANHE)', 'HST'],
   worker: null, ready: false, byId: new Map(), loading: false, propTimer: null, propBusy: false, lastPropMs: 0, adhoc: [],
-  groupsOn() { return Layers.opt('sat_groups') || []; },
+  groupsOn() { return (Layers.opt('sat_groups') || []).filter(g => this.GROUPS.some(x => x.id === g)); }, // drops retired ids (e.g. 'noaa') still in saved settings
   async loadGroup(g) {
     const key = 'tle.' + g, c = Store.get(key, null); if (c && Date.now() - c.t < 2 * 3600e3) return c.txt;
     // the website's copy of each group (refreshed from CelesTrak every 6 h by .github/build_site.py): read first on the
@@ -1144,12 +1215,14 @@ const Sats = {
       catch (e) { if (!/^HTTP/.test(e.message)) this.celestrakDown = true; throw e; }
     };
     const mir = () => Net.text('https://cwbhood.github.io/open-overwatch/data/tle/' + encodeURIComponent(g) + '.txt', { timeout: 30000 });
-    let txt, first = null;
+    let txt, first = null, notFound = false;
     for (const f of location.hostname === 'cwbhood.github.io' ? [mir, cel] : [cel, mir]) {
-      try { txt = await f(); if (!/^1 \d/m.test(txt)) throw new Error('unexpected CelesTrak response'); first = null; break; } catch (e) { txt = null; first = first || e; }
+      try { txt = await f(); if (!/^1 \d/m.test(txt)) throw new Error('unexpected CelesTrak response'); first = null; break; } catch (e) { txt = null; first = first || e; if (/^HTTP 404/.test(e.message)) notFound = true; }
     }
     if (first) { // keep showing the last good set (orbits stay usable for days) and say so
       if (c && c.txt) { Log.warn(`${g}: CelesTrak failed (${first.message}); using TLEs cached ${fmt.ago(c.t)} ago`); return c.txt; }
+      if (notFound) { // CelesTrak lists the group but has no TLE-format copy (e.g. new objects whose catalog numbers no longer fit a TLE): not an outage
+        const e = new Error('no TLE-format data for this group on CelesTrak right now; it is retried with the next refresh'); e.calm = true; throw e; }
       throw first;
     }
     if (!Store.set(key, { t: Date.now(), txt })) Log.warn(`Could not cache ${g} TLEs (browser storage full). CelesTrak allows one download per group every 2 h, so avoid reloading the page repeatedly with this group on.`);
@@ -1164,19 +1237,27 @@ const Sats = {
     }
     return out;
   },
-  async reload() {
-    if (this.loading) return; this.loading = true; const ly = lySats; ly.feed.status = 'loading'; UI.refreshLayer(ly);
+  reload() { // a call made while a load runs is not dropped: it queues one more pass (which sees the new groups/searches), and every caller awaits the end
+    if (this.loadP) { this.again = true; return this.loadP; }
+    this.loadP = (async () => { do { this.again = false; await this.reloadOnce(); } while (this.again); })().finally(() => { this.loadP = null; });
+    return this.loadP;
+  },
+  async reloadOnce() {
+    this.loading = true; const ly = lySats; ly.feed.status = 'loading'; UI.refreshLayer(ly);
     try {
-      const objs = new Map(); const groups = this.groupsOn(); const failed = [];
+      const objs = new Map(); const groups = this.groupsOn(); const failed = [], quiet = [];
       for (const g of groups) {
         const gd = this.GROUPS.find(x => x.id === g) || {};
         try { const txt = await this.loadGroup(g); for (const t of this.parse(txt, g)) { const ex = objs.get(t.id); if (ex) { ex.groups.push(g); if (!gd.heavy) ex.dim = false; continue; } objs.set(t.id, { ...t, groups: [g], dim: !!gd.heavy, star: this.STARS.includes(t.name), lat: null, lon: null }); } }
-        catch (e) { failed.push(g + ': ' + e.message); }
+        catch (e) { (e.calm ? quiet : failed).push(`${gd.name || g}: ${e.message}`); }
       }
       for (const t of this.adhoc) if (!objs.has(t.id)) objs.set(t.id, { ...t, groups: ['search'], dim: false, star: true, lat: null, lon: null });
+      for (const [id, o] of objs) { const old = this.byId.get(id); if (old && old.lat != null) Object.assign(o, { lat: old.lat, lon: old.lon, alt: old.alt, vel: old.vel }); } // no blink while the worker re-propagates
       this.byId = objs; Dyn.sats = [...objs.values()]; this.startWorker(); this.worker.postMessage({ type: 'load', tles: Dyn.sats.map(t => ({ id: t.id, l1: t.l1, l2: t.l2 })) });
+      if (Sel.kind === 'sat' && objs.has(Sel.id)) Sel.obj = objs.get(Sel.id); // rebind the open detail panel to the new object, or it freezes
       ly.feed.count = Dyn.sats.length; ly.feed.status = failed.length ? 'error' : 'ok'; ly.feed.err = failed.join(' · '); ly.feed.lastOk = Date.now();
-      if (failed.length) Log.error('CelesTrak: ' + failed.join(' · ')); else Log.info(`Satellites: ${Dyn.sats.length} objects from ${groups.length} CelesTrak group${groups.length === 1 ? '' : 's'} (TLEs cached 2 h)`);
+      if (quiet.length) Log.info('Satellites · ' + quiet.join(' · '));
+      if (failed.length) Log.error('CelesTrak: ' + failed.join(' · ')); else Log.info(`Satellites: ${Dyn.sats.length} objects from ${groups.length - quiet.length} CelesTrak group${groups.length - quiet.length === 1 ? '' : 's'} (TLEs cached 2 h)`);
     } catch (e) { ly.feed.status = 'error'; ly.feed.err = e.message; Log.error('Satellites: ' + e.message); }
     finally { this.loading = false; UI.refreshLayer(ly); }
   },
@@ -1209,7 +1290,8 @@ const Sats = {
     if (this.propBusy && !force) return; this.propBusy = true; this.lastPropAt = Date.now(); this.worker.postMessage({ type: 'prop', t: Date.now() });
   },
   drawTrack(o) {
-    if (!o || !o.l1) return; Tracks.clear(); this.trackAt = Date.now();
+    if (!o || !o.l1) return; this.trackAt = Date.now();
+    if (this.trackLayer) Tracks.group.removeLayer(this.trackLayer); const tl = this.trackLayer = L.layerGroup().addTo(Tracks.group); // own sub-group: the 30 s refresh must not wipe the Locate marker or an aircraft trail
     let sr; try { sr = satellite.twoline2satrec(o.l1, o.l2); } catch (e) { return; }
     const period = Math.max(10, Math.min(1500, o.period || 95)), span = Math.min(period * 60 * 1000 * 1.05, 3 * 3600e3), step = Math.max(15000, span / 240);
     const segs = [[]]; let prevLon = null;
@@ -1218,8 +1300,8 @@ const Sats = {
       const g = satellite.eciToGeodetic(pv.position, satellite.gstime(d)); const la = deg(g.latitude), lo = deg(g.longitude);
       if (prevLon != null && Math.abs(lo - prevLon) > 180) segs.push([]); segs[segs.length - 1].push([la, lo]); prevLon = lo;
     }
-    for (const s of segs) if (s.length > 1) L.polyline(s, { color: C.sat, weight: 1.2, opacity: .75, dashArray: '2 4', renderer: vecRenderer }).addTo(Tracks.group);
-    if (o.alt) { const R = 6371, r = R * Math.acos(R / (R + o.alt)) * 1000; if (isFinite(r) && r > 1000) L.circle([o.lat, o.lon], { radius: r, color: C.sat, weight: 1, opacity: .5, fillOpacity: .05, renderer: vecRenderer }).addTo(Tracks.group); }
+    for (const s of segs) if (s.length > 1) L.polyline(s, { color: C.sat, weight: 1.2, opacity: .75, dashArray: '2 4', renderer: vecRenderer }).addTo(tl);
+    if (o.alt && o.lat != null) { const R = 6371, r = R * Math.acos(R / (R + o.alt)) * 1000; if (isFinite(r) && r > 1000) L.circle([o.lat, o.lon], { radius: r, color: C.sat, weight: 1, opacity: .5, fillOpacity: .05, renderer: vecRenderer }).addTo(tl); }
   },
   async searchByName(q) {
     const txt = await Net.text(`https://celestrak.org/NORAD/elements/gp.php?NAME=${encodeURIComponent(q)}&FORMAT=TLE`, { throttle: 'celestrak', gap: 2000, timeout: 30000 });
@@ -1277,11 +1359,15 @@ feed(lySats, { interval: 7200, errorInterval: 1200, fetch: async () => {
 /* ============================================================ POINT + VECTOR LAYERS
    Points go on the shared canvas (Points.set); only polygons and lines stay as Leaflet vectors, non-interactive. */
 function lineLayer(def) { const g = L.layerGroup(); def.group_ = g; const en = def.enable, dis = def.disable; def.enable = () => { g.addTo(map); en && en(); }; def.disable = () => { g.clearLayers(); map.removeLayer(g); dis && dis(); if (def.feed) def.feed.count = 0; }; return g; }
+function rerunFeed(f) { // option changed: refetch now, or as soon as a fetch already in flight (with the old option) finishes
+  if (!f.running) return runFeed(f, true); if (f.rerunT) return;
+  f.rerunT = setInterval(() => { if (f.running) return; clearInterval(f.rerunT); f.rerunT = null; runFeed(f, true); }, 300);
+}
 const World = { quakes: [], events: [], storms: [], gdacs: [], news: [] }; // latest parsed feed data for the Brief
 
 /* ---------- Earthquakes (USGS) */
 const lyQuakes = Layers.add({ id: 'quakes', group: 'Ground', name: 'Earthquakes', desc: 'USGS real-time feed', color: C.qk, shape: 'round', default: true, points: 'quakes',
-  sub(el) { const feeds = [{ id: '2.5_day', name: 'M2.5+ 24 h' }, { id: '1.0_day', name: 'M1+ 24 h' }, { id: '4.5_week', name: 'M4.5+ 7 d' }, { id: 'significant_month', name: 'Significant 30 d' }]; const r = () => UI.pills(el, feeds, id => Layers.opt('quake_feed') === id, id => { Layers.setOpt('quake_feed', id); r(); if (lyQuakes.on) runFeed(lyQuakes.feed, true); }); r(); } });
+  sub(el) { const feeds = [{ id: '2.5_day', name: 'M2.5+ 24 h' }, { id: '1.0_day', name: 'M1+ 24 h' }, { id: '4.5_week', name: 'M4.5+ 7 d' }, { id: 'significant_month', name: 'Significant 30 d' }]; const r = () => UI.pills(el, feeds, id => Layers.opt('quake_feed') === id, id => { Layers.setOpt('quake_feed', id); r(); if (lyQuakes.on) rerunFeed(lyQuakes.feed); }); r(); } });
 Points.define('quakes', 'quakes');
 Detail.renderers.quake = p => `<div class="det">${Detail.head(C.qk, 'Earthquake · USGS', `M${(p.mag ?? 0).toFixed(1)} ${p.place || ''}`, esc(fmt.date(p.time)), [p.tsunami ? { t: 'Tsunami flag', cls: 'emg' } : null, p.alert ? { t: 'PAGER ' + p.alert, cls: p.alert === 'red' ? 'emg' : 'warn' } : null].filter(Boolean))}
 ${Detail.kv([['Magnitude', `${(p.mag ?? 0).toFixed(1)} ${p.magType || ''}`], ['Depth', `${fmt.n(p.depth, 1)} km`], ['Position', fmt.ll(p.lat, p.lon)], ['Felt reports', p.felt], ['Status', p.status], ['Age', fmt.ago(p.time) + ' ago']])}
@@ -1325,9 +1411,16 @@ ${Detail.kv([['Country', p.country], ['From', p.fromdate ? fmt.date(p.fromdate) 
 <div class="actions"><button class="btn small" onclick="flyTo(${p.lat},${p.lon},6)">Center</button></div><hr class="sep">${Detail.links([p.url?.report ? { text: 'GDACS report', url: p.url.report } : null, p.url?.details ? { text: 'Details (JSON)', url: p.url.details } : null].filter(Boolean))}</div>`;
 feed(lyGdacs, { interval: 900, fetch: async () => {
   const day = t => new Date(t).toISOString().slice(0, 10);
-  const d = await Net.json(`https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=EQ;TC;FL;VO;WF;DR&fromDate=${day(Date.now() - 14 * 86400e3)}&toDate=${day(Date.now())}&alertlevel=Green;Orange;Red`, { timeout: 60000 }); const items = []; World.gdacs = [];
-  for (const f of d.features || []) {
+  const features = []; // the API answers 100 events per page, newest-modified first: page through the whole 14 days
+  for (let page = 1; page <= 10; page++) {
+    const d = await Net.json(`https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=EQ;TC;FL;VO;WF;DR&fromDate=${day(Date.now() - 14 * 86400e3)}&toDate=${day(Date.now())}&alertlevel=Green;Orange;Red&pagenumber=${page}`, { timeout: 60000, throttle: 'gdacs', gap: 1000 });
+    const fs = d.features || []; features.push(...fs); if (fs.length < 100) break;
+  }
+  const items = [], seen = new Set(); World.gdacs = [];
+  for (const f of features) {
     if (!f.geometry || f.geometry.type !== 'Point') continue; const [lon, lat] = f.geometry.coordinates; const p = { ...f.properties, lat, lon }; const col = GDACS_LVL[p.alertlevel] || C.warn;
+    const key = p.eventtype + p.eventid; if (p.eventid != null && seen.has(key)) continue; seen.add(key); // one marker per event (latest episode)
+    for (const k of ['fromdate', 'todate']) if (typeof p[k] === 'string' && !/(Z|[+-]\d\d:?\d\d)$/.test(p[k])) p[k] += 'Z'; // GDACS times are UTC without a zone
     if (p.eventtype === 'EQ' && p.alertlevel === 'Green') continue; // USGS covers minor quakes already
     World.gdacs.push(p); items.push({ lat, lon, r: p.alertlevel === 'Red' ? 8 : p.alertlevel === 'Orange' ? 6 : 4, color: col, fillAlpha: .2, halo: p.alertlevel === 'Red' ? 14 : 0, kind: 'gdacs', obj: p, tip: `${p.eventtype} · ${p.name || ''} (${p.alertlevel})`, label: p.alertlevel !== 'Green' ? (p.eventname || p.eventtype) : null, labelZoom: 3 });
   }
@@ -1354,16 +1447,17 @@ feed(lyStorms, { interval: 1200, errorInterval: 1800, fetch: async () => {
     const nhc = await Net.json('https://www.nhc.noaa.gov/CurrentStorms.json');
     for (const st of nhc.activeStorms || []) { const lat = +st.latitudeNumeric, lon = +st.longitudeNumeric; if (!isFinite(lat)) continue;
       const s = { id: st.id, src: 'NOAA NHC', title: `${st.classification || ''} ${st.name}`.trim(), sub: `Basin ${st.binNumber || ''}`, lat, lon, kt: +st.intensity || null, pressure: st.pressure, movement: st.movementDir != null ? `${st.movementDir}° at ${st.movementSpeed} kt` : null, advisory: st.lastUpdate, links: [st.publicAdvisory?.url ? { text: `Public advisory ${st.publicAdvisory.advNum || ''}`, url: st.publicAdvisory.url } : null, st.forecastAdvisory?.url ? { text: 'Forecast advisory', url: st.forecastAdvisory.url } : null, { text: 'NHC home', url: 'https://www.nhc.noaa.gov/' }].filter(Boolean) };
-      const dup = World.storms.find(x => haversine(x.lat, x.lon, lat, lon) < 300000); if (dup) { dup.nhc = s; dup.kt = dup.kt || s.kt; dup.links = [...s.links, ...dup.links]; dup.pressure = s.pressure; dup.movement = s.movement; dup.advisory = s.advisory; dup.src = 'NASA EONET + NOAA NHC'; }
+      const dup = World.storms.find(x => haversine(x.lat, x.lon, lat, lon) < 300000); if (dup) { dup.nhc = s; dup.kt = dup.kt || s.kt; dup.links = [...s.links, ...dup.links]; dup.pressure = s.pressure; dup.movement = s.movement; dup.advisory = s.advisory; dup.src = 'NASA EONET + NOAA NHC';
+        const it = items.find(i => i.obj === dup); if (it && dup.kt) { it.tip = `${dup.title} · ${dup.kt} kt`; if (dup.kt >= 64) it.color = '#ff7b7b'; } } // the marker was built from EONET's (maybe missing) wind
       else { World.storms.push(s); items.push({ lat, lon, r: 7, color: '#7fd0ff', fillAlpha: .25, lw: 2, halo: 16, kind: 'storm', obj: s, tip: `NHC: ${s.title} · ${s.kt} kt`, label: st.name, labelZoom: 2 }); } }
   } catch (e) { Log.warn('NHC advisories: ' + e.message); } }
   Points.set('storms', items); lyStorms.feed.count = items.length; lyStorms.desc = items.length ? `Active: ${World.storms.slice(0, 4).map(s => s.title).join(', ')}${World.storms.length > 4 ? ' +' + (World.storms.length - 4) : ''}` : 'No active storms in EONET right now';
 } });
 
 /* ---------- World news by source country (GDELT DOC 2.0; the GEO API was retired) */
-const lyNews = Layers.add({ id: 'news', group: 'Ground', name: 'World news', desc: 'GDELT · last 24 h of coverage matching your query, placed by the reporting country · needs the helper', color: C.news, default: false, points: 'news',
+const lyNews = Layers.add({ id: 'news', group: 'Ground', name: 'World news', desc: 'GDELT · last 24 h of coverage matching your query, placed by the reporting country', color: C.news, default: false, points: 'news',
   sub(el) { const w = document.createElement('div'); w.style.cssText = 'display:flex;gap:4px;width:100%'; w.innerHTML = `<input class="mono" id="newsQ" style="flex:1;min-width:0;background:var(--panel-2);border:1px solid var(--line-strong);border-radius:3px;padding:4px 7px;font-size:11px" placeholder="query, e.g. missile OR drone" value="${esc(Layers.opt('news_q'))}"><button type="button" class="btn small">Run</button>`;
-    const go = () => { Layers.setOpt('news_q', $('#newsQ', w).value.trim() || 'military'); if (lyNews.on) runFeed(lyNews.feed, true); }; $('button', w).addEventListener('click', go); $('input', w).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } }); el.appendChild(w); } });
+    const go = () => { Layers.setOpt('news_q', $('#newsQ', w).value.trim() || 'military'); if (lyNews.on) rerunFeed(lyNews.feed); }; $('button', w).addEventListener('click', go); $('input', w).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } }); el.appendChild(w); } });
 Points.define('news', 'news');
 function countryIso(name) {
   if (!name) return null; let s = name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\(.*?\)/g, ' ').replace(/[^a-z, ]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -1374,16 +1468,19 @@ function countryIso(name) {
   return null;
 }
 function gdeltQuery(q) { q = q.trim(); if (/\bOR\b/i.test(q) && !/^\(.*\)$/.test(q)) q = '(' + q + ')'; return q; }
-Detail.renderers.news = p => `<div class="det">${Detail.head(C.news, 'World news · GDELT', p.name, `${fmt.n(p.count)} article${p.count === 1 ? '' : 's'} from ${esc(p.name)} outlets in the last 24 h matching <span class="mono">${esc(Layers.opt('news_q'))}</span>`)}
+Detail.renderers.news = p => `<div class="det">${Detail.head(C.news, 'World news · GDELT', p.name, `${fmt.n(p.count)} article${p.count === 1 ? '' : 's'} from ${esc(p.name)} outlets in the last 24 h matching <span class="mono">${esc(p.q || Layers.opt('news_q'))}</span>`)}
 ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}
 <div class="actions"><button class="btn small" onclick="flyTo(${p.lat},${p.lon},5)">Center</button></div><hr class="sep">${Detail.links(p.articles)}</div>`;
 feed(lyNews, { interval: 900, errorInterval: 900, fetch: async () => {
   const q = gdeltQuery(Layers.opt('news_q') || 'military');
-  const d = await Net.json(`https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=artlist&format=json&maxrecords=250&timespan=24h`, { timeout: 40000, throttle: 'gdelt', gap: 6000 });
+  let txt; // GDELT sends CORS itself now (no helper needed), but its rate-limit replies don't, so they surface as a CORS error
+  try { txt = await Net.text(`https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(q)}&mode=artlist&format=json&maxrecords=250&timespan=24h`, { timeout: 40000, throttle: 'gdelt', gap: 6000 }); }
+  catch (e) { throw /CORS|HTTP 429/.test(e.message) ? new Error('GDELT refused the request (usually its limit of one query per 5 s, or offline): retrying later') : e; }
+  let d; try { d = txt.trim() ? JSON.parse(txt) : {}; } catch (e) { throw new Error('GDELT: ' + txt.trim().replace(/\s+/g, ' ').slice(0, 160)); } // bad queries come back as plain text with HTTP 200
   const by = new Map(); let unknown = 0;
   for (const a of d.articles || []) {
     const iso = countryIso(a.sourcecountry); if (!iso || !COUNTRY[iso]) { unknown++; continue; }
-    const g = by.get(iso) || { iso, name: COUNTRY[iso][2], lat: COUNTRY[iso][0], lon: COUNTRY[iso][1], count: 0, articles: [], image: null }; by.set(iso, g);
+    const g = by.get(iso) || { iso, name: COUNTRY[iso][2], lat: COUNTRY[iso][0], lon: COUNTRY[iso][1], count: 0, articles: [], image: null, q }; by.set(iso, g);
     g.count++; if (g.articles.length < 15 && isHttp(a.url)) g.articles.push({ text: (a.title || a.url).slice(0, 140), url: a.url, sub: `${a.domain || safeHost(a.url)} · ${a.language || ''} · ${(a.seendate || '').replace(/T(\d\d)(\d\d)\d\dZ/, ' $1:$2Z')}` });
     if (!g.image && isHttp(a.socialimage)) g.image = a.socialimage;
   }
@@ -1403,7 +1500,7 @@ feed(lyNws, { interval: 300, fetch: async () => {
   const d = await Net.json('https://api.weather.gov/alerts/active?status=actual&message_type=alert,update&severity=Extreme,Severe', { timeout: 60000 }); gNws.clearLayers(); let n = 0, drawn = 0; World.nws = [];
   for (const f of d.features || []) {
     const p = f.properties || {}; n++; World.nws.push(p); if (!f.geometry) continue; const isTor = /tornado|hurricane|extreme wind/i.test(p.event || ''); const col = isTor ? C.emg : /flash flood|storm/i.test(p.event || '') ? C.warn : '#ff9a6b';
-    const g = L.geoJSON(f.geometry, { style: { color: col, weight: isTor ? 2 : 1.2, fillColor: col, fillOpacity: isTor ? .25 : .12, renderer: vecRenderer } }); g.on('click', () => Detail.show('nws', p, p.id)); gNws.addLayer(g); drawn++;
+    const g = L.geoJSON(f.geometry, { bubblingMouseEvents: false, style: { color: col, weight: isTor ? 2 : 1.2, fillColor: col, fillOpacity: isTor ? .25 : .12, renderer: vecRenderer } }); g.on('click', () => Detail.show('nws', p, p.id)); gNws.addLayer(g); drawn++;
     if (isTor && !lyNws.seen?.has(p.id)) { (lyNws.seen ||= new Set()).add(p.id); if (/tornado warning/i.test(p.event) && Date.now() - (Date.parse(p.sent) || 0) < 900e3) Log.alert(`${p.event}: ${p.areaDesc}`, { onclick: () => { const c = g.getBounds().getCenter(); flyTo(c.lat, c.lng, 8); Detail.show('nws', p, p.id); } }); }
   }
   lyNws.feed.count = drawn; lyNws.desc = `${n} active Extreme/Severe alerts · ${drawn} with polygons`;
@@ -1432,23 +1529,32 @@ async function fetchKp() {
     const last = rows[rows.length - 1]; if (!last) throw new Error('no Kp rows');
     const kp = last.kp; Space.kp = kp; Space.kpTime = last.t; $('#chipKp b').textContent = kp.toFixed(1); $('#chipKp').classList.toggle('hot', kp >= 5);
     $('#chipKp').title = `Planetary K-index ${kp} at ${last.t} UTC (NOAA SWPC)` + (kp >= 5 ? ' · geomagnetic storm' : '');
-    if (kp >= 6 && !window._kpWarned) { window._kpWarned = true; Log.warn(`Geomagnetic storm: Kp ${kp}`); }
+    if (kp >= 6 && !window._kpWarned) { window._kpWarned = true; Log.warn(`Geomagnetic storm: Kp ${kp}`); } else if (kp < 5) window._kpWarned = false; // re-arm for the next storm
   } catch (e) { $('#chipKp b').textContent = '—'; $('#chipKp').title = 'Kp unavailable: ' + e.message; }
 }
-fetchKp(); setInterval(fetchKp, 600000);
+fetchKp(); setInterval(() => { if (!Feeds.paused) fetchKp(); }, 600000);
 
-/* ---------- Precipitation radar + IR satellite (RainViewer) */
+/* ---------- Precipitation radar (RainViewer) + IR satellite (NASA GIBS geostationary band 13; RainViewer dropped its IR product) */
 const lyRadar = Layers.add({ id: 'radar', group: 'Weather & space weather', name: 'Precipitation radar', desc: 'RainViewer · latest composite radar', color: '#4fa3ff', default: false });
-const lyIr = Layers.add({ id: 'irsat', group: 'Weather & space weather', name: 'Cloud cover (IR satellite)', desc: 'RainViewer · latest infrared composite', color: '#c9d6df', default: false });
+const lyIr = Layers.add({ id: 'irsat', group: 'Weather & space weather', name: 'Cloud cover (IR satellite)', desc: 'NASA GIBS · GOES-East, GOES-West and Himawari clean-IR (band 13), newest 10-min scans · no Europe/Africa disk', color: '#c9d6df', default: false });
 let radarTiles = null, irTiles = null;
 lyRadar.enable = () => { if (radarTiles) radarTiles.addTo(map); }; lyRadar.disable = () => { if (radarTiles) map.removeLayer(radarTiles); };
 lyIr.enable = () => { if (irTiles) irTiles.addTo(map); }; lyIr.disable = () => { if (irTiles) map.removeLayer(irTiles); };
 async function rainviewer(kind) {
   const d = await Net.json('https://api.rainviewer.com/public/weather-maps.json'); const host = d.host || 'https://tilecache.rainviewer.com';
-  if (kind === 'radar') { const fr = (d.radar?.past || []).slice(-1)[0]; if (!fr) throw new Error('no radar frames'); const url = `${host}${fr.path}/256/{z}/{x}/{y}/2/1_1.png`; if (radarTiles) map.removeLayer(radarTiles); radarTiles = L.tileLayer(url, { opacity: .7, maxNativeZoom: 12, zIndex: 400, attribution: 'RainViewer' }); if (lyRadar.on) radarTiles.addTo(map); lyRadar.desc = `Frame ${fmt.hms(fr.time * 1000)}Z`; lyRadar.feed.count = 1; }
-  else { const fr = (d.satellite?.infrared || []).slice(-1)[0]; if (!fr) throw new Error('no satellite frames'); const url = `${host}${fr.path}/256/{z}/{x}/{y}/0/0_0.png`; if (irTiles) map.removeLayer(irTiles); irTiles = L.tileLayer(url, { opacity: .55, maxNativeZoom: 8, zIndex: 390, attribution: 'RainViewer' }); if (lyIr.on) irTiles.addTo(map); lyIr.desc = `Frame ${fmt.hms(fr.time * 1000)}Z`; lyIr.feed.count = 1; }
+  if (kind === 'radar') { const fr = (d.radar?.past || []).slice(-1)[0]; if (!fr) throw new Error('no radar frames'); const url = `${host}${fr.path}/256/{z}/{x}/{y}/2/1_1.png`; if (radarTiles) map.removeLayer(radarTiles); radarTiles = L.tileLayer(url, { opacity: .7, maxNativeZoom: 7, zIndex: 400, attribution: 'RainViewer' }); /* the free tiles stop at zoom 7 (8+ is a "Zoom Level Not Supported" image): Leaflet upscales past it */ if (lyRadar.on) radarTiles.addTo(map); lyRadar.desc = `Frame ${fmt.hms(fr.time * 1000)}Z`; lyRadar.feed.count = 1; }
 }
-feed(lyRadar, { interval: 600, fetch: () => rainviewer('radar') }); feed(lyIr, { interval: 900, fetch: () => rainviewer('ir') });
+// GIBS serves each disk's newest scan as time "default" (CORS *, no-cache), so a refresh is a cache-busting redraw.
+// The three layers share one pane inside the tile pane, so the opacity applies once and overlapping disks show no seams.
+const GIBS_IR = ['GOES-West_ABI_Band13_Clean_Infrared', 'Himawari_AHI_Band13_Clean_Infrared', 'GOES-East_ABI_Band13_Clean_Infrared'];
+const irPane = map.createPane('irsat', map.getPane('tilePane')); irPane.style.zIndex = 390; irPane.style.opacity = .55; irPane.style.pointerEvents = 'none';
+async function gibsIr() {
+  const b = Math.floor(Date.now() / 600e3);
+  if (!irTiles) irTiles = L.layerGroup(GIBS_IR.map(id => L.tileLayer(`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${id}/default/default/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png?b={b}`, { b, pane: 'irsat', maxNativeZoom: 6, attribution: 'NASA GIBS · GOES / Himawari' })));
+  else irTiles.eachLayer(t => { if (t.options.b !== b) { t.options.b = b; t.redraw(); } });
+  if (lyIr.on && !map.hasLayer(irTiles)) irTiles.addTo(map); lyIr.feed.count = GIBS_IR.length;
+}
+feed(lyRadar, { interval: 600, fetch: () => rainviewer('radar') }); feed(lyIr, { interval: 600, fetch: gibsIr });
 
 /* ---------- Day/night terminator */
 const lyTerm = Layers.add({ id: 'terminator', group: 'Weather & space weather', name: 'Day / night', desc: 'Solar terminator, computed locally', color: '#2b3c49', default: true });
@@ -1457,21 +1563,26 @@ function drawTerminator() { const ring = terminatorRing(Date.now()); if (termPol
 lyTerm.enable = () => { drawTerminator(); termTimer = setInterval(drawTerminator, 60000); }; lyTerm.disable = () => { clearInterval(termTimer); if (termPoly) map.removeLayer(termPoly); };
 
 /* ---------- Submarine cables + landing points (TeleGeography data); cables are non-interactive lines with a manual click test */
-const lyCables = Layers.add({ id: 'cables', group: 'Infrastructure', name: 'Submarine cables', desc: 'TeleGeography submarine cable map data', color: C.cable, default: false });
+const lyCables = Layers.add({ id: 'cables', group: 'Infrastructure', name: 'Submarine cables', desc: 'TeleGeography submarine cable map data · live with the helper, an older GitHub copy without it', color: C.cable, default: false });
 const gCables = lineLayer(lyCables); let cableData = null;
 const lyLanding = Layers.add({ id: 'landing', group: 'Infrastructure', name: 'Cable landing stations', desc: 'Where the cables come ashore', color: '#8fc6e6', shape: 'round', default: false, points: 'landing' });
 Points.define('landing', 'landing', { minZoom: 4 });
-Detail.renderers.cable = p => `<div class="det">${Detail.head(p.color || C.cable, 'Submarine cable · TeleGeography', p.name, '')}${Detail.links([{ text: 'Cable page on submarinecablemap.com', url: `https://www.submarinecablemap.com/submarine-cable/${encodeURIComponent(p.id)}` }])}</div>`;
+Detail.renderers.cable = p => `<div class="det">${Detail.head(/^#[0-9a-f]{3,8}$/i.test(p.color || '') ? p.color : C.cable, 'Submarine cable · TeleGeography', p.name, '')}${Detail.links([{ text: 'Cable page on submarinecablemap.com', url: `https://www.submarinecablemap.com/submarine-cable/${encodeURIComponent(p.id)}` }])}</div>`;
 Detail.renderers.landing = p => `<div class="det">${Detail.head('#8fc6e6', 'Cable landing station', p.name, '')}${Detail.links([{ text: 'Landing point on submarinecablemap.com', url: `https://www.submarinecablemap.com/landing-point/${encodeURIComponent(p.id)}` }])}</div>`;
-const CABLE_URLS = ['https://raw.githubusercontent.com/lintaojlu/submarine_cable_information/master/web/public/api/v3/cable/cable-geo.json', 'https://www.submarinecablemap.com/api/v3/cable/cable-geo.json'];
-const LANDING_URLS = ['https://raw.githubusercontent.com/lintaojlu/submarine_cable_information/master/web/public/api/v3/landing-point/landing-point-geo.json', 'https://www.submarinecablemap.com/api/v3/landing-point/landing-point-geo.json'];
+// live TeleGeography first (no CORS header: relayed by the helper; without it Net fails fast), then a GitHub copy that is months behind
+const CABLE_URLS = ['https://www.submarinecablemap.com/api/v3/cable/cable-geo.json', 'https://raw.githubusercontent.com/lintaojlu/submarine_cable_information/master/web/public/api/v3/cable/cable-geo.json'];
+const LANDING_URLS = ['https://www.submarinecablemap.com/api/v3/landing-point/landing-point-geo.json', 'https://raw.githubusercontent.com/lintaojlu/submarine_cable_information/master/web/public/api/v3/landing-point/landing-point-geo.json'];
 async function firstOk(urls, o) { let err; for (const u of urls) { try { return await Net.json(u, o); } catch (e) { err = e; } } throw err; }
-function cableHit(latlng) { // nearest cable vertex within ~10 px
+function cableHit(latlng) { // nearest cable segment within ~10 px (local flat frame in metres around the click)
   if (!cableData || !lyCables.on) return null; const tol = 10 * 40075016 * Math.cos(rad(latlng.lat)) / (256 * Math.pow(2, map.getZoom())); let best = null, bd = tol;
-  for (const f of cableData.features) { const lines = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [f.geometry.coordinates]; for (const line of lines) for (let i = 0; i < line.length; i += 1) { const [lon, lat] = line[i]; if (Math.abs(lat - latlng.lat) > 3) continue; const d = haversine(latlng.lat, latlng.lng, lat, lon); if (d < bd) { bd = d; best = f; } } }
+  const la0 = latlng.lat, lo0 = latlng.lng, kx = 111320 * Math.cos(rad(la0)), ky = 110540, P = c => [(((c[0] - lo0) % 360 + 540) % 360 - 180) * kx, (c[1] - la0) * ky];
+  for (const f of cableData.features) { const lines = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [f.geometry.coordinates];
+    for (const line of lines) { let a = null; for (const c of line) { const b = P(c);
+      if (a && Math.abs(b[0] - a[0]) < 180 * kx && Math.min(Math.abs(a[1]), Math.abs(b[1])) < tol + Math.abs(b[1] - a[1])) { const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy; const t = l2 ? Math.max(0, Math.min(1, -(a[0] * dx + a[1] * dy) / l2)) : 0; const d = Math.hypot(a[0] + t * dx, a[1] + t * dy); if (d < bd) { bd = d; best = f; } }
+      a = b; } } }
   return best;
 }
-feed(lyCables, { interval: 86400, fetch: async () => { const d = await firstOk(CABLE_URLS, { timeout: 60000 }); cableData = d; gCables.clearLayers();
+feed(lyCables, { interval: 86400, fetch: async () => { const d = cableData && Date.now() - cableData._t < 86400e3 ? cableData : await firstOk(CABLE_URLS, { timeout: 60000 }); d._t = d._t || Date.now(); cableData = d; gCables.clearLayers(); // toggling the layer reuses the multi-MB file
   gCables.addLayer(L.geoJSON(d, { interactive: false, style: f => ({ color: f.properties?.color || C.cable, weight: 1.2, opacity: .55, renderer: vecRenderer }) })); lyCables.feed.count = (d.features || []).length; } });
 feed(lyLanding, { interval: 86400, fetch: async () => { const d = await firstOk(LANDING_URLS, { timeout: 60000 });
   Points.set('landing', (d.features || []).map(f => { const [lon, lat] = f.geometry.coordinates; return { lat, lon, r: 2.5, color: '#8fc6e6', fillAlpha: .6, kind: 'landing', obj: f.properties, tip: f.properties?.name || '' }; })); lyLanding.feed.count = (d.features || []).length; } });
@@ -1485,7 +1596,7 @@ const CAM_SRCS = [
   { id: 'finland', name: 'Finland', title: 'Fintraffic road weather cameras (~700)', bbox: [59.6, 19.0, 70.2, 31.7] },
 ];
 const lyCams = Layers.add({ id: 'cams', group: 'Ground', name: 'Public cameras', desc: 'Official traffic-camera feeds · appear from zoom 8 over London, New York, California, Singapore, Finland · Windy key adds webcams worldwide', color: C.cam, default: true, points: 'cams',
-  sub(el) { const r = () => UI.pills(el, CAM_SRCS, id => (Layers.opt('cam_src') || []).includes(id), (id, on) => { const s = (Layers.opt('cam_src') || []).filter(x => x !== id); if (on) s.push(id); Layers.setOpt('cam_src', s); r(); if (lyCams.on) runFeed(lyCams.feed, true); }); r();
+  sub(el) { const r = () => UI.pills(el, CAM_SRCS, id => (Layers.opt('cam_src') || []).includes(id), (id, on) => { const s = (Layers.opt('cam_src') || []).filter(x => x !== id); if (on) s.push(id); Layers.setOpt('cam_src', s); r(); if (lyCams.on) rerunFeed(lyCams.feed); }); r();
     const b = document.createElement('button'); b.type = 'button'; b.className = 'pill'; b.textContent = 'show regions'; b.title = 'Fly to the covered regions one by one'; let i = 0; b.addEventListener('click', () => { const s = CAM_SRCS[i++ % CAM_SRCS.length]; map.flyToBounds([[s.bbox[0], s.bbox[1]], [s.bbox[2], s.bbox[3]]], { duration: 1 }); toast('Cameras: ' + s.name); }); el.appendChild(b); } });
 Points.define('cams', 'cams', { minZoom: 8 });
 function viewIntersects(bbox) { const b = map.getBounds(); return !(b.getNorth() < bbox[0] || b.getSouth() > bbox[2] || b.getEast() < bbox[1] || b.getWest() > bbox[3]); }
@@ -1547,18 +1658,21 @@ let vesselMeta = { t: 0, m: new Map() };
 feed(lyShipsFi, { interval: 60, fetch: async () => {
   if (Date.now() - vesselMeta.t > 1800e3) { try { const v = await Net.json('https://meri.digitraffic.fi/api/ais/v1/vessels', { timeout: 60000 }); const m = new Map(); for (const x of v || []) m.set(x.mmsi, x); vesselMeta = { t: Date.now(), m }; } catch (e) { Log.warn('Digitraffic vessel names: ' + e.message); } }
   const d = await Net.json('https://meri.digitraffic.fi/api/ais/v1/locations', { timeout: 60000 }); const now = Date.now(); let n = 0;
+  if (!lyShipsFi.on) return; // switched off while loading: don't put the ships back
+  for (const [k, s] of Dyn.ships) if (k.startsWith('fi') && now - s.ts > 3600e3) Dyn.ships.delete(k); // ships that stopped reporting
   for (const f of d.features || []) { const p = f.properties || {}; const mmsi = f.mmsi ?? p.mmsi; const [lon, lat] = f.geometry?.coordinates || []; if (lat == null || !mmsi) continue; const meta = vesselMeta.m.get(mmsi) || {}; const ts = p.timestampExternal || now;
     if (now - ts > 3600e3) continue; Dyn.ships.set('fi' + mmsi, { id: mmsi, lat, lon, sog: p.sog, cog: p.cog, heading: p.heading, navStat: p.navStat, navText: NAV[p.navStat], name: meta.name, callsign: meta.callSign, imo: meta.imo, dest: meta.destination, typeName: meta.shipType != null ? 'AIS type ' + meta.shipType : null, draught: meta.draught != null ? meta.draught / 10 : null, ts, src: 'Digitraffic' }); n++; }
   lyShipsFi.feed.count = n; requestDraw();
 } });
 const lyShipsWs = Layers.add({ id: 'ships_ws', group: 'Sea & sky', name: 'Ships · global AIS stream', desc: 'aisstream.io WebSocket · needs a free key (Setup tab)', color: '#3fb8a2', default: false });
 const AisWs = { ws: null, timer: null,
-  connect() { const key = Keys.get('aisstream'); if (!key) { lyShipsWs.feed.status = 'error'; lyShipsWs.feed.err = 'no aisstream.io key'; UI.refreshLayer(lyShipsWs); return; }
+  connect() { const key = Keys.get('aisstream'); if (!key) { this.close(); lyShipsWs.feed.status = 'error'; lyShipsWs.feed.err = 'no aisstream.io key'; UI.refreshLayer(lyShipsWs); return; }
     this.close(); lyShipsWs.feed.status = 'loading'; UI.refreshLayer(lyShipsWs);
     try { this.ws = new WebSocket('wss://stream.aisstream.io/v0/stream'); } catch (e) { lyShipsWs.feed.status = 'error'; lyShipsWs.feed.err = e.message; UI.refreshLayer(lyShipsWs); return; }
     this.ws.onopen = () => { this.subscribe(); lyShipsWs.feed.status = 'ok'; lyShipsWs.feed.lastOk = Date.now(); UI.refreshLayer(lyShipsWs); Log.info('aisstream.io connected'); };
     this.ws.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } if (m.error) { lyShipsWs.feed.status = 'error'; lyShipsWs.feed.err = m.error; UI.refreshLayer(lyShipsWs); return; } if (m.MessageType !== 'PositionReport') return; const md = m.MetaData || {}, pr = m.Message?.PositionReport || {}; if (md.latitude == null) return;
-      Dyn.ships.set('ws' + md.MMSI, { id: md.MMSI, lat: md.latitude, lon: md.longitude, sog: pr.Sog, cog: pr.Cog, heading: pr.TrueHeading, navStat: pr.NavigationalStatus, navText: NAV[pr.NavigationalStatus], name: (md.ShipName || '').trim(), ts: Date.now(), src: 'aisstream.io' }); lyShipsWs.feed.count = [...Dyn.ships.keys()].filter(k => k.startsWith('ws')).length; };
+      if (!Dyn.ships.has('ws' + md.MMSI)) lyShipsWs.feed.count++; if (!this.drawT) this.drawT = setTimeout(() => { this.drawT = null; requestDraw(); }, 1000); // O(1) per message; redraw at most once a second
+      Dyn.ships.set('ws' + md.MMSI, { id: md.MMSI, lat: md.latitude, lon: md.longitude, sog: pr.Sog, cog: pr.Cog, heading: pr.TrueHeading, navStat: pr.NavigationalStatus, navText: NAV[pr.NavigationalStatus], name: (md.ShipName || '').trim(), ts: Date.now(), src: 'aisstream.io' }); };
     this.ws.onclose = () => { if (lyShipsWs.on) { lyShipsWs.feed.status = 'error'; lyShipsWs.feed.err = 'disconnected — retrying'; UI.refreshLayer(lyShipsWs); this.timer = setTimeout(() => this.connect(), 15000); } };
     this.ws.onerror = () => { };
   },
@@ -1576,7 +1690,7 @@ Detail.renderers.balloon = b => `<div class="det">${Detail.head(C.bal, 'Radioson
 ${Detail.kv([['Altitude', `${fmt.n(b.alt)} m`], ['Climb', b.vel_v != null ? `${b.vel_v > 0 ? '▲' : '▼'} ${Math.abs(b.vel_v).toFixed(1)} m/s` : null], ['Ground speed', b.vel_h != null ? `${fmt.n(b.vel_h * 3.6)} km/h` : null], ['Heading', b.heading != null ? `${fmt.n(b.heading)}°` : null], ['Temp', b.temp != null ? `${b.temp} °C` : null], ['Humidity', b.humidity != null ? `${b.humidity} %` : null], ['Pressure', b.pressure != null ? `${b.pressure} hPa` : null], ['Frequency', b.frequency ? `${b.frequency} MHz` : null], ['Heard by', b.uploader], ['Last frame', b.datetime ? fmt.date(b.datetime) : null], ['Position', fmt.ll(b.lat, b.lon)]])}
 <div class="actions"><button class="btn small" onclick="flyTo(${b.lat},${b.lon},9)">Center</button></div><hr class="sep">${Detail.links([{ text: 'Track on SondeHub', url: `https://sondehub.org/${encodeURIComponent(b.id)}` }])}</div>`;
 feed(lyBalloons, { interval: 120, viewDependent: true, fetch: async () => {
-  const c = map.getCenter(); const d = await Net.json(`https://api.v2.sondehub.org/sondes?lat=${c.lat.toFixed(2)}&lon=${(((c.lng + 540) % 360) - 180).toFixed(2)}&distance=3000000&last=10800`, { timeout: 40000 }); Dyn.balloons.clear(); let n = 0;
+  const c = map.getCenter(); const d = await Net.json(`https://api.v2.sondehub.org/sondes?lat=${c.lat.toFixed(2)}&lon=${(((c.lng + 540) % 360) - 180).toFixed(2)}&distance=3000000&last=10800`, { timeout: 40000 }); if (!lyBalloons.on) return; Dyn.balloons.clear(); let n = 0; // off while loading: stay off
   for (const [serial, t] of Object.entries(d || {})) { if (!t || t.lat == null) continue; Dyn.balloons.set(serial, { id: serial, lat: t.lat, lon: t.lon, alt: t.alt, vel_h: t.vel_h, vel_v: t.vel_v, heading: t.heading, temp: t.temp, humidity: t.humidity, pressure: t.pressure, frequency: t.frequency, type: t.type, subtype: t.subtype, uploader: t.uploader_callsign, datetime: t.datetime, ts: Date.parse(t.datetime) || Date.now() }); n++; }
   lyBalloons.feed.count = n; requestDraw();
 } });
@@ -1596,7 +1710,7 @@ feed(lyFires, { interval: 900, viewDependent: true, minZoom: 5, fetch: async () 
 
 /* ---------- OSM area scan results (from the probe) */
 const lyScan = Layers.add({ id: 'osm_scan', group: 'Infrastructure', name: 'Area scan results', desc: 'Military areas, airfields, nuclear sites, harbours from OpenStreetMap · run from a map probe', color: C.infra, default: true, points: 'scan' });
-Points.define('scan', 'osm_scan');
+Points.define('scan', 'osm_scan'); lyScan.enable = () => { if (lyScan.last) Points.set('scan', lyScan.last); }; // turning the layer off clears the points; bring the last scan back
 Detail.renderers.osm = o => `<div class="det">${Detail.head(C.infra, 'OpenStreetMap · ' + o.kind, o.name, esc(o.sub || ''))}${Detail.kv(Object.entries(o.tags).filter(([k]) => !/^(name|source|created_by)/.test(k)).slice(0, 24).map(([k, v]) => [k, v]))}
 <div class="actions"><button class="btn small" onclick="flyTo(${o.lat},${o.lon},13)">Center</button></div><hr class="sep">${Detail.links([{ text: `OSM ${o.type} ${o.id}`, url: `https://www.openstreetmap.org/${o.type}/${o.id}` }])}</div>`;
 async function scanArea(lat, lon, radius = 30000) {
@@ -1608,7 +1722,7 @@ async function scanArea(lat, lon, radius = 30000) {
     const o = { id: el.id, type: el.type, kind, name: t.name || t['name:en'] || t.icao || t.iata || kind, sub: [t.operator, t.icao, t.iata].filter(Boolean).join(' · '), lat: la, lon: lo, tags: t };
     const col = /Military/.test(kind) ? C.mil : /Nuclear|Radar/.test(kind) ? C.emg : C.infra;
     items.push({ lat: la, lon: lo, r: 5, color: col, shape: /Military/.test(kind) ? 'tri' : 'circle', fillAlpha: .3, kind: 'osm', obj: o, tip: `${o.kind}: ${o.name}`, label: o.name, labelZoom: 10 }); }
-  if (!lyScan.on) Layers.set('osm_scan', true); Points.set('scan', items); lyScan.feed = lyScan.feed || { status: 'ok', count: 0, lastOk: 0, err: '', nextAt: 1e15, running: false, interval: 1e9, errorInterval: 1e9, layer: lyScan, fetch: async () => { } }; lyScan.feed.count = items.length; lyScan.feed.status = 'ok'; lyScan.feed.lastOk = Date.now(); UI.refreshLayer(lyScan);
+  lyScan.last = items; if (!lyScan.on) Layers.set('osm_scan', true); Points.set('scan', items); lyScan.feed = lyScan.feed || { status: 'ok', count: 0, lastOk: 0, err: '', nextAt: 1e15, running: false, interval: 1e9, errorInterval: 1e9, layer: lyScan, fetch: async () => { } }; lyScan.feed.count = items.length; lyScan.feed.status = 'ok'; lyScan.feed.lastOk = Date.now(); UI.refreshLayer(lyScan);
   Log.info(`OSM scan: ${items.length} features within ${radius / 1000} km of ${fmt.ll(lat, lon)}`); toast(`${items.length} features found`); return items.length;
 }
 /* ============================================================ PRESETS ("views") */
@@ -1623,10 +1737,18 @@ const Presets = {
   current: Store.get('preset', null),
   apply(id, { fly = true } = {}) {
     const p = PRESETS.find(x => x.id === id); if (!p) return;
-    Layers.apply(p.layers); if (p.sats) { Layers.setOpt('sat_groups', p.sats); if (lySats.on) Sats.reload(); }
+    Layers.apply(p.layers); if (p.sats) this.satOpt('sat_groups', p.sats);
     this.current = id; Store.set('preset', id); $$('.view').forEach(b => b.classList.toggle('on', b.dataset.preset === id));
+    // clear the old selection and follow BEFORE flying: the ISS follow below selects the ISS, draws its track and toasts its own hint
+    Detail.clear(); Fun.issFollow = false; Fun.issPending = 0; toast(`View: ${p.name}`);
     if (fly) { if (p.view) map.flyTo([p.view[0], p.view[1]], p.view[2], { duration: 1 }); else if (p.go === 'locate') Locate.go(); else if (p.go === 'iss') Fun.followIss(); }
-    Sel.kind = null; Tracks.clear(); toast(`View: ${p.name}`); Brief.render();
+    Brief.render();
+  },
+  // satellite options changed by a view or the ISS shortcut: redraw the Satellites pills to match, and reload the groups
+  // (after any reload already in flight, which read the old ones)
+  satOpt(k, v) {
+    Layers.setOpt(k, v); const sr = $('.subrow[data-sub="sats"]'); if (sr) lySats.sub(sr);
+    if (k === 'sat_groups' && lySats.on) { const go = () => { this.satWait = null; if (!lySats.on) return; if (Sats.loading) this.satWait = setTimeout(go, 1000); else Sats.reload(); }; if (!this.satWait) go(); }
   },
   build() { const root = $('#views'); for (const p of PRESETS) { const b = document.createElement('button'); b.type = 'button'; b.className = 'view' + (this.current === p.id ? ' on' : ''); b.dataset.preset = p.id; b.innerHTML = `<b>${esc(p.name)}</b><small>${esc(p.desc)}</small>`; b.addEventListener('click', () => this.apply(p.id)); root.appendChild(b); } },
 };
@@ -1636,12 +1758,12 @@ function legendHtml() { return LEGEND.map(([n, c, cls]) => `<span><i class="${cl
 /* ============================================================ LOCATION */
 const Locate = {
   pos: Store.get('pos', null), // {lat, lon, how, t}
-  async get() { if (this.pos && Date.now() - this.pos.t < 6 * 3600e3) return this.pos; try { return await this.refresh(); } catch (e) { return this.pos; } },
   refresh() {
     return new Promise((resolve, reject) => {
       const ok = (lat, lon, how) => { this.pos = { lat, lon, how, t: Date.now() }; Store.set('pos', this.pos); resolve(this.pos); };
       const ip = () => Net.json('https://ipapi.co/json/').then(d => { if (d.latitude) ok(d.latitude, d.longitude, 'approximate (IP)'); else reject(new Error('no fix')); }).catch(reject);
-      if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => ok(p.coords.latitude, p.coords.longitude, 'device'), ip, { timeout: 8000, maximumAge: 60000 }); else ip();
+      // fall back to an IP lookup when the device can't get a fix, but not when the user refused location access
+      if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => ok(p.coords.latitude, p.coords.longitude, 'device'), e => e && e.code === 1 ? reject(new Error('location access was denied')) : ip(), { timeout: 8000, maximumAge: 60000 }); else ip();
     });
   },
   async go() { try { const p = await this.refresh(); map.flyTo([p.lat, p.lon], 8, { duration: 1 }); L.circleMarker([p.lat, p.lon], { radius: 6, color: C.accent, weight: 2, fillOpacity: .2, interactive: false, renderer: vecRenderer }).addTo(Tracks.group); toast(`Centered on your ${p.how} position`); Brief.render(); } catch (e) { toast('Could not determine location: ' + e.message, 'alert'); } },
@@ -1656,21 +1778,26 @@ const Fun = {
     toast(`${a.flight || a.r || a.hex.toUpperCase()} · ${a.desc || a.t || 'military'} · ${Air.roleOf(a)} · near ${Air.where(a)}`);
   },
   followIss() {
-    const iss = Sats.iss();
-    if (!iss || iss.lat == null) { if (!Layers.on('sats')) Layers.set('sats', true); if (!Sats.groupsOn().includes('stations')) { Layers.setOpt('sat_groups', [...Sats.groupsOn(), 'stations']); Sats.reload(); } toast('Loading the ISS orbit… try again in a moment'); return; }
-    map.flyTo([iss.lat, iss.lon], Math.max(map.getZoom(), 3), { duration: 1 }); Detail.show('sat', iss, iss.id); Sats.drawTrack(iss); Layers.setOpt('sat_tracks', true);
+    const iss = Sats.iss(); Air.following = null; // one follow at a time
+    if (!iss || iss.lat == null) { // not loaded yet: start it, and the follow interval below picks the ISS up once it is propagated
+      if (!Layers.on('sats')) Layers.set('sats', true); if (!Sats.groupsOn().includes('stations')) Presets.satOpt('sat_groups', [...Sats.groupsOn(), 'stations']);
+      this.issPending = Date.now(); toast('Loading the ISS orbit… the map will follow it once it is in'); return;
+    }
+    this.issPending = 0; map.flyTo([iss.lat, iss.lon], Math.max(map.getZoom(), 3), { duration: 1 }); Detail.show('sat', iss, iss.id); Sats.drawTrack(iss); if (!Layers.opt('sat_tracks')) Presets.satOpt('sat_tracks', true);
     this.issFollow = true; toast('Following the ISS — pan the map to stop');
   },
-  nearestCam() {
-    const p = Locate.pos; if (!p) { toast('Set your location first (Center on me)', 'alert'); return; }
-    let best = null, bd = Infinity; for (const s of CAM_SRCS) { const [s0, w0, n0, e0] = s.bbox; const lat = Math.min(Math.max(p.lat, s0), n0), lon = Math.min(Math.max(p.lon, w0), e0); const d = haversine(p.lat, p.lon, lat, lon); if (d < bd) { bd = d; best = { s, lat, lon }; } }
-    if (!best) return; if (!Layers.on('cams')) Layers.set('cams', true);
-    if (bd < 1000) { map.flyTo([p.lat, p.lon], 12, { duration: 1 }); toast('Cameras near you load as the view settles'); }
-    else { map.flyTo([best.lat, best.lon], 11, { duration: 1.2 }); toast(`Nearest camera network: ${best.s.name}, ${fmt.dist(bd)} away`); }
-  },
+  issInView() { const iss = Sats.iss(); if (!iss || iss.lat == null) return true; const b = map.getBounds(), c = b.getCenter(); return iss.lat >= b.getSouth() && iss.lat <= b.getNorth() && Math.abs(((iss.lon - c.lng) % 360 + 540) % 360 - 180) <= (b.getEast() - b.getWest()) / 2; },
 };
-map.on('dragstart', () => { Fun.issFollow = false; });
-setInterval(() => { if (Fun.issFollow) { const iss = Sats.iss(); if (iss && iss.lat != null && !document.hidden) map.panTo([iss.lat, iss.lon], { animate: true, duration: .8 }); } }, 2500);
+// the ISS follow stops on a drag, or when anything else (Brief, search, Locate, an aircraft follow…) moves the ISS out of view;
+// it never pans over another move in progress (panTo would cancel that flyTo)
+let mapMovingAt = 0;
+map.on('dragstart', () => { Fun.issFollow = false; Fun.issPending = 0; });
+map.on('movestart', () => { mapMovingAt = Date.now(); });
+map.on('moveend', () => { mapMovingAt = 0; if (Fun.issFollow && !Fun.issInView()) Fun.issFollow = false; });
+setInterval(() => {
+  if (Fun.issPending) { const iss = Sats.iss(); if (!Layers.on('sats') || Date.now() - Fun.issPending > 120e3) Fun.issPending = 0; else if (iss && iss.lat != null) Fun.followIss(); }
+  if (Fun.issFollow) { const iss = Sats.iss(); if (!Layers.on('sats')) Fun.issFollow = false; else if (iss && iss.lat != null && !document.hidden && Date.now() - mapMovingAt > 4000) map.panTo([iss.lat, iss.lon], { animate: true, duration: .8 }); }
+}, 2500);
 
 /* ============================================================ BRIEF: the live situation summary */
 const Brief = {
@@ -1678,8 +1805,12 @@ const Brief = {
   sec(label, body, when) { return `<section class="bsec"><div class="bhead"><span class="label">${esc(label)}</span>${when ? `<span class="when">${esc(when)}</span>` : ''}</div>${body}</section>`; },
   item(cls, id, what, where, act) { return `<button class="item" data-act="${esc(act)}"><span class="id ${cls}">${esc(id)}</span><span class="what">${esc(what)}</span><span class="where">${esc(where || '')}</span></button>`; },
   kpText(kp) { if (kp == null) return null; const g = kp >= 9 ? 'G5 extreme storm' : kp >= 8 ? 'G4 severe storm' : kp >= 7 ? 'G3 strong storm' : kp >= 6 ? 'G2 moderate storm' : kp >= 5 ? 'G1 minor storm' : kp >= 4 ? 'active' : kp >= 3 ? 'unsettled' : 'quiet'; const lat = 66.5 - kp * 2.05; return { g, lat }; },
+  // centred-dipole geomagnetic latitude (north geomagnetic pole ≈ 80.8°N 72.6°W); the oval edge above is in these terms
+  magLat(lat, lon) { const p = rad(80.8); return deg(Math.asin(Math.sin(rad(lat)) * Math.sin(p) + Math.cos(rad(lat)) * Math.cos(p) * Math.cos(rad(lon + 72.6)))); },
   render() {
     if (!this.el || !$('#tab-brief').classList.contains('on')) return;
+    // a rebuild mid-press swallows the click and wipes a text selection: skip this tick (the next one catches up)
+    const sel = getSelection(); if (this.el.matches(':active') || (sel && !sel.isCollapsed && this.el.contains(sel.anchorNode))) return;
     const air = [...Dyn.air.values()], now = Date.now(); const pos = Locate.pos; const parts = [];
     // ---- emergencies
     const emg = air.filter(a => a.emerg);
@@ -1711,9 +1842,10 @@ const Brief = {
       if (iss && iss.lat != null) {
         body += `<p class="bline"><b>ISS</b> is over <b>${esc(regionOf(iss.lat, iss.lon))}</b>, ${fmt.n(iss.alt)} km up at ${fmt.n(iss.vel * 3600)} km/h, on the ${sunElevation(iss.lat, iss.lon, now) > 0 ? 'day' : 'night'} side.</p>`;
         if (pos) {
-          const key = `${iss.id}|${pos.lat.toFixed(1)},${pos.lon.toFixed(1)}`; if (this.issPass.key !== key || now - this.issPass.t > 300e3) { this.issPass = { t: now, key, v: Sats.nextPass(iss, pos.lat, pos.lon, 10) }; }
-          const p = this.issPass.v; const el = Sats.elevation(pos.lat, pos.lon, iss);
-          if (el > 0) body += `<p class="bline hot" style="color:var(--accent)"><b>It is above your horizon right now</b> — ${el.toFixed(0)}° elevation${sunElevation(pos.lat, pos.lon, now) < -6 && sunElevation(iss.lat, iss.lon, now) > 0 ? ', sunlit in a dark sky: go look' : ''}.</p>`;
+          const key = `${iss.id}|${pos.lat.toFixed(1)},${pos.lon.toFixed(1)}`, old = this.issPass.v; if (this.issPass.key !== key || now - this.issPass.t > 300e3 || (old && (old.end || old.start) < now)) { this.issPass = { t: now, key, v: Sats.nextPass(iss, pos.lat, pos.lon, 10) }; }
+          // the ISS stays sunlit until the sun is acos(R/(R+alt)) (~20°) below the horizon under it, not just 0°
+          const p = this.issPass.v; const el = Sats.elevation(pos.lat, pos.lon, iss), shadow = -deg(Math.acos(6371 / (6371 + (iss.alt || 420))));
+          if (el > 0) body += `<p class="bline hot" style="color:var(--accent)"><b>It is above your horizon right now</b> — ${el.toFixed(0)}° elevation${sunElevation(pos.lat, pos.lon, now) < -6 && sunElevation(iss.lat, iss.lon, now) > shadow ? ', sunlit in a dark sky: go look' : ''}.</p>`;
           else if (p) body += `<p class="bline">Next pass over you in <b>${fmt.mins((p.start - now) / 60000)}</b> (${fmt.hm(p.start)}), peaking at ${p.max.toFixed(0)}° elevation${p.end ? `, ${fmt.mins((p.end - p.start) / 60000)} long` : ''}.</p>`;
         } else body += `<p class="bline">Use <b>Center on me</b> to get your next ISS pass and what is above you.</p>`;
       } else body += `<p class="bline">${Sats.loading ? 'Loading orbital elements…' : (Sats.groupsOn().includes('stations') ? 'ISS not propagated yet.' : 'Turn on the Stations group to track the ISS.')}</p>`;
@@ -1721,20 +1853,20 @@ const Brief = {
       body += `<div class="brow"><button class="btn small" data-act="iss">Follow ISS</button>${pos ? '' : '<button class="btn small" data-act="locate">Center on me</button>'}</div>`;
       parts.push(this.sec('Space', body, Dyn.sats.length ? `${fmt.n(Dyn.sats.length)} tracked` : ''));
     }
-    // ---- hazards
+    // ---- hazards (World.* keep their last data when a layer is switched off, so gate each on its layer)
     {
       let body = '';
-      const q = World.quakes.slice().sort((a, b) => b.mag - a.mag); if (q.length) { const big = q[0]; const m45 = q.filter(x => x.mag >= 4.5).length; body += `<div class="items">${this.item('qk', `M${big.mag.toFixed(1)}`, `${big.place || ''} · ${fmt.ago(big.time)} ago`, `${m45} at M4.5+`, 'quake:' + big.id)}</div>`; }
+      const q = (Layers.on('quakes') ? World.quakes : []).slice().sort((a, b) => b.mag - a.mag); if (q.length) { const big = q[0]; const m45 = q.filter(x => x.mag >= 4.5).length; body += `<div class="items">${this.item('qk', `M${big.mag.toFixed(1)}`, `${big.place || ''} · ${fmt.ago(big.time)} ago`, `${m45} at M4.5+`, 'quake:' + big.id)}</div>`; }
       else if (Layers.on('quakes')) body += `<p class="bline">${lyQuakes.feed.err ? esc(lyQuakes.feed.err) : 'Loading earthquakes…'}</p>`;
-      if (World.storms.length) body += `<div class="items">${World.storms.slice(0, 5).map(s => this.item('', s.title.replace(/^Tropical Cyclone\s+/i, ''), `${s.kt ? s.kt + ' kt · ' : ''}${s.src}`, 'near ' + regionOf(s.lat, s.lon), 'storm:' + s.id)).join('')}</div>`;
+      if (Layers.on('storms') && World.storms.length) body += `<div class="items">${World.storms.slice(0, 5).map(s => this.item('', s.title.replace(/^Tropical Cyclone\s+/i, ''), `${s.kt ? s.kt + ' kt · ' : ''}${s.src}`, 'near ' + regionOf(s.lat, s.lon), 'storm:' + s.id)).join('')}</div>`;
       else if (Layers.on('storms') && lyStorms.feed.lastOk) body += `<p class="bline">No named tropical cyclones active.</p>`;
-      const red = World.gdacs.filter(p => p.alertlevel === 'Red' || p.alertlevel === 'Orange'); if (red.length) body += `<div class="items">${red.slice(0, 4).map(p => this.item('', p.alertlevel, p.name || p.eventtype, p.country || '', `fly:${p.lat.toFixed(2)},${p.lon.toFixed(2)},6`)).join('')}</div>`;
-      const tor = (World.nws || []).filter(p => /tornado warning/i.test(p.event || '')); if (tor.length) body += `<p class="bline hot"><b>${tor.length} tornado warning${tor.length > 1 ? 's' : ''}</b> active in the US: ${esc(tor.slice(0, 3).map(p => p.areaDesc).join(' · '))}</p>`;
+      const red = (Layers.on('gdacs') ? World.gdacs : []).filter(p => p.alertlevel === 'Red' || p.alertlevel === 'Orange'); if (red.length) body += `<div class="items">${red.slice(0, 4).map(p => this.item('', p.alertlevel, p.name || p.eventtype, p.country || '', `fly:${p.lat.toFixed(2)},${p.lon.toFixed(2)},6`)).join('')}</div>`;
+      const tor = (Layers.on('nws') && World.nws || []).filter(p => /tornado warning/i.test(p.event || '')); if (tor.length) body += `<p class="bline hot"><b>${tor.length} tornado warning${tor.length > 1 ? 's' : ''}</b> active in the US: ${esc(tor.slice(0, 3).map(p => p.areaDesc).join(' · '))}</p>`;
       else if (Layers.on('nws') && World.nws) body += `<p class="bline">${World.nws.length} severe/extreme NWS alerts active, no tornado warnings.</p>`;
       if (body) parts.push(this.sec('Hazards', body));
     }
     // ---- space weather
-    if (Space.kp != null) { const k = this.kpText(Space.kp); const auroraHere = pos && Aurora.grid ? Aurora.at(pos.lat, pos.lon) : null; parts.push(this.sec('Space weather', `<div class="bigrow"><div><span class="big">Kp ${Space.kp.toFixed(1)}<small>${esc(k.g)}</small></span></div></div><p class="bline">Aurora oval reaches about <b>${k.lat.toFixed(0)}°</b> geomagnetic latitude${pos ? (Math.abs(pos.lat) >= k.lat - 5 ? ' — <b>possible on your horizon tonight</b>' : ` — you are at ${Math.abs(pos.lat).toFixed(0)}°, too far from the poles right now`) : ''}.${auroraHere != null ? ` OVATION gives <b>${auroraHere}%</b> at your location.` : ''}</p>`, Space.kpTime ? String(Space.kpTime).replace('T', ' ').slice(5, 16) + 'Z' : '')); }
+    if (Space.kp != null) { const k = this.kpText(Space.kp); const auroraHere = pos && Layers.on('aurora') && Aurora.grid ? Aurora.at(pos.lat, pos.lon) : null; const mlat = pos ? Math.abs(this.magLat(pos.lat, pos.lon)) : 0; parts.push(this.sec('Space weather', `<div class="bigrow"><div><span class="big">Kp ${Space.kp.toFixed(1)}<small>${esc(k.g)}</small></span></div></div><p class="bline">Aurora oval reaches about <b>${k.lat.toFixed(0)}°</b> geomagnetic latitude${pos ? (mlat >= k.lat - 5 ? ` — <b>possible on your horizon ${sunElevation(pos.lat, pos.lon, now) < -6 ? 'now' : 'after dark'}</b>` : ` — you are at ${mlat.toFixed(0)}° geomagnetic, too far from the poles right now`) : ''}.${auroraHere != null ? ` OVATION gives <b>${auroraHere}%</b> at your location.` : ''}</p>`, Space.kpTime ? String(Space.kpTime).replace('T', ' ').slice(5, 16) + 'Z' : '')); }
     // ---- records
     const flying = air.filter(a => !a.ground && a.alt > 0);
     if (flying.length > 5) {
@@ -1747,9 +1879,10 @@ const Brief = {
         ${nearest ? this.item('', 'nearest you', `${nearest.a.flight || nearest.a.r || nearest.a.hex} · ${nearest.a.desc || nearest.a.t || ''}`, fmt.dist(nearest.d) + ' away', 'air:' + nearest.a.hex) : ''}</div>`, `${fmt.n(flying.length)} aircraft`));
     } else if (Layers.on('air_local') && map.getZoom() < 3) parts.push(this.sec('All aircraft in view', `<p class="bline">Zoom in one step and the visible area is swept in 250 nm tiles (up to 30 per pass — the whole continental US when it fills the screen). At world scale only military and emergency traffic is loaded.</p>`));
     // ---- news
-    if (World.news.length) parts.push(this.sec('World news', `<p class="bline">Most coverage of <span class="mono">${esc(Layers.opt('news_q'))}</span> in the last 24 h comes from ${World.news.slice(0, 5).map(n => `<b>${esc(n.name)}</b> (${n.count})`).join(', ')}.</p><div class="items">${World.news.slice(0, 3).flatMap(n => n.articles.slice(0, 1).map(a => this.item('', n.name, a.text, safeHost(a.url), 'news:' + n.iso))).join('')}</div>`));
+    if (Layers.on('news') && World.news.length) parts.push(this.sec('World news', `<p class="bline">Most coverage of <span class="mono">${esc(Layers.opt('news_q'))}</span> in the last 24 h comes from ${World.news.slice(0, 5).map(n => `<b>${esc(n.name)}</b> (${n.count})`).join(', ')}.</p><div class="items">${World.news.slice(0, 3).flatMap(n => n.articles.slice(0, 1).map(a => this.item('', n.name, a.text, safeHost(a.url), 'news:' + n.iso))).join('')}</div>`));
     if (!parts.length) parts.push(`<div class="empty">Turn on some layers, or pick a view on the left.</div>`);
-    this.el.innerHTML = parts.join('');
+    const html = parts.join(''), fa = this.el.contains(document.activeElement) ? document.activeElement.dataset.act : null;
+    if (html !== this.html) { this.html = html; this.el.innerHTML = html; if (fa) { const b = [...this.el.querySelectorAll('[data-act]')].find(x => x.dataset.act === fa); if (b) b.focus(); } } // keep keyboard focus on the same item
     this.spark();
   },
   spark() {
@@ -1781,11 +1914,11 @@ const Welcome = {
       ${!Relay.available ? `<div class="wnote">Aircraft feeds need the bundled helper. ${Relay.local ? 'It is not answering on this port.' : 'Run <span class="mono">Start Open Overwatch.bat</span> (or serve.py / serve.js) and open the page it gives you.'} Everything else works from here.</div>` : ''}
       <div class="wgrid">${PRESETS.map(p => `<button class="view" data-preset="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.desc)}</small></button>`).join('')}</div>
       <div class="legend">${legendHtml()}</div>
-      <div class="foot"><span>Shown once · reopen from Setup → Welcome</span><a id="wSkip">Just show the map</a></div></div>`;
-    const done = () => { Store.set('welcomed', true); el.hidden = true; };
-    $$('.view', el).forEach(b => b.addEventListener('click', () => { done(); Presets.apply(b.dataset.preset); }));
-    $('#wSkip').addEventListener('click', done);
+      <div class="foot"><span>Shown once · reopen from Setup → Welcome</span><a id="wSkip" href="#" role="button">Just show the map</a></div></div>`;
+    $$('.view', el).forEach(b => b.addEventListener('click', () => { this.hide(); Presets.apply(b.dataset.preset); }));
+    $('#wSkip').addEventListener('click', e => { e.preventDefault(); this.hide(); });
   },
+  hide() { const el = $('#welcome'); if (el.hidden) return; Store.set('welcomed', true); el.hidden = true; }, // any way out counts as "shown once"
 };
 /* ============================================================ AUDIO: generative soundtrack (original, synthesized live) + underground radio */
 const Synth = {
@@ -1800,7 +1933,7 @@ const Synth = {
   set: 'underground', step: 0, next: 0, timer: null, live: false, n: {},
   density: .5, brightness: 0, // reactive inputs from the map (0..1)
   start(ctx, out) {
-    if (this.live) return; this.ctx = ctx; this.out = out; this.live = true; this.step = 0; this.next = ctx.currentTime + .1;
+    if (this.live) return; this.ctx = ctx; this.out = out; this.step = 0; this.next = ctx.currentTime + .1; // live is set once the graph is built, so a throw here can be retried
     const n = this.n = {};
     // noise buffer (pink-ish)
     const len = ctx.sampleRate * 2, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0); let b0 = 0, b1 = 0, b2 = 0;
@@ -1822,12 +1955,12 @@ const Synth = {
     // drone: sub sine + soft square an octave up
     n.drone = ['sine', 'square'].map((t, i) => { const o = ctx.createOscillator(); o.type = t; const g = ctx.createGain(); g.gain.value = 0; o.connect(g).connect(n.bus); o.start(); return { o, g }; });
     this.chord(0, ctx.currentTime, 3);
-    this.timer = setInterval(() => this.schedule(), 40);
+    this.live = true; this.timer = setInterval(() => this.schedule(), 40);
   },
   stop() {
     if (!this.live) return; this.live = false; clearInterval(this.timer); const ctx = this.ctx, t = ctx.currentTime, n = this.n;
     try { n.bus.gain.setTargetAtTime(0, t, .4); n.bedG.gain.setTargetAtTime(0, t, .4); n.wet.gain.setTargetAtTime(0, t, .4); } catch (e) { }
-    setTimeout(() => { try { for (const k of ['bed', 'bedLfo']) n[k].stop(); n.pad.forEach(p => p.o.stop()); n.drone.forEach(p => p.o.stop()); n.bus.disconnect(); n.bedG.disconnect(); n.wet.disconnect(); } catch (e) { } }, 1500);
+    setTimeout(() => { try { for (const k of ['bed', 'bedLfo']) n[k].stop(); n.pad.forEach(p => p.o.stop()); n.drone.forEach(p => p.o.stop()); n.bus.disconnect(); n.bedG.disconnect(); n.wet.disconnect(); n.lp.disconnect(); n.delay.disconnect(); n.fb.disconnect(); } catch (e) { } }, 1500); // incl. the delay↔feedback loop, which would keep itself alive
   },
   use(set) { this.set = set; if (this.live) { const s = this.SETS[set]; this.n.lp.frequency.setTargetAtTime(s.cut, this.ctx.currentTime, .5); this.n.delay.delayTime.setTargetAtTime(60 / s.bpm * .75, this.ctx.currentTime, .5); } },
   chord(i, t, glide = 1.5) {
@@ -1864,7 +1997,7 @@ const Synth = {
 
 const Radio = { // directory: radio-browser.info (community-maintained, open API); streams belong to their broadcasters
   TAGS: ['dark ambient', 'ambient', 'techno', 'dub techno', 'drum and bass', 'jungle', 'idm', 'downtempo', 'trip hop', 'dub', 'industrial', 'synthwave', 'lofi', 'breakbeat', 'deep house', 'psytrance'],
-  HOSTS: ['de1', 'nl1', 'at1', 'de2', 'fi1'], cache: {}, tag: Store.get('radio_tag', 'dark ambient'),
+  HOSTS: ['all', 'de1', 'de2'], cache: {}, // all.api… resolves to whichever mirrors are live (nl1/at1/fi1 are gone); de1/de2 as named fallbacks tag: Store.get('radio_tag', 'dark ambient'),
   tidy(name) { // some directory entries carry keyword-stuffed names; keep the first clause, capped
     let s = String(name || '').replace(/^[\s#\-–—|>*]+/, '').replace(/\s+/g, ' ').trim();
     if (s.length > 42) { const re = /\s[-–—|:]\s|\s-{2,}|\s\|\|/g; let m; while ((m = re.exec(s))) { if (m.index > 8) { s = s.slice(0, m.index).trim(); break; } } }
@@ -1873,63 +2006,81 @@ const Radio = { // directory: radio-browser.info (community-maintained, open API
   },
   async list(tag) {
     if (this.cache[tag] && Date.now() - this.cache[tag].t < 3600e3) return this.cache[tag].list; let err;
-    for (const h of this.HOSTS) { try { const d = await Net.json(`https://${h}.api.radio-browser.info/json/stations/bytag/${encodeURIComponent(tag)}?limit=14&hidebroken=true&order=clickcount&reverse=true`, { timeout: 12000 }); const list = (d || []).filter(x => isHttp(x.url_resolved || x.url)).map(x => ({ id: x.stationuuid, name: Radio.tidy(x.name), url: x.url_resolved || x.url, codec: x.codec, bitrate: x.bitrate, country: x.countrycode, homepage: x.homepage, tags: (x.tags || '').split(',').slice(0, 4).join(', ') })); this.cache[tag] = { t: Date.now(), list }; return list; } catch (e) { err = e; } }
-    throw err || new Error('directory unavailable');
+    for (const h of this.HOSTS) { try { const d = await Net.json(`https://${h}.api.radio-browser.info/json/stations/bytag/${encodeURIComponent(tag)}?limit=14&hidebroken=true&order=clickcount&reverse=true`, { timeout: 12000 }); const list = (d || []).filter(x => isHttp(x.url_resolved || x.url)).map(x => ({ id: x.stationuuid, name: Radio.tidy(x.name), url: x.url_resolved || x.url, codec: x.codec, bitrate: x.bitrate, country: x.countrycode, homepage: x.homepage, tags: (x.tags || '').split(',').slice(0, 4).join(', ') })); this.cache[tag] = { t: Date.now(), list }; return list; } catch (e) { err = err || e; } }
+    throw new Error(`radio directory unreachable (tried ${this.HOSTS.join(', ')}.api.radio-browser.info${err && !/CORS|offline/.test(err.message) ? ': ' + err.message : ''})`); // a dead host looks like a CORS error to the browser
   },
 };
 const Music = {
-  mode: Store.get('music_mode', 'synth'), set: Store.get('music_set', 'underground'), vol: Store.get('music_vol', .55), auto: Store.get('music_auto', true),
+  mode: Store.get('music_mode', 'synth'), set: (s => Object.keys(Synth.SETS).includes(s) ? s : 'underground')(Store.get('music_set', 'underground')), vol: Store.get('music_vol', .55), auto: Store.get('music_auto', true),
   // a saved station must be a {name,url} object with an http(s) url (older builds stored a plain id — ignore those)
   station: (s => (s && typeof s === 'object' && typeof s.url === 'string' && /^https?:\/\//i.test(s.url)) ? s : null)(Store.get('music_station', null)),
   ctx: null, master: null, analyser: null, playing: false, audio: null, busy: false, radioState: '',
   ensure() {
-    if (this.ctx) return; const ctx = this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (this.ctx) return; const ctx = this.ctx = Sound.ctx || new (window.AudioContext || window.webkitAudioContext)(); // share the alert chime's context rather than orphaning it
     this.master = ctx.createGain(); this.master.gain.value = this.vol; this.analyser = ctx.createAnalyser(); this.analyser.fftSize = 128; this.analyser.smoothingTimeConstant = .82;
     this.master.connect(this.analyser).connect(ctx.destination); Sound.ctx = ctx;
   },
   async start() {
-    if (this.playing || this.busy) return; this.busy = true;
+    if (this.playing || this.busy) return; this.busy = true; let st = null, again = false;
     try {
-      this.ensure(); if (this.ctx.state === 'suspended') await this.ctx.resume();
-      if (this.mode === 'radio') { if (!this.station || typeof this.station.url !== 'string') { this.station = null; this.mode = 'synth'; toast('Pick a station first — playing the generated set meanwhile'); } else await this.startRadio(); }
-      if (this.mode === 'synth') { Synth.use(this.set); Synth.start(this.ctx, this.master); }
+      this.ensure();
+      if (this.mode === 'radio') { if (!this.station || typeof this.station.url !== 'string') { this.station = null; this.mode = 'synth'; toast('Pick a station first — playing the generated set meanwhile'); } else {
+        st = this.station; if (this.ctx.state === 'running') this.ctx.suspend(); // the stream plays outside the context
+        await this.startRadio();
+        // another station or the generated set was picked while this one connected: drop it and start that instead
+        if (this.mode !== 'radio' || this.station !== st) { this.dropRadio(); again = true; return; }
+      } }
+      if (this.mode === 'synth') { if (this.ctx.state === 'suspended') await this.ctx.resume(); Synth.use(this.set); Synth.start(this.ctx, this.master); }
       this.playing = true; this.vis(); this.ui(); Log.info(this.mode === 'radio' ? `Radio: ${this.station.name}` : `Soundtrack: ${Synth.SETS[this.set].name} (generated live)`);
-    } catch (e) { toast('Audio failed to start: ' + e.message, 'alert'); this.ui(); }
-    finally { this.busy = false; }
+    } catch (e) { if (st && (this.mode !== 'radio' || this.station !== st)) again = true; else if (!e.cancelled) toast('Audio failed to start: ' + e.message, 'alert'); this.ui(); }
+    finally { this.busy = false; if (again) this.start(); }
   },
-  stop() { if (!this.playing) return; this.playing = false; Synth.stop(); if (this.audio) { try { this.audio.pause(); this.audio.src = ''; } catch (e) { } this.audio = null; } this.ui(); },
-  toggle() { if (this.playing) this.stop(); else this.start(); Store.set('music_auto', this.auto = this.playing); },
+  // also cancels a station that is still connecting; once the synth has faded, the context is suspended (Sound.ping resumes it)
+  stop() {
+    if (!this.playing && !this.audio) return; this.playing = false; Synth.stop(); this.dropRadio(); this.ui();
+    setTimeout(() => { if (this.ctx && this.ctx.state === 'running' && !this.busy && !(this.playing && this.mode === 'synth')) this.ctx.suspend(); }, 1700);
+  },
+  dropRadio() { const a = this.audio; this.audio = null; this.radioState = ''; if (a) { try { a.pause(); a.src = ''; } catch (e) { } } },
+  toggle() { const on = !(this.playing || this.busy); if (on) this.start(); else this.stop(); Store.set('music_auto', this.auto = on); }, // the intent, not this.playing (a station starts async)
   startRadio() {
     return new Promise((resolve, reject) => {
       const a = this.audio = new Audio(); a.preload = 'none'; a.volume = this.vol; const st = this.station; this.radioState = 'connecting…'; this.ui();
-      const fail = msg => { this.radioState = ''; if (this.audio === a) { this.audio = null; } reject(new Error(msg)); };
-      a.addEventListener('error', () => fail(`"${st.name}" is not answering — pick another station`), { once: true });
-      a.addEventListener('waiting', () => { this.radioState = 'buffering…'; this.ui(); }); a.addEventListener('playing', () => { this.radioState = ''; this.ui(); });
-      a.src = st.url; a.load(); a.play().then(resolve).catch(err => fail(err.name === 'NotAllowedError' ? 'the browser wants a click first' : 'stream unavailable (' + err.message + ')'));
+      let started = false; const to = setTimeout(() => fail(`"${st.name}" is not answering — pick another station`), 20000);
+      // before play() resolves a failure rejects start(); after it (stream dropped or ended) it stops the player and says so; a dropped element rejects as cancelled
+      const fail = msg => {
+        clearTimeout(to); if (this.audio !== a) { if (!started) reject(Object.assign(new Error('cancelled'), { cancelled: true })); return; }
+        this.dropRadio(); if (!started) { reject(new Error(msg)); return; }
+        this.playing = false; this.ui(); toast(`Radio stopped: ${msg}`, 'alert');
+      };
+      a.addEventListener('error', () => fail(started ? `"${st.name}" dropped the stream` : `"${st.name}" is not answering — pick another station`));
+      a.addEventListener('ended', () => fail(`"${st.name}" ended the stream`));
+      a.addEventListener('waiting', () => { if (this.audio === a) { this.radioState = 'buffering…'; this.ui(false); } }); a.addEventListener('playing', () => { if (this.audio === a) { this.radioState = ''; this.ui(false); } });
+      a.src = st.url; a.load(); a.play().then(() => { if (this.audio !== a) return fail(); clearTimeout(to); started = true; resolve(); }).catch(err => fail(err.name === 'NotAllowedError' ? 'the browser wants a click first' : 'stream unavailable (' + err.message + ')'));
     });
   },
-  setMode(m) { const was = this.playing; this.stop(); this.mode = m; Store.set('music_mode', m); if (was && (m === 'synth' || this.station)) this.start(); else this.ui(); },
-  setSet(id) { this.set = id; Store.set('music_set', id); Synth.use(id); if (this.mode !== 'synth') { this.mode = 'synth'; Store.set('music_mode', 'synth'); if (this.playing) { this.stop(); this.start(); } } this.ui(); },
-  setStation(st) { this.station = st; Store.set('music_station', st); this.mode = 'radio'; Store.set('music_mode', 'radio'); if (this.playing) { this.stop(); } this.start(); },
+  setMode(m) { const was = this.playing; this.stop(); this.mode = m; Store.set('music_mode', m); if (was && (m === 'synth' || this.station)) this.start(); this.ui(); },
+  setSet(id) { this.set = id; Store.set('music_set', id); Synth.use(id); if (this.mode !== 'synth') { this.mode = 'synth'; Store.set('music_mode', 'synth'); if (this.playing || this.audio) { this.stop(); this.start(); } } this.ui(); },
+  setStation(st) { this.station = st; Store.set('music_station', st); this.mode = 'radio'; Store.set('music_mode', 'radio'); if (this.playing || this.audio) this.stop(); this.start(); },
   setVol(v) { this.vol = v; Store.set('music_vol', v); if (this.master) this.master.gain.setTargetAtTime(v, this.ctx.currentTime, .05); if (this.audio) this.audio.volume = v; },
   react() { // the soundtrack listens to the map: traffic density → hats, zoom → brightness
-    const inView = Dyn.air.size; Synth.density = Math.min(1, inView / 900); Synth.brightness = Math.min(1, Math.max(0, (map.getZoom() - 3) / 9));
+    const b = map.getBounds(); let inView = 0; for (const a of Dyn.air.values()) if (a.lat != null && b.contains([a.lat, a.lon])) inView++;
+    Synth.density = Math.min(1, inView / 400); Synth.brightness = Math.min(1, Math.max(0, (map.getZoom() - 3) / 9));
   },
-  label() { return !this.playing ? 'audio off' : this.mode === 'radio' ? (this.radioState || (this.station && this.station.name) || 'radio') : Synth.SETS[this.set].name; },
-  ui() {
+  label() { return this.audio && this.radioState && !this.playing ? this.radioState : !this.playing ? 'audio off' : this.mode === 'radio' ? (this.radioState || (this.station && this.station.name) || 'radio') : Synth.SETS[this.set].name; },
+  ui(full = true) { // full=false (stream buffering events) updates the labels only: rebuilding the popover would detach a slider mid-drag
     const b = $('#btnAudio'); if (b) { b.classList.toggle('on', this.playing); $('.alabel', b).textContent = this.label(); }
-    const pop = $('#audioPop'); if (pop && !pop.hidden) this.renderPop();
+    const pop = $('#audioPop'); if (full && pop && !pop.hidden) this.renderPop();
     const hud = $('#hudAudio'); if (hud) hud.textContent = this.playing ? `▶ ${this.label()}` : '';
   },
   async renderPop() {
-    const pop = $('#audioPop'); const on = this.playing;
+    const pop = $('#audioPop'); const on = this.playing || this.busy; // a connecting station shows Stop, which cancels it
     pop.innerHTML = `<div class="ahead"><span class="label">Soundtrack</span><button class="btn small ${on ? 'on' : 'primary'}" id="apPlay">${on ? '■ Stop' : '▶ Play'}</button></div>
       <div class="amodes"><button class="amode ${this.mode === 'synth' ? 'on' : ''}" data-mode="synth"><b>Generated</b><small>original, synthesized live, reacts to the map</small></button><button class="amode ${this.mode === 'radio' ? 'on' : ''}" data-mode="radio"><b>Radio</b><small>underground stations from the open directory</small></button></div>
       ${this.mode === 'synth' ? `<div class="alist">${Object.entries(Synth.SETS).map(([id, s]) => `<button class="aitem ${this.set === id ? 'on' : ''}" data-set="${id}"><span class="aname">${esc(s.name)}</span><span class="adesc">${esc(s.desc)}</span><span class="atag">${s.bpm} bpm</span></button>`).join('')}</div>`
       : `<div class="atags">${Radio.TAGS.map(t => `<button class="pill ${Radio.tag === t ? 'on' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div><div class="alist" id="apStations"><div class="acredit">Loading stations…</div></div><p class="acredit">Directory by <a href="https://www.radio-browser.info/" target="_blank" rel="noopener">radio-browser.info</a>; streams belong to their broadcasters. Some stations refuse to play outside their own site — pick another.</p>`}
       <div class="avol"><span class="label">Volume</span><input type="range" id="apVol" min="0" max="1" step="0.02" value="${this.vol}"><label class="acheck"><input type="checkbox" id="apAuto" ${this.auto ? 'checked' : ''}> start with the page</label></div>`;
     $('#apPlay').addEventListener('click', () => this.toggle());
-    $$('.amode', pop).forEach(b => b.addEventListener('click', () => { this.mode = b.dataset.mode; Store.set('music_mode', this.mode); if (this.playing) { this.stop(); if (this.mode === 'synth' || this.station) this.start(); } this.renderPop(); }));
+    $$('.amode', pop).forEach(b => b.addEventListener('click', () => { if (b.dataset.mode !== this.mode) this.setMode(b.dataset.mode); }));
     $$('[data-set]', pop).forEach(b => b.addEventListener('click', () => { this.setSet(b.dataset.set); if (!this.playing) this.start(); }));
     $$('[data-tag]', pop).forEach(b => b.addEventListener('click', () => { Radio.tag = b.dataset.tag; Store.set('radio_tag', Radio.tag); this.renderPop(); }));
     $('#apVol').addEventListener('input', e => this.setVol(+e.target.value));
@@ -1943,9 +2094,10 @@ const Music = {
   },
   togglePop() { const pop = $('#audioPop'); pop.hidden = !pop.hidden; if (!pop.hidden) this.renderPop(); },
   vis() {
-    const cv = $('#vis'); if (!cv) return; const ctx2 = cv.getContext('2d'); const W = cv.width, H = cv.height; const bars = 18; const data = new Uint8Array(this.analyser.frequencyBinCount); let phase = 0;
+    // one loop at a time: a stop+start in the same task never lets the old loop see !playing, so it just keeps running
+    const cv = $('#vis'); if (!cv || this.visOn) return; this.visOn = true; const ctx2 = cv.getContext('2d'); const W = cv.width, H = cv.height; const bars = 18; const data = new Uint8Array(this.analyser.frequencyBinCount); let phase = 0;
     const frame = () => {
-      if (!this.playing) { ctx2.clearRect(0, 0, W, H); return; }
+      if (!this.playing) { this.visOn = false; ctx2.clearRect(0, 0, W, H); return; }
       requestAnimationFrame(frame); if (document.hidden) return;
       ctx2.clearRect(0, 0, W, H); const col = cssVar('--vibe');
       if (this.mode === 'synth') { this.analyser.getByteFrequencyData(data); for (let i = 0; i < bars; i++) { const v = data[Math.floor(i * data.length / bars * .6)] / 255; const h = Math.max(1, v * H); ctx2.fillStyle = hexA(col, .35 + v * .65); ctx2.fillRect(i * (W / bars), H - h, W / bars - 1.5, h); } }
@@ -1966,21 +2118,32 @@ const Keys = {
   get(id) { return (Store.get('keys', {})[id] || '').trim(); },
   set(id, v) { const k = Store.get('keys', {}); k[id] = v.trim(); Store.set('keys', k); },
   build() {
-    const el = $('#setupKeys'); el.innerHTML = `<div class="prose"><h3>Helper / relay</h3><p id="relayStatus"></p><p>Aircraft feeds, OpenSky, NYC cameras, NHC and GDELT refuse direct browser requests. The bundled helper (<span class="mono">serve.py</span>, <span class="mono">serve.js</span> or the <span class="mono">.bat</span>) serves this page from <span class="mono">localhost</span> and relays only those hosts. If you host your own relay (a Cloudflare Worker, say), put its URL here; <span class="mono">{url}</span> marks where the encoded target goes, otherwise it is appended.</p></div>
+    const el = $('#setupKeys'); el.innerHTML = `<div class="prose"><h3>Helper / relay</h3><p id="relayStatus"></p><p>Aircraft feeds, OpenSky, NYC cameras, NHC and the live submarine-cable map refuse direct browser requests, and so do FIRMS and Windy (the keyed layers). The bundled helper (<span class="mono">serve.py</span>, <span class="mono">serve.js</span> or the <span class="mono">.bat</span>) serves this page from <span class="mono">localhost</span> and relays only those hosts. If you host your own relay (a Cloudflare Worker, say), put its URL here; <span class="mono">{url}</span> marks where the encoded target goes, otherwise it is appended.</p></div>
     <div class="form"><div class="field"><label class="label" for="key_proxy">Custom relay URL (optional)</label><input id="key_proxy" type="text" autocomplete="off" spellcheck="false" placeholder="https://my-relay.example.workers.dev/?url={url}" value="${esc(Relay.custom)}"><small>Leave empty to use the local helper automatically.</small></div></div>
-    <div class="prose"><h3>API keys</h3><p>Keys are optional. Everything else on the map works without them. They are stored only in this browser (localStorage) and sent only to the provider that issued them.</p></div><div class="form" id="keyform"></div>`;
+    <div class="prose"><h3>API keys</h3><p>Keys are optional. Everything else on the map works without them. They are stored only in this browser (localStorage) and sent only to the provider that issued them, through the relay for FIRMS and Windy: the local helper passes them on without logging them, but a custom relay above sees them (the FIRMS key is part of the URL), so only use a relay you run yourself.</p></div><div class="form" id="keyform"></div>`;
     const f = $('#keyform');
     this.relayStatus();
     for (const d of this.DEFS) { const w = document.createElement('div'); w.className = 'field'; w.innerHTML = `<label class="label" for="key_${d.id}">${esc(d.name)}</label><input id="key_${d.id}" type="password" autocomplete="off" spellcheck="false" placeholder="paste key" value="${esc(this.get(d.id))}"><small>${esc(d.note)} <a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(safeHost(d.url))}</a></small>`; f.appendChild(w); }
     const actions = document.createElement('div'); actions.className = 'actions'; actions.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
     actions.innerHTML = `<button class="btn primary small" id="keysSave">Save keys</button><button class="btn small" id="keysClearCache">Clear cached orbital data</button><button class="btn small" id="keysReset">Reset layout & layers</button><button class="btn small" id="keysWelcome">Welcome screen</button>`; f.appendChild(actions);
     $('#keysSave').addEventListener('click', async () => {
+      const changed = this.DEFS.filter(d => this.get(d.id) !== $('#key_' + d.id).value.trim()).map(d => d.id);
       for (const d of this.DEFS) this.set(d.id, $('#key_' + d.id).value);
-      const px = $('#key_proxy').value.trim(); if (px !== Relay.custom) { Relay.custom = px; Store.set('proxy', px); await Relay.check(); this.relayStatus(); }
-      toast('Saved in this browser'); for (const l of Layers.defs) if (l.on && l.feed) l.feed.nextAt = 0; Brief.render();
+      const px = $('#key_proxy').value.trim();
+      if (px && !isHttp(px)) { toast('The relay URL must start with https://', 'alert'); return; }
+      if (/^http:/i.test(px) && !/^http:\/\/(localhost|127\.0\.0\.1|\[::1\])[:/]/i.test(px)) Log.warn('The custom relay is plain http://, so relayed requests (and the FIRMS / Windy keys) cross the network unencrypted');
+      const relayChanged = px !== Relay.custom; if (relayChanged) { Relay.custom = px; Store.set('proxy', px); await Relay.check(); this.relayStatus(); }
+      // refetch only what the change affects: the keyed layers whose key changed, and after a relay change the failing feeds
+      const KEY_LAYER = { windy: 'cams', aisstream: 'ships_ws', firms: 'fires' };
+      for (const l of Layers.defs) if (l.on && l.feed && ((relayChanged && l.feed.status === 'error') || changed.some(k => KEY_LAYER[k] === l.id))) l.feed.nextAt = 0;
+      if (changed.includes('aisstream') && Layers.on('ships_ws')) AisWs.connect(); // the open socket was subscribed with the old key
+      toast(relayChanged ? `Saved in this browser · relay ${Relay.status()}` : 'Saved in this browser'); Brief.render();
     });
-    $('#keysClearCache').addEventListener('click', () => { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.startsWith('ow.tle.')) localStorage.removeItem(k); } toast('Orbital data cache cleared — next satellite load fetches fresh TLEs'); });
-    $('#keysReset').addEventListener('click', () => { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.startsWith('ow.') && !k.startsWith('ow.keys') && !k.startsWith('ow.tle.')) localStorage.removeItem(k); } location.reload(); });
+    const lsKeys = () => { try { const out = []; for (let i = 0; i < localStorage.length; i++) out.push(localStorage.key(i)); return out; } catch (e) { return []; } }; // storage can throw when site data is blocked
+    const lsDel = k => { try { localStorage.removeItem(k); } catch (e) { } };
+    $('#keysClearCache').addEventListener('click', () => { for (const k of lsKeys()) if (k && k.startsWith('ow.tle.')) lsDel(k); toast('Orbital data cache cleared — next satellite load fetches fresh TLEs'); });
+    // reset keeps the "Helper & keys" settings (keys, custom relay) and the orbital cache
+    $('#keysReset').addEventListener('click', () => { for (const k of lsKeys()) if (k && k.startsWith('ow.') && !k.startsWith('ow.keys') && k !== 'ow.proxy' && !k.startsWith('ow.tle.')) lsDel(k); location.reload(); });
     $('#keysWelcome').addEventListener('click', () => Welcome.show());
   },
 };
@@ -1991,12 +2154,12 @@ const DIAG = [
   ['CelesTrak (satellites)', 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE', true], ['USGS earthquakes', 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_day.geojson'], ['NASA EONET', 'https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=1&limit=1'],
   ['GDACS', 'https://www.gdacs.org/gdacsapi/api/events/geteventlist/MAP?eventtype=EQ'], ['NOAA NHC', 'https://www.nhc.noaa.gov/CurrentStorms.json'], ['NWS alerts', 'https://api.weather.gov/alerts/active?severity=Extreme'], ['NOAA SWPC', 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'], ['RainViewer', 'https://api.rainviewer.com/public/weather-maps.json'],
   ['GDELT news', 'https://api.gdeltproject.org/api/v2/doc/doc?query=earthquake&mode=artlist&format=json&maxrecords=1&timespan=1h'], ['TfL cameras', 'https://api.tfl.gov.uk/Place/JamCams_00001.07450'], ['NYC DOT cameras', 'https://webcams.nyctmc.org/api/cameras'], ['Caltrans cameras', 'https://cwwp2.dot.ca.gov/data/d12/cctv/cctvStatusD12.json'], ['Singapore cameras', 'https://api.data.gov.sg/v1/transport/traffic-images'], ['Finland cameras', 'https://tie.digitraffic.fi/api/weathercam/v1/stations/C01503'],
-  ['Digitraffic AIS', 'https://meri.digitraffic.fi/api/ais/v1/vessels?from=' + Date.now()], ['SondeHub', 'https://api.v2.sondehub.org/sondes?lat=52&lon=5&distance=100000&last=3600'], ['Open-Meteo', 'https://api.open-meteo.com/v1/forecast?latitude=40&longitude=-74&current=temperature_2m'], ['Photon geocoder', 'https://photon.komoot.io/reverse?lat=40.7&lon=-74'], ['Overpass (OSM)', 'https://overpass-api.de/api/status', true], ['GitHub (cables)', 'https://raw.githubusercontent.com/lintaojlu/submarine_cable_information/master/README.md', true],
+  ['Digitraffic AIS', () => 'https://meri.digitraffic.fi/api/ais/v1/vessels?from=' + (Date.now() - 60e3)], /* built per run: only the last minute */ ['SondeHub', 'https://api.v2.sondehub.org/sondes?lat=52&lon=5&distance=100000&last=3600'], ['Open-Meteo', 'https://api.open-meteo.com/v1/forecast?latitude=40&longitude=-74&current=temperature_2m'], ['Photon geocoder', 'https://photon.komoot.io/reverse?lat=40.7&lon=-74'], ['Overpass (OSM)', 'https://overpass-api.de/api/status', true], ['GitHub (cables)', 'https://raw.githubusercontent.com/lintaojlu/submarine_cable_information/master/README.md', true],
 ];
 async function runDiagnostics(btn) {
   btn.disabled = true; const out = $('#diagOut'); out.innerHTML = '<p>Testing ' + DIAG.length + ' sources…</p>'; const rows = [];
   await Relay.check(); Keys.relayStatus();
-  await Promise.all(DIAG.map(async ([name, url, isText]) => { const t0 = Date.now(); let st, cls; try { await Net.fetch(url, { timeout: 20000, text: !!isText }); st = 'ok' + (Relay.needs(url) ? ' via relay' : ''); cls = 'good'; } catch (e) { st = e.message; cls = /blocked|relay/.test(st) ? 'warn' : 'emg'; } rows.push([name, st, Date.now() - t0, cls]); }));
+  await Promise.all(DIAG.map(async ([name, u, isText]) => { const url = typeof u === 'function' ? u() : u, t0 = Date.now(); let st, cls; try { await Net.fetch(url, { timeout: 20000, text: !!isText }); st = 'ok' + (Relay.needs(url) ? ' via relay' : ''); cls = 'good'; } catch (e) { st = e.message; cls = /blocked|relay/.test(st) ? 'warn' : 'emg'; } rows.push([name, st, Date.now() - t0, cls]); }));
   rows.sort((a, b) => a[0].localeCompare(b[0]));
   out.innerHTML = `<table>${rows.map(r => `<tr><td>${esc(r[0])}</td><td><span class="flag ${r[3]}">${esc(r[1])}</span> <span class="mono" style="font-size:11px;color:var(--ink-faint)">${r[2]} ms</span></td></tr>`).join('')}</table><p style="margin-top:8px">${Relay.available ? 'Relay is active, so the sources that block browsers are reached through the helper.' : 'Sources marked "blocked" refuse browser requests. Start the helper (see above) and open the page through it to enable them.'}</p>`;
   btn.disabled = false; Log.info('Diagnostics: ' + rows.filter(r => r[3] === 'good').length + '/' + rows.length + ' sources reachable');
@@ -2013,7 +2176,7 @@ function buildSetup() {
 <h3>Keyboard</h3><p><kbd>1</kbd>–<kbd>5</kbd> views · <kbd>M</kbd> surprise me · <kbd>I</kbd> follow ISS · <kbd>A</kbd> audio on/off · <kbd>N</kbd> next generated set · <kbd>S</kbd> alert sounds · <kbd>/</kbd> search · <kbd>Esc</kbd> clear selection · <kbd>L</kbd> layer rail · <kbd>P</kbd> pause feeds</p></div></details>
 <details class="setup"><summary>Sources &amp; terms</summary><div class="prose">
 <p>A single-file situation map fed entirely by public, open data. It runs in your browser and talks straight to each source. Nothing is stored anywhere except your own browser (layer choices, map position, cached orbital elements and any keys you add). Version ${OW_VERSION}.</p>
-<h3>The helper</h3><p>A few sources refuse requests that come from a web page (no CORS headers): the ADS-B aggregators, OpenSky, NYC DOT, NHC and GDELT. The bundled helper fixes that: run <span class="mono">Start Open Overwatch.bat</span> (Windows), or <span class="mono">python serve.py</span> / <span class="mono">node serve.js</span> in the folder. It serves this page at <span class="mono">http://127.0.0.1:8787/</span> and relays only those hosts, adding the missing header. No dependencies, nothing leaves your machine except the requests you would make anyway.</p>
+<h3>The helper</h3><p>A few sources refuse requests that come from a web page (no CORS headers): the ADS-B aggregators, OpenSky, NYC DOT, NHC and the live submarine-cable map, plus FIRMS and Windy for the keyed layers. The bundled helper fixes that: run <span class="mono">Start Open Overwatch.bat</span> (Windows), or <span class="mono">python serve.py</span> / <span class="mono">node serve.js</span> in the folder. It serves this page at <span class="mono">http://127.0.0.1:8787/</span> and relays only those hosts, adding the missing header. No dependencies, nothing leaves your machine except the requests you would make anyway.</p>
 <h3>Sources and terms</h3>
 <table>
 <tr><td>Aircraft</td><td><a href="https://www.adsb.lol/" target="_blank" rel="noopener">adsb.lol</a> (primary) and <a href="https://adsb.fi/" target="_blank" rel="noopener">adsb.fi</a> (fallback): community ADS-B/MLAT, unfiltered, ~1 request/s, non-commercial. <a href="https://airplanes.live/" target="_blank" rel="noopener">airplanes.live</a> now answers 403 unless they have granted you API access, so it is only used if you pick it. Optional <a href="https://opensky-network.org/" target="_blank" rel="noopener">OpenSky Network</a> anonymous snapshot (400 credits/day, CC BY-NC). All via the helper.</td></tr>
@@ -2025,7 +2188,7 @@ function buildSetup() {
 <tr><td>Natural events</td><td><a href="https://eonet.gsfc.nasa.gov/" target="_blank" rel="noopener">NASA EONET</a> (events and storm tracks); <a href="https://www.gdacs.org/" target="_blank" rel="noopener">GDACS</a> disaster alerts; <a href="https://www.nhc.noaa.gov/" target="_blank" rel="noopener">NOAA NHC</a> advisories via the helper; <a href="https://firms.modaps.eosdis.nasa.gov/" target="_blank" rel="noopener">NASA FIRMS</a> fires with a key.</td></tr>
 <tr><td>Weather</td><td><a href="https://www.rainviewer.com/api.html" target="_blank" rel="noopener">RainViewer</a> radar and IR composites; <a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">NWS API</a> alerts; <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> point conditions (CC BY 4.0).</td></tr>
 <tr><td>Space weather</td><td><a href="https://www.swpc.noaa.gov/" target="_blank" rel="noopener">NOAA SWPC</a> planetary K-index and OVATION aurora forecast.</td></tr>
-<tr><td>News</td><td><a href="https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/" target="_blank" rel="noopener">GDELT DOC 2.0</a>: worldwide coverage matching your query in the last 24 h, plotted by the country of the outlet (GDELT's geo API was retired). One request per 15 min; GDELT allows one per 5 s per IP. Via the helper.</td></tr>
+<tr><td>News</td><td><a href="https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/" target="_blank" rel="noopener">GDELT DOC 2.0</a>: worldwide coverage matching your query in the last 24 h, plotted by the country of the outlet (GDELT's geo API was retired). One request per 15 min; GDELT allows one per 5 s per IP.</td></tr>
 <tr><td>Infrastructure</td><td><a href="https://www.submarinecablemap.com/" target="_blank" rel="noopener">TeleGeography</a> submarine cable data (CC BY-NC-SA 3.0, via a maintained GitHub mirror); <a href="https://overpass-api.de/" target="_blank" rel="noopener">Overpass API</a> for OpenStreetMap scans (ODbL); <a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a> / Nominatim reverse geocoding.</td></tr>
 <tr><td>Audio</td><td>The generated soundtrack is synthesized in the browser with Web Audio (original, no samples). Radio mode lists stations from the community directory <a href="https://www.radio-browser.info/" target="_blank" rel="noopener">radio-browser.info</a> by tag and plays their public streams; the streams belong to their broadcasters, and some only allow playback on their own sites. Airframe photos come from <a href="https://www.planespotters.net/" target="_blank" rel="noopener">Planespotters.net</a> with photographer credit.</td></tr>
 <tr><td>Base maps</td><td>Esri dark gray canvas, Esri World Imagery and topographic, OpenStreetMap (plain and inverted to dark), OpenTopoMap, <a href="https://worldview.earthdata.nasa.gov/" target="_blank" rel="noopener">NASA GIBS</a> daily VIIRS true color and night lights. None need a key.</td></tr>
@@ -2062,15 +2225,22 @@ $('#search').addEventListener('submit', async ev => {
   ev.preventDefault(); const q = $('#q').value.trim(); if (!q) return; const ql = q.toLowerCase();
   const m = q.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/); if (m) { map.flyTo([+m[1], +m[2]], Math.max(map.getZoom(), 8)); return; }
   for (const a of Dyn.air.values()) if ([a.hex, a.flight, a.r].some(v => v && String(v).toLowerCase() === ql)) { flyTo(a.lat, a.lon, 8); Detail.show('air', a, a.hex); return; }
-  const sat = Dyn.sats.find(s => s.name.toLowerCase() === ql || String(s.id) === q) || Dyn.sats.find(s => s.name.toLowerCase().includes(ql)); if (sat) { if (sat.lat != null) flyTo(sat.lat, sat.lon, 3); Detail.show('sat', sat, sat.id); return; }
+  const showSat = sat => { if (sat.lat != null) flyTo(sat.lat, sat.lon, 3); Detail.show('sat', sat, sat.id); };
+  // exact matches in every loaded category first, then a satellite name fragment, then the online lookups
+  const satExact = Dyn.sats.find(s => s.name.toLowerCase() === ql || String(s.id) === q); if (satExact) return showSat(satExact);
   for (const s of Dyn.ships.values()) if ((s.name || '').toLowerCase() === ql || String(s.id) === q) { flyTo(s.lat, s.lon, 10); Detail.show('ship', s, s.id); return; }
+  const satPart = Dyn.sats.find(s => s.name.toLowerCase().includes(ql)); if (satPart) return showSat(satPart);
   toast('Searching feeds for ' + q + '…');
-  try {
-    const lookups = /^[0-9a-f]{6}$/i.test(q) ? [['hex', q.toLowerCase()]] : [['callsign', encodeURIComponent(q.toUpperCase())], ['reg', encodeURIComponent(q.toUpperCase())]];
-    for (const [kind, v] of lookups) { const d = await Air.get(kind, v); if (Air.ingest(d, 'search')) { const hex = String(d.ac[0].hex).toLowerCase(); const a = Dyn.air.get(hex); if (a) { flyTo(a.lat, a.lon, 8); Detail.show('air', a, hex); return; } } }
-  } catch (e) { if (/blocked by browser|no helper/.test(e.message)) toast('Aircraft lookups need the helper running (see Sources tab)', 'alert'); }
+  // six hex digits may be an ICAO address or a callsign such as CCA981, so try both; one failed lookup doesn't stop the next
+  const lookups = [...(/^[0-9a-f]{6}$/i.test(q) ? [['hex', q.toLowerCase()]] : []), ['callsign', encodeURIComponent(q.toUpperCase())], ['reg', encodeURIComponent(q.toUpperCase())]];
+  let airErr = '';
+  for (const [kind, v] of lookups) {
+    try { const d = await Air.get(kind, v); if (Air.ingest(d, 'search')) { const hex = Air.lastHexes[0]; const a = Dyn.air.get(hex); if (a) { flyTo(a.lat, a.lon, 8); Detail.show('air', a, hex); return; } } }
+    catch (e) { airErr = airErr || e.message || String(e); }
+  }
   try { const s = await Sats.searchByName(q); if (s) { const o = Sats.byId.get(s.id); toast(`Loaded ${s.name} from CelesTrak`); if (o) { Detail.show('sat', o, o.id); setTimeout(() => { if (o.lat != null) flyTo(o.lat, o.lon, 3); }, 1500); } return; } } catch (e) { }
-  toast('No aircraft, satellite or ship matched "' + q + '"', 'alert');
+  if (/blocked by browser|no helper/.test(airErr)) toast('Aircraft lookups need the helper running (see the Setup tab)', 'alert');
+  else toast(`No aircraft, satellite or ship matched "${q}"` + (airErr ? ` · aircraft lookup failed: ${airErr}` : ''), 'alert');
 });
 
 
@@ -2087,9 +2257,10 @@ const Splash = {
   line(k, v, cls = '') { const el = $('#boot'); const cur = $('.cursor', el); if (cur) cur.classList.remove('cursor'); const d = document.createElement('div'); d.innerHTML = `<span>${esc(k)}</span><span class="${cls}">${esc(v)}</span>`; el.appendChild(d); while (el.children.length > 7) el.firstChild.remove(); },
   async run() {
     const t0 = Date.now(); const ok = await Relay.check(); Keys.relayStatus(); Feeds.paused = false;
-    this.line('relay', ok ? (Relay.custom ? 'custom relay' : 'helper online · aircraft feeds unlocked') : (Relay.local ? 'helper not answering' : 'not running · aircraft feeds locked'), ok ? 'ok' : 'warn');
-    if (ok) Log.info(Relay.custom ? 'Custom relay set — blocked sources routed through it' : 'Helper detected — aircraft, OpenSky, NYC cameras, NHC and GDELT go through it');
-    else Log.warn(Relay.local ? 'Served from localhost but the helper /proxy route is not answering — is this serve.py / serve.js?' : 'Opened as a plain file: aircraft, OpenSky, NYC cameras, NHC and GDELT are blocked by the browser. Run the helper (Setup tab) to enable them.');
+    this.line('relay', ok ? (Relay.usingCustom() ? 'custom relay answering' : 'helper online · aircraft feeds unlocked') : (Relay.custom ? 'custom relay not answering' : Relay.local ? 'helper not answering' : 'not running · aircraft feeds locked'), ok ? 'ok' : 'warn');
+    if (Relay.custom && !Relay.usingCustom()) Log.warn('The custom relay (Setup tab) is not answering' + (ok ? ' — using the local helper instead' : ''));
+    if (ok) Log.info(Relay.usingCustom() ? 'Custom relay answering — blocked sources routed through it' : 'Helper detected — aircraft, OpenSky, NYC cameras, NHC, cables, FIRMS and Windy go through it');
+    else Log.warn(Relay.local ? 'Served from localhost but the helper /proxy route is not answering — is this serve.py / serve.js?' : 'Opened as a plain file: aircraft, OpenSky, NYC cameras, NHC, the live cable map, FIRMS and Windy are blocked by the browser. Run the helper (Setup tab) to enable them.');
     const watch = [['sats', 'orbital data'], ['air_mil', 'military ads-b'], ['quakes', 'seismic'], ['storms', 'storm tracks'], ['nws', 'weather warnings']]; const seen = new Set();
     for (let i = 0; i < 40 && seen.size < watch.length; i++) { await sleep(150); for (const [id, name] of watch) { const f = Layers.byId[id] && Layers.byId[id].feed; if (seen.has(id) || !f) continue; if (!Layers.byId[id].on) { seen.add(id); this.line(name, 'standby', ''); continue; } if (f.status === 'ok') { seen.add(id); this.line(name, `online · ${fmt.n(f.count)}`, 'ok'); } else if (f.status === 'error') { seen.add(id); this.line(name, f.err.slice(0, 60), 'bad'); } } }
     this.line('ready', `${((Date.now() - t0) / 1000).toFixed(1)} s`, 'ok'); this.done = true;
@@ -2107,8 +2278,8 @@ if (Locate.pos && Date.now() - Locate.pos.t < 24 * 3600e3) setTimeout(() => Brie
 document.addEventListener('keydown', e => {
   const t = e.target; if (t && t.matches && t.matches('input,textarea,select')) { if (e.key === 'Escape') t.blur(); return; }
   if (e.metaKey || e.ctrlKey || e.altKey) return; const k = e.key.toLowerCase();
-  if (e.key === 'Escape') { Detail.clear(); map.closePopup(); $('#welcome').hidden = true; } else if (e.key === '/') { e.preventDefault(); $('#q').focus(); } else if (k === 'l') { $('#rail').classList.toggle('hidden'); setTimeout(() => map.invalidateSize(), 50); } else if (k === 'p') { $('#btnPause').click(); }
-  else if (k === 'm') Fun.surprise(); else if (k === 'i') Fun.followIss(); else if (k === 's') Sound.toggle(); else if (k === 'a') Music.toggle(); else if (k === 'n') { const ks = Object.keys(Synth.SETS); Music.setSet(ks[(ks.indexOf(Music.set) + 1) % ks.length]); if (!Music.playing) Music.start(); toast('Audio: ' + Music.label()); } else if (/^[1-5]$/.test(k)) Presets.apply(PRESETS[+k - 1].id);
+  if (e.key === 'Escape') { Detail.clear(); map.closePopup(); Welcome.hide(); Fun.issFollow = false; Fun.issPending = 0; } else if (e.key === '/') { e.preventDefault(); $('#q').focus(); } else if (k === 'l') { $('#rail').classList.toggle('hidden'); setTimeout(() => map.invalidateSize(), 50); } else if (k === 'p') { $('#btnPause').click(); }
+  else if (k === 'm') Fun.surprise(); else if (k === 'i') Fun.followIss(); else if (k === 's') Sound.toggle(); else if (k === 'a') Music.toggle(); else if (k === 'n') { const ks = Object.keys(Synth.SETS); Music.setSet(ks[(ks.indexOf(Music.set) + 1) % ks.length]); if (!Music.playing) Music.start(); toast('Audio: ' + Music.label()); } else if (/^[1-5]$/.test(k)) { Welcome.hide(); Presets.apply(PRESETS[+k - 1].id); }
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { requestDraw(); Sats.prop(true); Brief.render(); } });
 try { // the ADS-B and GDELT limits are per IP address, so a second open copy halves everyone's budget
@@ -2117,7 +2288,6 @@ try { // the ADS-B and GDELT limits are per IP address, so a second open copy ha
   bc.postMessage({ t: 'hello', id: me });
 } catch (e) { }
 window.addEventListener('error', e => { if (/satellite|Leaflet|\bL\b/.test(e.message || '')) Log.error('Script: ' + e.message); });
-if (typeof L === 'undefined') { document.body.innerHTML = '<p style="padding:24px;font-family:sans-serif">Leaflet failed to load from cdnjs — this page needs an internet connection.</p>'; }
 Log.info('Open Overwatch v' + OW_VERSION + ' online · ' + Layers.defs.filter(d => d.on).length + ' layers active');
 // console handle for tinkering: OW.Layers, OW.Dyn.air, OW.Feeds …
 window.OW = { map, Layers, Feeds, Dyn, Sel, Detail, Log, Net, Relay, Store, Keys, Sats, Air, Probe, Points, World, Brief, Presets, Fun, Locate, Welcome, Hover, Sound, Music, Synth, Splash, Photos, glyphs, Tracks, scanArea, runFeed, runDiagnostics, countryIso, regionOf, showTab, openSheet, applyLayoutMode, fetchKp, AisWs, get auroraOverlay() { return auroraOverlay; }, get radarTiles() { return radarTiles; }, get irTiles() { return irTiles; } };

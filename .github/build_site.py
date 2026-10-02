@@ -20,7 +20,7 @@ APP_PATHS = ['open-overwatch.html', 'globe.html', 'README.txt', 'brand/emblem', 
 SKIP_VERSION = ('brand/models/previews/', 'brand/sprites/raw/')
 # every group globe.html (LAYERS sat:) and open-overwatch.html (Sats.GROUPS) can ask for
 TLE_GROUPS = ['stations', 'visual', 'last-30-days', 'military', 'radar', 'gps-ops', 'glo-ops', 'galileo', 'beidou',
-              'weather', 'noaa', 'goes', 'resource', 'science', 'iridium-NEXT', 'geo', 'oneweb', 'starlink',
+              'weather', 'goes', 'resource', 'science', 'iridium-NEXT', 'geo', 'oneweb', 'starlink',
               'cosmos-2251-debris', 'iridium-33-debris']
 
 

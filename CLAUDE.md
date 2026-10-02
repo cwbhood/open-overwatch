@@ -78,14 +78,16 @@ SATELLITES 1105 · point/vector layers 1269 · PRESETS 1606 · BRIEF 1667 · AUD
 Moving-object types (like aircraft/ships) have no generic path: they need a hand-written branch in Glyphs.draw.
 A top-level exception anywhere aborts INIT, so test every new layer in the browser.
 
-## Status as of 2026-10-01 (from the review)
-Broken/stale feeds: RainViewer IR satellite (discontinued), RainViewer radar maxNativeZoom 12 (real limit is lower),
-submarine cables (GitHub mirror is stale; the live TeleGeography fallback isn't relayed), GDACS only shows ~1-2 days
-(100-result cap), 3 of 5 radio-browser hosts gone, GDELT flaky. GDELT now sends CORS headers (could skip the relay).
-Fixed 2026-10-01: detail panels escape all values (Detail.kv escapes; head() `sub` callers pass escaped text; links
-must be http(s)), header tiers instead of overlap (desktop only), satellite failures now red + 20 min retry with stale-
-cache fallback, emergency alerts fire on the transition into emergency from any feed (Air.raiseEmergency).
-Agreed plan: foundation pass first (feeds + top bugs + git), then a small layer helper, then new features.
+## Status as of 2026-10-02
+The 2026-10-01 review's confirmed issues (notes/review-2026-10-01.json) were worked through on 2026-10-02: all fixed
+except the antimeridian handling for point layers (design change) and a separate static-layer canvas (refactor).
+Feeds now: IR clouds = NASA GIBS band-13 clean IR from GOES-East/West + Himawari (no Meteosat: no Europe/Africa);
+RainViewer radar maxNativeZoom 7; submarine cables live from submarinecablemap.com via the helper (GitHub copy as
+fallback); GDACS paged (up to 1000 events); radio-browser hosts all/de1/de2; GDELT not relayed (rate-limit replies
+arrive without CORS and are reported as such); airplanes.live only when picked (403 without permission); CelesTrak
+`noaa` group gone (in `weather`), `last-30-days` often has no TLE-format data (new catalog numbers outgrow TLE).
+Helpers (serve.js/serve.py) are locked down: Host check, /proxy only for the helper's own pages, no ACAO, each
+redirect hop re-checked against the allowlist. Keep their allowlists = NEEDS_RELAY (+ old hosts for archived pages).
 
 ## Blender (for 3D assets)
 - Production renders run HEADLESS via the launcher (blocks, returns the exit code, but stdout is lost: log to files).

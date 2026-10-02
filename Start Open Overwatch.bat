@@ -11,7 +11,7 @@ echo Neither Python nor Node.js was found on this PC.
 echo Install one of them (https://www.python.org/downloads/ or https://nodejs.org/) and run this file again.
 echo.
 echo Until then you can still open open-overwatch.html directly; only the aircraft, OpenSky, NYC camera,
-echo NHC and GDELT feeds need the helper.
+echo NHC, live cable map, FIRMS and Windy feeds need the helper.
 :done
 echo.
 pause

@@ -3,4 +3,5 @@
 Set sh = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 dir = fso.GetParentFolderName(WScript.ScriptFullName)
-sh.Run "cmd /c """ & dir & "\Start Open Overwatch.bat""", 7, False
+' the extra outer quotes keep cmd from splitting a folder path that contains & or ^
+sh.Run "cmd /c """"" & dir & "\Start Open Overwatch.bat""""", 7, False

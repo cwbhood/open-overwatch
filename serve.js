@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Open Overwatch helper (Node 18+ or Bun, no dependencies).
 // Serves this folder at http://127.0.0.1:8787/ and relays requests to a short list of data sources
-// that refuse browser (CORS) requests, adding the missing Access-Control-Allow-Origin header.
+// that refuse browser (CORS) requests. The page comes from this same origin, so the relayed answers need no CORS header,
+// and only this helper's own pages may use the relay.
 // Run:  node serve.js   (or double-click "Start Open Overwatch.bat")
 'use strict';
 const http = require('http'), fs = require('fs'), path = require('path'), { execFile } = require('child_process');
@@ -14,30 +15,46 @@ const ALLOWED_HOSTS = new Set([
   'opensky-network.org',                                                    // aircraft snapshot
   'www.nhc.noaa.gov',                                                       // hurricane advisories
   'webcams.nyctmc.org',                                                     // NYC cameras
-  'api.gdeltproject.org',                                                   // news
+  'api.gdeltproject.org',                                                   // news (now sends CORS itself; kept for old pages)
   'firms.modaps.eosdis.nasa.gov',                                           // fires (key)
   'api.windy.com',                                                          // webcams (key)
-  'celestrak.org', 'tle.ivanstanojevic.me',                                 // orbital data fallbacks
-]);
+  'www.submarinecablemap.com',                                              // submarine cables (live TeleGeography data)
+]); // keep in sync with NEEDS_RELAY in open-overwatch.html and ALLOWED_HOSTS in serve.py
 const FORWARD_HEADERS = ['x-windy-api-key', 'accept'];
 const UA = 'OpenOverwatch/1.0 (local helper; personal use)';
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.txt': 'text/plain; charset=utf-8', '.py': 'text/plain; charset=utf-8', '.bat': 'text/plain; charset=utf-8', '.md': 'text/markdown; charset=utf-8',
   '.webp': 'image/webp', '.glb': 'model/gltf-binary', '.mp4': 'video/mp4', '.wav': 'audio/wav', '.mjs': 'text/javascript; charset=utf-8' }; // brand/ assets and the 3D globe
 
+// No Access-Control-Allow-Origin: the page is served from this same origin, and other sites must not use the relay.
 function reply(res, code, body, type = 'text/plain; charset=utf-8') {
-  res.writeHead(code, { 'Access-Control-Allow-Origin': '*', 'Content-Type': type, 'Cache-Control': 'no-store' });
+  res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store' });
   res.end(body);
+}
+const allowed = u => u.protocol === 'https:' && ALLOWED_HOSTS.has(u.hostname);
+// only this helper's own pages: a Host other than ours means DNS rebinding, a cross-site fetch carries Sec-Fetch-Site / Origin
+const OWN_HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
+function ownRequest(req) {
+  if (!OWN_HOSTS.has(req.headers.host)) return false;
+  const site = req.headers['sec-fetch-site']; if (site && site !== 'same-origin' && site !== 'none') return false;
+  const origin = req.headers.origin; return !origin || OWN_HOSTS.has(origin.replace(/^http:\/\//, ''));
 }
 
 async function proxy(req, res, params) {
   if (params.has('ping')) return reply(res, 200, 'ok');
   let target; try { target = new URL(params.get('url') || ''); } catch (e) { return reply(res, 400, 'bad url'); }
-  if (target.protocol !== 'https:' || !ALLOWED_HOSTS.has(target.hostname)) return reply(res, 403, "host not in the helper's allowlist: " + target.hostname);
+  if (!allowed(target)) return reply(res, 403, "host not in the helper's allowlist: " + target.hostname);
   const headers = { 'User-Agent': UA };
   for (const h of FORWARD_HEADERS) if (req.headers[h]) headers[h] = req.headers[h];
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 60000);
   try {
-    const r = await fetch(target, { headers, signal: ctl.signal, redirect: 'follow' });
+    let r;
+    for (let hop = 0; ; hop++) { // follow redirects by hand so every hop is checked against the allowlist
+      r = await fetch(target, { headers, signal: ctl.signal, redirect: 'manual' });
+      const loc = r.status >= 300 && r.status < 400 && r.headers.get('location'); if (!loc) break;
+      const next = new URL(loc, target); if (hop >= 5 || !allowed(next)) return reply(res, 502, 'upstream redirected outside the allowlist: ' + next.hostname);
+      if (next.hostname !== target.hostname) delete headers['x-windy-api-key'];
+      target = next;
+    }
     const buf = Buffer.from(await r.arrayBuffer());
     reply(res, r.status, buf, r.headers.get('content-type') || 'application/octet-stream');
   } catch (e) { reply(res, 502, 'upstream error: ' + (e.name === 'AbortError' ? 'timeout' : e.message)); }
@@ -45,20 +62,22 @@ async function proxy(req, res, params) {
 }
 
 function serveFile(req, res, pathname) {
-  const rel = decodeURIComponent(pathname).replace(/^\/+/, '');
-  const file = path.normalize(path.join(DIR, rel || PAGE));
-  if (!file.startsWith(DIR)) return reply(res, 403, 'forbidden');
+  let rel; try { rel = decodeURIComponent(pathname).replace(/^\/+/, ''); } catch (e) { return reply(res, 400, 'bad path'); } // a stray % would otherwise kill the helper
+  const file = path.resolve(DIR, rel || PAGE);
+  if (!file.startsWith(DIR + path.sep)) return reply(res, 403, 'forbidden'); // with the separator, so ../open-overwatch-other/ is outside too
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) return reply(res, 404, 'not found');
     res.writeHead(200, { 'Content-Type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream', 'Content-Length': st.size, 'Cache-Control': 'no-store' });
-    fs.createReadStream(file).pipe(res);
+    fs.createReadStream(file).on('error', () => res.destroy()).pipe(res); // e.g. EBUSY while an editor saves the file
   });
 }
 
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://127.0.0.1');
-  if (req.method === 'OPTIONS') { res.writeHead(204, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS' }); return res.end(); }
-  if (u.pathname === '/proxy') { const host = (() => { try { return new URL(u.searchParams.get('url')).hostname; } catch (e) { return '?'; } })(); console.log(new Date().toISOString().slice(11, 19), 'relay', host); return proxy(req, res, u.searchParams); }
+  if (!OWN_HOSTS.has(req.headers.host)) return reply(res, 421, 'wrong host'); // DNS rebinding guard
+  if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); } // no CORS preflight approval: same-origin pages never need one
+  if (u.pathname === '/proxy') {
+    if (!ownRequest(req)) return reply(res, 403, 'the relay only serves pages from this helper'); const host = (() => { try { return new URL(u.searchParams.get('url')).hostname; } catch (e) { return '?'; } })(); console.log(new Date().toISOString().slice(11, 19), 'relay', host); return proxy(req, res, u.searchParams); }
   if (u.pathname === '/') { res.writeHead(302, { Location: '/' + PAGE }); return res.end(); }
   serveFile(req, res, u.pathname);
 });
