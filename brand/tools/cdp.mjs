@@ -150,7 +150,14 @@ export class Browser {
  * @param {string[]} [o.args] extra command-line switches
  * @param {[number, number]} [o.windowSize]
  */
-export async function launch({ exe = EDGE, profileRoot = WORK, headless = true, args = [], windowSize = [540, 960], timeoutMs = 30000 } = {}) {
+export const CHROME = String.raw`C:\Program Files\Google\Chrome\Application\chrome.exe`;
+/** Launch Edge (or OO_BROWSER_EXE); if Edge exits at once (it does mid-update), retry once with Chrome. */
+export async function launch(o = {}) {
+  const exe = o.exe || process.env.OO_BROWSER_EXE || EDGE;
+  try { return await launchOnce({ ...o, exe }); }
+  catch (e) { if (exe !== EDGE || !/exited early/.test(e.message)) throw e; return launchOnce({ ...o, exe: CHROME }); }
+}
+async function launchOnce({ exe = EDGE, profileRoot = WORK, headless = true, args = [], windowSize = [540, 960], timeoutMs = 30000 } = {}) {
   await mkdir(profileRoot, { recursive: true });
   const userDataDir = await mkdtemp(path.join(profileRoot, 'edge-profile-'));
   const argv = [
