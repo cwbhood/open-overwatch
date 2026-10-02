@@ -1,16 +1,18 @@
 // 3D globe: wiring, the frame hooks, feeds on timers, and boot.
-import { C, $, toast } from './env.js';
+import { C, $, toast, PHONE } from './env.js';
 import { viewer, scene, globe, camera, satPts, airPts, airIcons, qkPts, camHeight } from './viewer.js';
 import { L, initDock } from './layers.js';
 import { hooks } from './state.js';
 import { Earth, BASES, setBase, currentBase, sunlitView, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, moonPosition } from './earth.js';
 import { Follow, MODEL_FIX, SOLAR_AXIS } from './follow.js';
-import { Sats, SatModels } from './satellites.js';
+import { Sats, SatModels, SHADOW_FILL } from './satellites.js';
+import { warmModels } from './warm.js';
 import { Air, AirModels, airShown } from './aircraft.js';
 import { Time } from './time.js';
 import { Quakes } from './quakes.js';
 import { updateStats, updateBand, PRESETS, Lighting, select } from './ui.js';
 import { Space } from './space.js';
+import { Quality, LEVELS } from './quality.js';
 
 function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
@@ -21,7 +23,8 @@ function applyVisibility() {
 }
 hooks.applyVisibility = applyVisibility;
 hooks.updateStats = updateStats;
-initDock({ bases: BASES, currentBase, onBase: setBase });
+initDock({ bases: BASES, currentBase, onBase: setBase, quality: { levels: LEVELS, chosen: () => Quality.chosen, current: () => Quality.level, choose: id => Quality.choose(id) } });
+Quality.follow(q => { AirModels.max = q.air; SatModels.max = q.sat; cloudShell.material.uniforms.octaves = q.octaves; });
 
 // before each frame: follow camera, model lighting; before rendering: sun direction, satellite dots, Earth fades
 scene.preUpdate.addEventListener((sc, time) => { Follow.track(time); Lighting.update(); });
@@ -43,6 +46,12 @@ updateBand(); applyVisibility();
     if (globe.tilesLoaded || Date.now() - t0 > 8000) { clearInterval(wait); $('#boot').classList.add('out'); setTimeout(() => $('#boot').remove(), 900); }
   }, 200);
 }
+// compile every model type's shaders now, not mid-flight: aircraft (0.8 MB) behind the boot screen, satellites (6.7 MB;
+// phones only the two common types) once the page is idle. Model options must match the real ones (aircraft.js,
+// satellites.js) where they change the shader: the satellites' shadow CustomShader does, sizes don't.
+warmModels(['airliner', 'prop', 'heli', 'fighter', 'heavy', 'tprop'].flatMap(t => ['civ', 'mil'].map(k => ({ uri: `brand/models/aircraft/${t}_${k}.glb` }))));
+setTimeout(() => warmModels((PHONE ? ['starlink', 'smallsat'] : ['starlink', 'smallsat', 'rocketbody', 'gnss', 'geo', 'weather', 'soyuz', 'hubble', 'iss', 'css'])
+  .flatMap(t => [{ uri: `brand/models/${t}.glb`, runAnimations: false }, { uri: `brand/models/${t}.glb`, runAnimations: false, customShader: SHADOW_FILL }])), 6000);
 Sats.load().catch(e => toast('Satellites failed: ' + e.message));
 every(15 * 60e3, () => Air.opensky(), 'Civil aircraft');
 every(60e3, () => Air.military(), 'Military aircraft');

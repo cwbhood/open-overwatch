@@ -16,6 +16,8 @@ import { createDeepSpace } from './deepspace.js';
 import { createStory } from './story.js';
 import { createUI } from './ui.js';
 import { createEmbed, EMBED } from './embed.js';
+import { createQuality } from './quality.js';
+import { SOFTWARE_HINT } from '../core/gpu.js';
 
 const showError = m => { const el = document.querySelector('#err'); el.style.display = 'block'; el.textContent = 'Something went wrong: ' + m; };
 addEventListener('error', e => showError(e.message));
@@ -72,8 +74,10 @@ const nav = {
   },
 };
 const story = createStory({ scene, clock, nav, caption: (...a) => ui.caption(...a), onTourChange: on => ui.tourLabel(on) });
-const ui = createUI({ camera, controls, clock, nav, story, small, deep });
+const quality = createQuality({ renderer, small, onAutoChange: q => { ui.renderLayers(); ui.caption(`Graphics set to ${q.name}`, 'Lowered automatically for smoother motion. You can change it in the layer panel.', '', 5000); } });
+const ui = createUI({ camera, controls, clock, nav, story, small, deep, quality });
 small.onChange = () => ui.renderLayers();
+if (quality.software) setTimeout(() => ui.caption('Slow graphics', SOFTWARE_HINT, '', 15000), 10e3);
 
 // ---- the loop
 let lastT = performance.now();
@@ -93,7 +97,7 @@ const loop = {
 const embed = createEmbed({ camera, controls, nav, clock, loop, update });
 function frame(t) {
   if (!loop.running) return;
-  const dt = Math.min((t - lastT) / 1000, 0.1); lastT = t;
+  const dt = Math.min((t - lastT) / 1000, 0.1); lastT = t; quality.tick(t);
   update(clock.tick(Math.max(dt, 0)));
   if (!embed.frame(view)) nav.frame();
   controls.update(); camera.updateMatrixWorld();
@@ -127,4 +131,4 @@ const settle = p => p.catch(e => console.warn(e)).finally(() => { applyLayers();
 settle(moons.load()); settle(small.load()); settle(craft.load()); settle(deep.loadStars());
 applyLayers();
 
-window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, moons, nav, story, renderer, LY: LY_AU, embed: embed.api, loop };
+window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, moons, quality, nav, story, renderer, LY: LY_AU, embed: embed.api, loop };

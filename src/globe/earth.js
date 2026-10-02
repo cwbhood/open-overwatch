@@ -100,7 +100,7 @@ czm_material czm_getMaterial(czm_materialInput mi) {
   return m;
 }`;
 const CLOUD_GLSL = `
-uniform sampler2D fx; uniform float fade;
+uniform sampler2D fx; uniform float fade; uniform float octaves;
 float hash3(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.zyx + 31.32); return fract((p.x + p.y) * p.z); } // float-safe at Earth-scale coordinates
 float vnoise(vec3 x) {
   vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
@@ -117,6 +117,7 @@ czm_material czm_getMaterial(czm_materialInput mi) {
   vec3 pW = (czm_inverseView * vec4(-mi.positionToEyeEC, 1.0)).xyz;
   float px = length(fwidth(pW)), n = 0.0, wsum = 0.0, lam = 16000.0, k = 0.0;
   for (int o = 0; o < 4; o++) {
+    if (float(o) >= octaves) break;                             // fewer octaves on the lower quality levels
     float w = (1.0 - smoothstep(lam * 0.12, lam * 0.4, px)) / float(o + 1);
     n += (vnoise(pW / lam + float(o) * 7.31) - 0.5) * w; wsum += 1.0 / float(o + 1); k = max(k, w * float(o + 1) * step(0.5, float(o)));
     lam *= 0.42;
@@ -163,14 +164,14 @@ czm_material czm_getMaterial(czm_materialInput mi) {
   m.diffuse = col * smoothstep(-1500.0, 500.0, h) * fade; m.alpha = 0.0;
   return m;
 }`;
-function earthShell(lift, source, blending) {
-  const material = new C.Material({ fabric: { uniforms: { fx: C.Material.DefaultImageId, fade: 1.0, ocean: 0.0, cshadow: 1.0 }, source }, translucent: true });
+function earthShell(lift, source, blending, extra = {}) {
+  const material = new C.Material({ fabric: { uniforms: { fx: C.Material.DefaultImageId, fade: 1.0, ocean: 0.0, cshadow: 1.0, ...extra }, source }, translucent: true });
   const appearance = new C.MaterialAppearance({ material, flat: true, translucent: true, closed: true, faceForward: false,
     materialSupport: C.MaterialAppearance.MaterialSupport.TEXTURED,
     renderState: { depthTest: { enabled: true }, depthMask: false, cull: { enabled: true, face: C.CullFace.BACK }, blending } });
   // Appearance.getRenderState() forces ALPHA_BLEND on anything translucent; keep the requested blending
   appearance.getRenderState = function () { const rs = C.clone(this.renderState, false); rs.depthMask = false; rs.blending = blending; return rs; };
-  const geometry = new C.EllipsoidGeometry({ radii: new C.Cartesian3(R_EQ + lift, R_EQ + lift, R_PO + lift), stackPartitions: 256, slicePartitions: 512,
+  const geometry = new C.EllipsoidGeometry({ radii: new C.Cartesian3(R_EQ + lift, R_EQ + lift, R_PO + lift), stackPartitions: PHONE ? 128 : 256, slicePartitions: PHONE ? 256 : 512,
     vertexFormat: C.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat });
   const primitive = scene.primitives.add(new C.Primitive({ geometryInstances: new C.GeometryInstance({ geometry }), appearance, asynchronous: false, compressVertices: false }));
   return { primitive, material };
@@ -180,7 +181,7 @@ const PREMULTIPLIED = { enabled: true, equationRgb: C.BlendEquation.ADD, equatio
   functionDestinationRgb: C.BlendFunction.ONE_MINUS_SOURCE_ALPHA, functionDestinationAlpha: C.BlendFunction.ONE_MINUS_SOURCE_ALPHA };
 export const fxShell = earthShell(1500, FX_GLSL, PREMULTIPLIED);   // 1.5 km up: thinner shells z-fight with the coarse far-zoom globe mesh
 export const limbShell = earthShell(1.15e5, LIMB_GLSL, PREMULTIPLIED);
-export const cloudShell = earthShell(9000, CLOUD_GLSL, C.BlendingState.ALPHA_BLEND);
+export const cloudShell = earthShell(9000, CLOUD_GLSL, C.BlendingState.ALPHA_BLEND, { octaves: 4.0 });
 export const Fx = { ok: false };   // the glint/shadow and cloud shells stay hidden until earth_fx is in
 loadImage(FX_TEX).then(img => { fxShell.material.uniforms.fx = img; cloudShell.material.uniforms.fx = img; Fx.ok = true; Earth.apply(); })
   .catch(e => console.warn('Clouds and sun glint unavailable:', e.message));
@@ -192,7 +193,10 @@ export const Earth = {
   apply() {
     const h = this.h, real = smooth(2.0e4, 2.0e5, h);   // 0 = readable map, 1 = real day/night
     marbleLayer.alpha = smooth(1.2e5, 4.5e5, h);          // Blue Marble from space (level 8 ~ 600 m still matches the screen at ~300 km)
-    if (baseLayer) baseLayer.nightAlpha = 1 - real;       // close in, the map stays visible on the night side
+    // a layer at alpha 0, or one fully under the opaque Blue Marble, still costs tile downloads, texture units and a
+    // globe shader variant per combination (each new variant is a compile stall mid-flight): switch those off
+    marbleLayer.show = marbleLayer.alpha > 0.001;
+    if (baseLayer) { baseLayer.nightAlpha = 1 - real; baseLayer.show = marbleLayer.alpha < 0.999; }   // close in, the map stays visible on the night side
     marbleLayer.nightAlpha = 1 - real;
     nightLayer.show = L.night.on && real > 0.001; nightLayer.alpha = real;
     // the globe dims its night side to 0.3 only at full lighting (linear in height between the two lighting fade

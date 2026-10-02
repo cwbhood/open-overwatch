@@ -54,7 +54,7 @@ const FRAG = LOGDEPTH_F + `uniform float uFade; varying vec3 vC;
   }`;
 
 export function createSmallBodies({ scene, renderer }) {
-  const S = { epoch: DEFAULT_EPOCH, named: [], comets: [], files: [], points: [], cometPoints: null, loadingAll: false };
+  const S = { epoch: DEFAULT_EPOCH, named: [], comets: [], files: [], points: [], cometPoints: null, loadingAll: false, full: !PHONE };
   const uniforms = {
     uDays: { value: 0 }, uFade: { value: 1 }, uShow: { value: CLASS_STYLE.map(() => 1) }, uSize: { value: PHONE ? 1.6 : 1.5 }, uPR: { value: renderer.getPixelRatio() },
     uCol: { value: CLASS_STYLE.map(([c, k]) => new THREE.Vector3(...c).multiplyScalar(k)) },
@@ -79,11 +79,11 @@ export function createSmallBodies({ scene, renderer }) {
     S.files[0] = pointsFor(await fetchAsset('data/solar/asteroids_a.bin'));
     layer('asteroids').n = count();
     addNamedWorlds(); addComets();
-    if (!PHONE) loadAll();
+    if (S.full) loadAll();
   }
-  async function loadAll() { // the other 1.27M (19 MB): desktop only
+  async function loadAll() { // the other 1.27M (19 MB): only on the higher quality levels (quality.js)
     if (S.loadingAll || S.files[1]) return; S.loadingAll = true;
-    try { S.files[1] = pointsFor(await fetchAsset('data/solar/asteroids_b.bin')); S.files[1].points.visible = layerOn('asteroids'); layer('asteroids').n = count(); onChange(); }
+    try { S.files[1] = pointsFor(await fetchAsset('data/solar/asteroids_b.bin')); S.files[1].points.visible = layerOn('asteroids') && S.full; layer('asteroids').n = count(); onChange(); }
     catch (e) { console.warn('asteroids_b', e); } finally { S.loadingAll = false; }
   }
   let onChange = () => {};
@@ -153,19 +153,25 @@ export function createSmallBodies({ scene, renderer }) {
   }
 
   onLayers(() => {
-    for (const f of S.files) if (f) f.points.visible = layerOn('asteroids');
+    S.files.forEach((f, i) => { if (f) f.points.visible = layerOn('asteroids') && (i === 0 || S.full); });
     if (S.cometPoints) S.cometPoints.visible = layerOn('comets');
     CLASSES.forEach((_, i) => { uniforms.uShow.value[i] = layerOn('cls' + i) ? 1 : 0; });
     for (const b of bodies) {
       if (b.layer === 'dwarfs' || b.layer === 'comets') { b.group.visible = layerOn(b.layer); if (b.orbit) b.orbit.visible = layerOn(b.layer); if (b.tail) b.tail.visible = layerOn('comets'); }
     }
-    if (layerOn('asteroids') && !PHONE) loadAll();
+    if (layerOn('asteroids') && S.full && S.files[0]) loadAll();
   });
 
   return {
+    /** All 1.57M asteroids (true) or the brightest 300k (false); the second file loads on first use. */
+    setFull(on) {
+      S.full = on; if (S.files[1]) S.files[1].points.visible = on && layerOn('asteroids'); else if (on && S.files[0] && layerOn('asteroids')) loadAll();
+      layer('asteroids').n = S.files[0] ? S.files[0].view.N + (on && S.files[1] ? S.files[1].view.N : 0) : 0; onChange();
+    },
     S, load, asteroidBody, pickAsteroid, search, set onChange(fn) { onChange = fn; },
     update(jd) { uniforms.uDays.value = jd - S.epoch; },
     frame({ camera, camSun, fade }) {
+      uniforms.uPR.value = renderer.getPixelRatio();
       uniforms.uFade.value = (1 - fade(600, 6000, camSun)) * (1 - 0.88 * fade(12, 120, camSun)); // the belt piles into a blob from far out
       for (const b of bodies) {
         if (b.orbit) b.orbit.material.opacity = b.orbit.userData.opacity * (1 - fade(2000, 3e4, camSun));

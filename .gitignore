@@ -20,3 +20,9 @@ brand/source/sbdb/
 # downloaded catalogues / ephemerides (rebuild with brand/tools/make_stars.py, make_spacecraft.py)
 brand/source/hyg/
 brand/source/horizons/
+# moon maps and the 2MRS galaxy catalogue (rebuild with brand/tools/make_moon_textures.py, make_galaxies.py)
+brand/source/moons/
+brand/source/2mrs/
+
+# perf.mjs measurements (summaries go in docs/PERFORMANCE.md)
+brand/perf/

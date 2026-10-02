@@ -112,6 +112,7 @@ export function createDeepSpace({ scene, camera, renderer }) {
       if (camSun < 80 * LY_AU) list.filter(b => b.ly < 12).forEach(b => { b.vis = true; });
     },
     frame({ camSun, fade }) {
+      starUniforms.uPR.value = renderer.getPixelRatio();
       starUniforms.uFade.value = fade(0.02, 0.4, camSun, 'ly') * (1 - fade(2e4, 8e4, camSun, 'ly'));
       oort.material.opacity = 0.55 * fade(1500, 2e4, camSun) * (1 - fade(3, 30, camSun, 'ly'));
       helio.material.uniforms.k.value = 0.22 * fade(40, 250, camSun) * (1 - fade(3000, 3e4, camSun));

@@ -29,7 +29,8 @@ to `APP_PATHS` in `.github/build_site.py` and to the release zip list (archived 
 - [ ] Cosmic-web finale beyond the Local Group
 
 ## Stage 3 — launch like engineers
-- [ ] Performance budget + numbers in the README (fps, memory, load size), phone pass
+- [x] Performance numbers + fixes (docs/PERFORMANCE.md, brand/tools/perf.mjs): shader pre-warm, graphics levels with auto step-down, software-GPU hint, phone header fix
+- [ ] Real-phone pass (an actual phone's GPU; emulation only throttles the CPU) and README numbers
 - [ ] 30-second capture of the full zoom
 - [ ] Decide how the public history looks (squash / fresh repo) — the user's call
 - [ ] Publish as v0.9.1

@@ -17,10 +17,12 @@ export function updateStats() {
   $('#sSat').textContent = fmt(Sats.list.filter(s => L[s.layer].on).length); $('#sQk').textContent = fmt(Quakes.list.length);
 }
 // ---- time bar
+const NARROW = matchMedia('(max-width: 480px)');
 const RATE_TEXT = { '-3600': '1 h/s backwards', 0: 'paused', 1: 'live', 60: '1 min/s', 600: '10 min/s', 3600: '1 h/s' };
 function syncTime() {
   const ms = Time.nowMs(), k = Time.live ? 1 : Time.rate;
-  $('#tNow').textContent = new Date(ms).toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  const iso = new Date(ms).toISOString();
+  $('#tNow').textContent = NARROW.matches ? iso.slice(5, 16).replace('T', ' ') : iso.slice(0, 16).replace('T', ' ') + ' UTC';   // phones: MM-DD hh:mm
   const mode = Time.live ? 'live' : Time.offLive() ? (RATE_TEXT[k] || k + '×') + ' · not live' : RATE_TEXT[k] || k + '×';
   $('#tMode').textContent = mode; $('#tMode').classList.toggle('off', Time.offLive());
   document.querySelectorAll('#timebar [data-rate]').forEach(b => b.classList.toggle('on', +b.dataset.rate === (Time.live ? 1 : Time.rate)));

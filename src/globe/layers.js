@@ -22,7 +22,7 @@ for (const l of LAYERS) l.on = store.get('ly.' + l.id, l.on);
 export function setCount(id, n) { const el = $('#n-' + id); if (el) el.textContent = n ? fmt(n) : ''; }
 
 /** bases: { id: { name } }, currentBase(): id, onBase(id) */
-export function initDock({ bases, currentBase, onBase }) {
+export function initDock({ bases, currentBase, onBase, quality }) {
   const counts = {};
   function render() {
     for (const l of LAYERS) { const el = $('#n-' + l.id); if (el) counts[l.id] = el.textContent; }
@@ -32,13 +32,19 @@ export function initDock({ bases, currentBase, onBase }) {
       html += `<button class="ly ${l.on ? '' : 'off'}" data-ly="${l.id}" style="--c:${l.color}"><i></i><span class="t">${esc(l.name)}</span><span class="n" id="n-${l.id}">${esc(counts[l.id] || '')}</span></button>`;
     }
     html += '<div class="sep"></div><h3>Base map</h3>' + Object.entries(bases).map(([id, b]) => `<button class="ly ${currentBase() === id ? '' : 'off'}" data-base="${id}" style="--c:#e6edf3"><i></i><span class="t">${esc(b.name)}</span></button>`).join('');
+    if (quality) {
+      const auto = quality.chosen() === 'auto';
+      html += '<div class="sep"></div><h3>Graphics</h3>' + [['auto', `Auto (${quality.levels[quality.current()].name.toLowerCase()})`], ...Object.entries(quality.levels).map(([id, q]) => [id, q.name])]
+        .map(([id, name]) => `<button class="ly ${(auto ? id === 'auto' : id === quality.chosen()) ? '' : 'off'}" data-q="${id}" style="--c:#e6edf3"><i></i><span class="t">${esc(name)}</span></button>`).join('');
+    }
     html += '<p class="note">Drag to orbit, scroll to zoom, right-drag to tilt. Click anything for details.</p>';
     $('#dock').innerHTML = html;
   }
   render();
   $('#dock').addEventListener('click', e => {
-    const b = e.target.closest('[data-ly]'), base = e.target.closest('[data-base]');
+    const b = e.target.closest('[data-ly]'), base = e.target.closest('[data-base]'), q = e.target.closest('[data-q]');
     if (base) { onBase(base.dataset.base); render(); return; }
+    if (q) { quality.choose(q.dataset.q); render(); return; }
     if (!b) return;
     const l = L[b.dataset.ly]; l.on = !l.on; store.set('ly.' + l.id, l.on); b.classList.toggle('off', !l.on); hooks.applyVisibility();
   });

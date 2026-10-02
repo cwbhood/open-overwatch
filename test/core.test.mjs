@@ -144,3 +144,11 @@ test('assets: falls back to the site copy', async () => {
   assert.equal(seen.length, 2);
   await assert.rejects(fetchAsset('data/y.bin', 'buffer', { fetchImpl: async () => ({ ok: false, status: 500 }) }), /could not load data\/y\.bin/);
 });
+
+test('gpu: software WebGL renderers are recognised', async () => {
+  const { isSoftwareRenderer } = await import('../src/core/gpu.js');
+  for (const s of ['ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)', 'llvmpipe (LLVM 15.0.7, 256 bits)', 'ANGLE (Microsoft, Microsoft Basic Render Driver Direct3D11 vs_5_0 ps_5_0, D3D11)'])
+    assert.ok(isSoftwareRenderer(s), s);
+  for (const s of ['ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 (0x00002504) Direct3D11 vs_5_0 ps_5_0, D3D11)', 'Apple GPU', 'Adreno (TM) 740', 'Mali-G710', ''])
+    assert.ok(!isSoftwareRenderer(s), s);
+});

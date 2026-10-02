@@ -103,7 +103,7 @@ export const Sats = {
 };
 
 // ambient fill for satellite models in Earth's shadow (otherwise they render black)
-const SHADOW_FILL = new C.CustomShader({ fragmentShaderText: 'void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) { material.emissive += material.diffuse * 0.42; }' });
+export const SHADOW_FILL = new C.CustomShader({ fragmentShaderText: 'void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) { material.emissive += material.diffuse * 0.42; }' });
 
 /* Satellites near the camera swap their point for a glTF model at real size, flying nose-first (+X along velocity, +Z
    to zenith), with solar arrays (nodes solar_*) turned toward the real sun about the model's Y axis. Modelled

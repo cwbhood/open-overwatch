@@ -12,7 +12,7 @@ const $ = s => document.querySelector(s);
 const RATES = { '-6': -365.25, '-4': -1, '0': 0, '1': REAL_TIME, '4': 1, '5': 30.44, '6': 365.25 };
 const RATE_TEXT = { '-6': '1 year per second, backwards', '-4': '1 day per second, backwards', '0': 'paused', '1': 'real time', '4': '1 day per second', '5': '1 month per second', '6': '1 year per second' };
 
-export function createUI({ camera, controls, clock, nav, story, small, deep }) {
+export function createUI({ camera, controls, clock, nav, story, small, deep, quality }) {
   // ---- captions (a "locked" caption, from the tour or a button, isn't overwritten by scale-band captions)
   let capTimer = 0, capLock = 0;
   function caption(t, p, s, ms = 9000, lock = false) {
@@ -34,6 +34,10 @@ export function createUI({ camera, controls, clock, nav, story, small, deep }) {
   function renderLayers() {
     $('#lys').innerHTML = layers.map(l => `<button class="ly${l.on ? '' : ' off'}${l.sub ? ' sub' : ''}" data-id="${l.id}" style="--c:${l.c}"><i></i><span class="t">${esc(l.name)}</span>${l.n ? `<span class="n">${l.n.toLocaleString('en-US')}</span>` : ''}</button>`).join('');
     document.querySelectorAll('#lys .ly').forEach(b => { b.onclick = () => { const l = layer(b.dataset.id); l.on = !l.on; applyLayers(); renderLayers(); }; });
+    if (!quality) return;
+    const auto = quality.chosen === 'auto', opts = [['auto', `Auto (${quality.LEVELS[quality.level].name.toLowerCase()})`], ...Object.entries(quality.LEVELS).map(([id, q]) => [id, q.name])];
+    $('#lys').insertAdjacentHTML('beforeend', '<div class="qh">Graphics</div>' + opts.map(([id, name]) => `<button class="ly sub${(auto ? id === 'auto' : id === quality.chosen) ? '' : ' off'}" data-q="${id}" style="--c:#e6edf3"><i></i><span class="t">${esc(name)}</span></button>`).join(''));
+    document.querySelectorAll('#lys [data-q]').forEach(b => { b.onclick = () => { quality.choose(b.dataset.q); renderLayers(); }; });
   }
   $('#menuBtn').onclick = () => $('#dock').classList.toggle('open');
 
