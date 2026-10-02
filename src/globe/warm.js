@@ -10,14 +10,26 @@ import { viewer, camera } from './viewer.js';
 const AHEAD_M = 30;   // in front of the camera, inside the near/far range of the closest frustum
 const ents = [];
 
+const pos = new C.Cartesian3();
+const add = ({ uri, ...opts }) => ents.push(viewer.entities.add({
+  position: new C.CallbackProperty(() => C.Cartesian3.add(camera.positionWC, C.Cartesian3.multiplyByScalar(camera.directionWC, AHEAD_M, pos), pos), false),
+  model: { uri, scale: 1e-5, minimumPixelSize: 0, environmentMapOptions: NO_ENV_MAP, ...opts },
+}));
+
 /** Add one hidden copy of each { uri, ...model options }; resolves once they have all been drawn (see warmAgain). */
-export function warmModels(items) {
-  const pos = new C.Cartesian3();
-  for (const { uri, ...opts } of items) ents.push(viewer.entities.add({
-    position: new C.CallbackProperty(() => C.Cartesian3.add(camera.positionWC, C.Cartesian3.multiplyByScalar(camera.directionWC, AHEAD_M, pos), pos), false),
-    model: { uri, scale: 1e-5, minimumPixelSize: 0, environmentMapOptions: NO_ENV_MAP, ...opts },
-  }));
-  return warmAgain();
+export function warmModels(items) { for (const it of items) add(it); return warmAgain(); }
+
+/** The same, one model every `gapMs` while the page is in use: many short compiles instead of one long freeze
+ *  (phones, after the globe is showing). */
+export async function warmSlowly(items, gapMs = 700) {
+  for (const it of items) {
+    const n = ents.length; add(it);
+    await new Promise(resolve => { let f = 0; const t0 = performance.now(); const off = viewer.scene.postRender.addEventListener(() => {
+      if (!(modelOf(ents[n])?.ready && ++f >= 3) && performance.now() - t0 < 15e3) return;
+      off(); ents[n].show = false; resolve();
+    }); });
+    await new Promise(r => setTimeout(r, gapMs));
+  }
 }
 
 /** Draw every warm copy again for a few frames (at the camera's current height), then hide them. */

@@ -18,8 +18,8 @@ SKIP_ROOT = ('brand/source/', 'brand/blend/', '.github/', 'brand/models/previews
 # everything an archived app loads at run time (missing ones are skipped per tag); keep in sync with what the pages fetch.
 # solar.html's big data/textures (data/solar, brand/textures/planets, sky_equirect) are NOT copied per version: the page
 # falls back to the site root for them, which keeps each archived version small.
-APP_PATHS = ['open-overwatch.html', 'globe.html', 'solar.html', 'README.txt', 'brand/emblem', 'brand/hero', 'brand/sprites',
-             'brand/models', 'brand/textures/night', 'brand/textures/earth_fx_8k.jpg', 'brand/textures/earth_fx_4k.jpg',
+APP_PATHS = ['open-overwatch.html', 'globe.html', 'solar.html', 'README.txt', 'src', 'brand/emblem', 'brand/hero', 'brand/sprites',
+             'brand/models', 'brand/textures/night', 'brand/textures/earth_fx_8k.jpg', 'brand/textures/earth_fx_4k.jpg', 'brand/textures/earth_fx_2k.jpg',
              'brand/textures/sky', 'brand/textures/sky_1k', 'brand/social/og-1200x630.png']
 SKIP_VERSION = ('brand/models/previews/', 'brand/sprites/raw/')
 # every group globe.html (LAYERS sat:) and open-overwatch.html (Sats.GROUPS) can ask for

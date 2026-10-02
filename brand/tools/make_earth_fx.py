@@ -5,7 +5,7 @@
     B = soft cloud density (blurred R, used for cloud shadows and the soft cloud edge)
     The image starts at longitude 0 (not -180), matching the texture coordinates of Cesium.EllipsoidGeometry.
 
-    python make_earth_fx.py   ->  brand/textures/earth_fx_8k.jpg and earth_fx_4k.jpg (phones)
+    python make_earth_fx.py   ->  brand/textures/earth_fx_8k.jpg, earth_fx_4k.jpg and earth_fx_2k.jpg (phones)
 """
 from pathlib import Path
 import numpy as np
@@ -33,5 +33,6 @@ rgb = np.roll(rgb, W // 2, axis=1)
 img = Image.fromarray((np.clip(rgb, 0, 1) * 255 + 0.5).astype(np.uint8), 'RGB')
 img.save(TEX / 'earth_fx_8k.jpg', quality=80, subsampling=0, optimize=True)
 img.resize((4096, 2048), Image.LANCZOS).save(TEX / 'earth_fx_4k.jpg', quality=84, subsampling=0, optimize=True)
-for n in ('earth_fx_8k.jpg', 'earth_fx_4k.jpg'):
+img.resize((2048, 1024), Image.LANCZOS).save(TEX / 'earth_fx_2k.jpg', quality=88, subsampling=0, optimize=True)   # phones
+for n in ('earth_fx_8k.jpg', 'earth_fx_4k.jpg', 'earth_fx_2k.jpg'):
     print(n, (TEX / n).stat().st_size // 1024, 'KB')

@@ -63,7 +63,10 @@ hooks.clearPresets = () => $('#band').querySelectorAll('.go').forEach(x => x.cla
 // ---- picking: hover tip + details card
 const handler = new C.ScreenSpaceEventHandler(scene.canvas);
 // points carry the object as their id; model entities carry .sat / .air
-function pickObj(pos) { const p = scene.pick(pos), id = p && p.id; return id ? (id.kind ? id : id.sat || id.air || null) : null; }
+// fingers are wide and dots are a few pixels: touch picks within a 28 px square, the mouse within 3 px
+let touchInput = matchMedia('(pointer: coarse)').matches;
+scene.canvas.addEventListener('pointerdown', e => { touchInput = e.pointerType !== 'mouse'; if (touchInput) $('#hover').style.display = 'none'; }, true);
+function pickObj(pos, r = touchInput ? 28 : 3) { const p = scene.pick(pos, r, r), id = p && p.id; return id ? (id.kind ? id : id.sat || id.air || null) : null; }
 function tipFor(o) {
   if (o.kind === 'sat') return `${o.name} · ${L[o.layer].name.split(' (')[0]}`;
   if (o.kind === 'air') return `${o.flight || o.hex} · ${o.ground ? 'on ground' : fmt((o.alt || 0) / 0.3048) + ' ft'}${o.mil ? ' · military' : ''}`;
@@ -72,7 +75,7 @@ function tipFor(o) {
 }
 let hoverRaf = 0;
 handler.setInputAction(m => {
-  if (hoverRaf) return;
+  if (hoverRaf || touchInput) return;   // no hover tips from a finger: they stayed on screen after the touch
   hoverRaf = requestAnimationFrame(() => {
     hoverRaf = 0; const o = pickObj(m.endPosition), t = $('#hover');
     if (!o) { t.style.display = 'none'; scene.canvas.style.cursor = ''; return; }

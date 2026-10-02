@@ -24,7 +24,7 @@ const CLUSTERS = [
 
 export function createCosmicWeb({ scene, renderer }) {
   const uniforms = { uFade: { value: 0 }, uPR: { value: renderer.getPixelRatio() } };
-  let points = null;
+  let points = null, asked = false;
   const C = { count: 0, labels: [] };
 
   async function load() {
@@ -76,8 +76,9 @@ export function createCosmicWeb({ scene, renderer }) {
   onLayers(() => { if (points) points.visible = layerOn('galaxy'); });
 
   return {
-    C, load,
+    C, load: () => { asked = true; return load(); },
     frame({ camSun, fade }) {
+      if (!asked && camSun > 1e6 * LY_AU) { asked = true; load().catch(e => console.warn('galaxies', e)); }   // 0.7 MB: only out past the Local Group
       uniforms.uPR.value = renderer.getPixelRatio();
       uniforms.uFade.value = fade(4e6, 4e7, camSun, 'ly');
       if (points) points.visible = layerOn('galaxy') && uniforms.uFade.value > 0.002;

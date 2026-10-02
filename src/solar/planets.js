@@ -87,7 +87,8 @@ export function createPlanets({ scene, sunView, renderer }) {
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, key === 'earth' ? 128 : 96, key === 'earth' ? 64 : 48), globeMaterial(sunView, { atm: atm || [0, 0, 0], atmK, wrap: gas ? 0.05 : 0 }));
     const flat = key === 'earth' ? 0 : flattening; // Earth's 0.3% would only matter to its clouds; skip it
     mesh.scale.set(R, R * (1 - flat), R); mesh.visible = false; spin.add(mesh);
-    loadTexture(planetTexture(key)).then(t => { firstTexture(mesh.material.uniforms.map, t); mesh.visible = !!mesh.material.uniforms.map.value; });
+    const firstMap = t => { firstTexture(mesh.material.uniforms.map, t); mesh.visible = !!mesh.material.uniforms.map.value; };
+    if (key === 'earth') loadTexture(planetTexture(key)).then(firstMap);   // the others once they are more than a dot
     if (atm) { const h = halo(sunView, atm, key === 'earth' ? 1.1 : 0.6); h.scale.set(R, R * (1 - flat), R); spin.add(h); }
     const b = addBody({ key, name, kind: 'planet', color, radius: R, pos: new THREE.Vector3(), group, spin, mesh, big: true, fact: FACTS[key],
       update(jd) { (key === 'earth' ? earthPosition : (j, o) => planetPosition(key, j, o))(jd, b.pos); group.position.copy(b.pos); orient(key, jd, spin.quaternion); },
@@ -96,6 +97,7 @@ export function createPlanets({ scene, sunView, renderer }) {
         return [['Distance from Sun', distance(b.pos.length())], ['From Earth', key === 'earth' ? '—' : distance(dE) + ' · light ' + lightTime(dE)],
           ['Year', period(periodDays(el.a))], ['Radius', Math.round(radiusKm).toLocaleString('en-US') + ' km'], ['Orbit tilt', (el.i / DEG).toFixed(2) + '°']];
       } });
+    if (key !== 'earth') Sharpen.need(() => Sharpen.px(b) > 1.5, planetTexture(key), firstMap);
     if (HAS_4K.has(key)) Sharpen.add(() => Sharpen.px(b) > innerHeight * SHARP, sharpTexture(key), t => swapTexture(mesh.material.uniforms.map, t));
     if (key === 'earth') addEarthExtras(b, sunView, R);
     if (key === 'saturn') addRings(b, sunView, R, ringTex);

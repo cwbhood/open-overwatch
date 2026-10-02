@@ -18,7 +18,7 @@ export function createUI({ camera, controls, clock, nav, story, small, deep, qua
   function caption(t, p, s, ms = 9000, lock = false) {
     if (lock) capLock = performance.now() + ms; else if (performance.now() < capLock) return;
     $('#capT').textContent = t; $('#capP').textContent = p; $('#capS').textContent = s || '';
-    $('#cap').classList.remove('hide'); clearTimeout(capTimer); capTimer = setTimeout(() => $('#cap').classList.add('hide'), ms);
+    $('#cap').classList.remove('hide'); clearTimeout(capTimer); capTimer = setTimeout(() => $('#cap').classList.add('hide'), PHONE ? Math.min(ms, 6000) : ms);
   }
 
   // ---- time
@@ -50,7 +50,9 @@ export function createUI({ camera, controls, clock, nav, story, small, deep, qua
   document.querySelectorAll('.rung').forEach(b => { b.onclick = () => { story.stopTour(); const [, k, d] = RUNGS[+b.dataset.i]; nav.focusOn(byKey[k] || byKey.sun, d, k === 'gc' ? 3 : 2.4, false); }; });
 
   // ---- details card
+  $('#cap').addEventListener('click', () => $('#cap').classList.add('hide'));
   function showCard(b) {
+    if (b && PHONE) $('#cap').classList.add('hide');
     if (!b) { $('#card').style.display = 'none'; delete $('#card').dataset.key; return; }
     const rows = (b.info ? b.info() : []).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
     $('#cardB').innerHTML = `<div class="k">${esc(b.kind)}</div><h2>${esc(b.name)}</h2><dl>${rows}</dl>${b.fact ? `<p>${esc(b.fact)}</p>` : ''}

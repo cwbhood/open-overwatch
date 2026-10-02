@@ -18,8 +18,8 @@ programmer would enjoy reading, not three big HTML files.
 - [x] `docs/DATA_SOURCES.md` (every feed: what, licence, refresh, accuracy)
 - [ ] Honest README with a demo clip (do with Stage 3, once the zoom exists)
 
-Housekeeping to do before publishing: add `src`
-to `APP_PATHS` in `.github/build_site.py` and to the release zip list (archived versions import modules from `src/`).
+Housekeeping before publishing: `src`, `earth_fx_2k.jpg` and `brand/textures/moons` are now in `APP_PATHS` / the release zip;
+check any new runtime asset is too (archived /v/<tag>/ copies fall back to the site root only for big data and textures).
 
 ## Stage 2 — the signature: one zoom from street to galaxy
 - [x] Seamless globe ↔ Solar System hand-off (matched camera and field of view, cross-fade, roll to the ecliptic, both directions)
@@ -32,7 +32,8 @@ to `APP_PATHS` in `.github/build_site.py` and to the release zip list (archived 
 
 ## Stage 3 — launch like engineers
 - [x] Performance numbers + fixes (docs/PERFORMANCE.md, brand/tools/perf.mjs): shader pre-warm, graphics levels with auto step-down, software-GPU hint, phone header fix
-- [ ] Real-phone pass (an actual phone's GPU; emulation only throttles the CPU) and README numbers
+- [x] First-visit phone journey, emulated (brand/tools/mobile_journey.mjs): load times halved, touch picking, layout fixes on all three views
+- [ ] Real-phone pass on the published beta (iPhone Safari + Android Chrome: a real GPU, memory limits) and README numbers
 - [ ] 30-second capture of the full zoom
 - [ ] Decide how the public history looks (squash / fresh repo) — the user's call
 - [ ] Publish as v0.9.1

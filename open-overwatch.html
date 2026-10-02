@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<script>/* iOS ignores user-scalable=no: stop its page pinch-zoom too (the views handle pinch themselves) */ addEventListener('gesturestart', e => e.preventDefault(), { passive: false });</script>
 <meta name="theme-color" content="#04060a">
 <title>Open Overwatch</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='w' gradientUnits='userSpaceOnUse' x1='12' y1='4' x2='23.5' y2='9'%3E%3Cstop offset='0' stop-color='%237dffa6' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%237dffa6' stop-opacity='.6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='6' fill='%23080c12'/%3E%3Cpath d='M16 16L13.15 5.37A11 11 0 0 1 23.78 8.22Z' fill='url(%23w)'/%3E%3Ccircle cx='16' cy='16' r='12' fill='none' stroke='%237dffa6' stroke-width='2'/%3E%3Cpath d='M16 16L23.78 8.22' stroke='%23c8ffd9' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%237dffa6'/%3E%3C/svg%3E">
@@ -16,6 +17,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha384-c6Rcwz4e4CITMbu/NBmnNS8yN2sC3cUElMEMfP3vqqKFp7GOYaaBBCqmaWBjmkjb" crossorigin="anonymous">
 <style>
+html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%} /* no page pinch-zoom; panels still scroll */
 /* Open Overwatch — a dark ops-room console. Layout: nameplate bar, layer rail left, intel panel right, full-bleed map.
    Phones fold the rails into a bottom sheet. One committed dark look, film grain and vignette over everything. */
 :root{
@@ -329,7 +331,10 @@ details.setup[open] > summary::before{transform:rotate(90deg)}
   .stats{margin-left:0;flex-wrap:wrap}
   #search{flex:1 1 100%;order:5}
   #audioPop{right:8px;left:8px;width:auto;top:calc(100% + 6px)} /* --top-h is auto here, so the desktop calc() would be invalid */
-  #rail,#panel{position:absolute;left:0;right:0;bottom:0;width:auto;height:min(62vh,560px);z-index:1001;border:0;border-top:1px solid var(--line-strong);border-radius:10px 10px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  /* phones: a compact header (audio and alert buttons as icons) and sheets that leave the map most of the screen */
+  #btnAudio{min-width:0;padding:7px 10px} #btnAudio canvas,#btnAudio .alabel{display:none} #btnSound span{display:none}
+  .stats{flex-wrap:nowrap;gap:4px} .stats .chip{min-width:0;padding:3px 7px 2px}   /* chips, audio and bell on one row */
+  #rail,#panel{position:absolute;left:0;right:0;bottom:0;width:auto;height:min(48vh,460px);z-index:1001;border:0;border-top:1px solid var(--line-strong);border-radius:10px 10px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
   #rail.hidden,#panel.hidden{display:none}
   #mobilebar{display:flex;flex:0 0 auto;border-top:1px solid var(--line);background:var(--panel-solid);padding-bottom:env(safe-area-inset-bottom,0px);z-index:1300}
   #mobilebar button{flex:1;background:none;border:0;padding:10px 4px;font-family:var(--font-display);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:12.5px;color:var(--ink-dim)}

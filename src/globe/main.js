@@ -6,7 +6,7 @@ import { hooks } from './state.js';
 import { Earth, BASES, setBase, currentBase, sunlitView, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, moonPosition } from './earth.js';
 import { Follow, MODEL_FIX, SOLAR_AXIS } from './follow.js';
 import { Sats, SatModels, SHADOW_FILL } from './satellites.js';
-import { warmModels, warmAgain } from './warm.js';
+import { warmModels, warmAgain, warmSlowly } from './warm.js';
 import { Air, AirModels, airShown } from './aircraft.js';
 import { Time } from './time.js';
 import { Quakes } from './quakes.js';
@@ -53,19 +53,37 @@ updateBand(); applyVisibility();
   const [lon, lat] = sunlitView(), t0 = Date.now();
   const until = (ms, cond = () => false) => new Promise(res => { const id = setInterval(() => { if (cond() || Date.now() - t0 > ms) { clearInterval(id); res(); } }, 100); });
   const say = t => { const el = $('#boot div'); if (el) el.textContent = t; };
-  say('Preparing the 3D models…');
-  camera.setView({ destination: C.Cartesian3.fromDegrees(lon, lat, 6.0e5) });
-  await Promise.race([Promise.all([warmModels([...AIR_WARM, ...SAT_WARM]), until(4000, () => globe.tilesLoaded)]), until(5000)]);
-  camera.setView({ destination: C.Cartesian3.fromDegrees(lon, lat, 2.0e7) });
-  say('Loading the Earth…');
-  const high = warmAgain();
+  let high;
+  if (PHONE) {   // phones: a fast first view matters more; the models warm up in the background, from orbit only
+    camera.setView({ destination: C.Cartesian3.fromDegrees(lon, lat, 2.0e7) }); say('Loading the Earth…');
+    // the cloud and glint shells compile on their first draw (half a second on a phone): let that happen behind the
+    // boot screen; the models then warm one by one once the globe is showing
+    await until(9000, () => Fx.ok && globe.tilesLoaded && !!scene.skyBox);   // + the star cube map (its upload was a 0.5 s hitch)
+    high = new Promise(res => setTimeout(() => res(warmSlowly([...AIR_WARM, ...SAT_WARM])), 6000));
+  } else {
+    say('Preparing the 3D models…');
+    camera.setView({ destination: C.Cartesian3.fromDegrees(lon, lat, 6.0e5) });
+    await Promise.race([Promise.all([warmModels([...AIR_WARM, ...SAT_WARM]), until(4000, () => globe.tilesLoaded)]), until(5000)]);
+    camera.setView({ destination: C.Cartesian3.fromDegrees(lon, lat, 2.0e7) });
+    say('Loading the Earth…');
+    high = warmAgain();
+  }
   await until(10000, () => globe.tilesLoaded);
   $('#boot').classList.add('out'); setTimeout(() => $('#boot').remove(), 900);
   updateBand(); return high;
 })();
 Sats.load().catch(e => toast('Satellites failed: ' + e.message));
-// desktops: load the Solar System view in the background once the globe has settled, so zooming out never waits on it
-if (!PHONE) setTimeout(() => (window.requestIdleCallback || setTimeout)(() => Space.preload()), 10e3);
+// load the Solar System view in the background once the globe has settled, so zooming out never waits on it (its
+// start-up was 6 s of main-thread work on a phone, landing in the middle of the pinch); phones a little later
+{ // ...and on phones only while nobody is touching it (the work would otherwise land in the middle of a gesture)
+  let lastInput = performance.now();
+  for (const ev of ['pointerdown', 'pointermove', 'wheel']) addEventListener(ev, () => { lastInput = performance.now(); }, { passive: true, capture: true });
+  const t0 = performance.now(), wait = setInterval(() => {
+    const now = performance.now();
+    if (now - t0 < (PHONE ? 15e3 : 10e3) || (PHONE && now - lastInput < 3000)) return;
+    clearInterval(wait); (window.requestIdleCallback || setTimeout)(() => Space.preload());
+  }, 1000);
+}
 every(15 * 60e3, () => Air.opensky(), 'Civil aircraft');
 every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');

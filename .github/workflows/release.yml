@@ -16,6 +16,7 @@ jobs:
         run: |
           D=dist/open-overwatch
           mkdir -p "$D/brand/hero" "$D/brand/social" "$D/brand/textures" "$D/brand/models"
+          cp -r src "$D/"                                                                          # the apps' ES modules
           cp open-overwatch.html globe.html solar.html serve.js serve.py README.txt \
              "Start Open Overwatch.bat" "Start Open Overwatch (minimized).vbs" "$D/"
           cp -r brand/emblem brand/sprites "$D/brand/"
@@ -23,9 +24,9 @@ jobs:
           cp brand/hero/*.webp "$D/brand/hero/"
           cp brand/social/og-1200x630.png "$D/brand/social/"
           cp -r brand/textures/night "$D/brand/textures/"
-          cp brand/textures/earth_fx_8k.jpg brand/textures/earth_fx_4k.jpg "$D/brand/textures/"   # globe clouds/glint
+          cp brand/textures/earth_fx_8k.jpg brand/textures/earth_fx_4k.jpg brand/textures/earth_fx_2k.jpg "$D/brand/textures/"   # globe clouds/glint
           cp -r brand/textures/sky brand/textures/sky_1k "$D/brand/textures/"                     # globe star field
-          cp -r brand/textures/planets brand/textures/sky_equirect.jpg brand/textures/sky_equirect_2k.jpg "$D/brand/textures/"  # solar system
+          cp -r brand/textures/planets brand/textures/moons brand/textures/sky_equirect.jpg brand/textures/sky_equirect_2k.jpg "$D/brand/textures/"  # solar system
           mkdir -p "$D/data" && cp -r data/solar "$D/data/"                                       # orbits, stars, spacecraft
           cp -r brand/models/. "$D/brand/models/"   # satellites, aircraft/ and test/ (3D planes need aircraft/)
           rm -rf "$D/brand/models/previews"

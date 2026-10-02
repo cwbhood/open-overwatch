@@ -53,6 +53,42 @@ Fixes for this path:
 - **3D models:** per-model dynamic environment maps are off (`NO_ENV_MAP`). They rendered an atmosphere cube map for
   every model and added a shader version per height band.
 
+## A first visit on a phone (`brand/tools/mobile_journey.mjs`)
+
+A first-time visitor, A to Z: the landing page; the 3D globe (drag, pinch, Layers, Near misses, tap a satellite, pinch
+out to the Solar System); the Solar System view (drag, pinch, menu, ladder); the 2D map (Enter silent, a preset, drag
+and pinch, the tabs).
+- **Device:** an emulated mid-range Android: 390×844 at 3×, touch, CPU 4× slower, "Fast 4G" (9 Mbps, 60 ms), empty cache.
+- **Output:** a screenshot per step, plus a layout audit (sideways scroll, panels off screen or overlapping, tap targets,
+  tiny text) in `brand/perf/mobile/`.
+
+| | Before | After |
+|---|---|---|
+| Globe, until it shows | 11.3 s, 10.7 MB | 6.4 s, 4.9 MB |
+| Solar System, until it shows | 10.3 s, 8.9 MB | 4.1 s, 3.2 MB |
+| Tap a satellite | missed (3 px pick, a 2 px dot) | opens its card (28 px touch pick; the cloud shells no longer catch taps) |
+| Hover tips | stuck on screen after a touch | none from touch |
+| Pinch on a 2D-map panel | zoomed the whole page (stuck) | blocked (viewport, `touch-action`, iOS `gesturestart`) |
+| 2D map after a preset | ~100 px strip of map | sheets at 48 % height, one-row header |
+| Solar caption | a narrow column mid-screen | a compact strip at the bottom, tap to dismiss |
+| Globe Near-misses card | half hidden behind the band | a bottom sheet above it, scrolls |
+| Satellite error toast on arrival | yes (one missing group) | only if no satellites at all |
+
+What made the difference on load:
+- The globe no longer downloads Cesium's default sky box (0.9 MB, replaced anyway).
+- Phones get a 2k cloud/glint texture (0.9 MB instead of 2.6).
+- Satellite groups load four at a time instead of one by one.
+- Phones skip the low-altitude warm-up dip, and their models warm one at a time once the globe is showing.
+- The cloud shells and the star cube map compile behind the boot screen.
+- The Solar System view loads planet maps when a planet is more than a dot, and moon maps near their planet.
+- The Milky Way, the 109k stars and the galaxies load once you head out that far, or on a search; desktops fetch them
+  in the background.
+
+Known left (emulation can't show a real phone's GPU):
+- A ~0.5 s hitch about 3 s after the globe appears, most likely the first draw of the ~12,000 satellite dots.
+- Phones preload the Solar System view only once nobody has touched the screen for 3 s. A visitor who pinches straight
+  out still gets ~2–5 s of jank during the hand-off.
+
 ## What was slow, and the fixes
 
 - **Shader compiles mid-flight (globe).** Cesium compiles a program the first time each globe-tile imagery

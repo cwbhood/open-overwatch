@@ -29,6 +29,8 @@ export function createDeepSpace({ scene, camera, renderer }) {
   // ---- HYG stars: brightness and size from the apparent magnitude as seen from wherever the camera is
   const starUniforms = { uFade: { value: 0 }, uPR: { value: renderer.getPixelRatio() } };
   let starPoints = null;
+  let starsAsked = false, onStars = () => {};
+  const needStars = () => { if (starsAsked) return; starsAsked = true; loadStars().then(() => onStars(), e => console.warn('stars', e)); };
   async function loadStars() {
     const meta = await fetchAsset('data/solar/stars.json', 'json'), buf = await fetchAsset('data/solar/stars.bin');
     const N = buf.byteLength / 20, F = new Float32Array(buf), pos = new Float32Array(N * 3);
@@ -69,7 +71,9 @@ export function createDeepSpace({ scene, camera, renderer }) {
 
   // ---- the Milky Way: NASA/JPL-Caltech (R. Hurt) top-down artwork on the galactic plane, centre 26,000 ly away
   const GC = toVector3(GALACTIC.x).multiplyScalar(SUN_TO_GALACTIC_CENTRE_LY * LY_AU);
-  const milkyTex = loadTexture(planetTexture('milkyway'));
+  // the Milky Way artwork (also the Local Group spirals) loads once you head out past ~300 light-years
+  let milkyTex = null, milkyUsers = [];
+  const milkyNeeded = () => milkyTex || (milkyTex = loadTexture(planetTexture('milkyway')).then(t => { if (t) for (const m of milkyUsers) if (!m.map) { m.map = t; m.needsUpdate = true; } return t; }));
   const milky = new THREE.Mesh(new THREE.PlaneGeometry(115000 * LY_AU, 115000 * LY_AU), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
   // image: centre = galactic centre, the Sun straight below it, longitude 90 deg to the left (seen from the north galactic pole)
   milky.position.copy(GC); milky.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(toVector3(GALACTIC.y).negate(), toVector3(GALACTIC.x), toVector3(GALACTIC.z)));
@@ -89,12 +93,12 @@ export function createDeepSpace({ scene, camera, renderer }) {
     const size = diaKly * 1000 * LY_AU, mat = new THREE.MeshBasicMaterial({ map: spiral ? null : STAR_TEXTURE, color: tint, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size * (spiral ? 1 : 0.7)), mat);
     mesh.position.copy(p); mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(major, new THREE.Vector3().crossVectors(normal, major).normalize(), normal));
-    scene.add(mesh); galaxies.push(mesh); if (spiral) milkyTex.then(t => { mat.map = t; mat.needsUpdate = true; });
+    scene.add(mesh); galaxies.push(mesh); if (spiral) milkyUsers.push(mat);
     addBody({ key, name, kind: 'galaxy', color: '#cdd8ff', radius: 0, pos: p, fixed: true, far: true, fact, layer: 'galaxy',
       info: () => [['Distance', dMly < 1 ? Math.round(dMly * 1e3) + ',000 light-years' : dMly.toFixed(2) + ' million light-years'], ['Size', Math.round(diaKly) + ',000 light-years across'],
         ['Light left it', dMly < 1 ? Math.round(dMly * 1e3) + ',000 years ago' : dMly.toFixed(1) + ' million years ago']] });
   }
-  milkyTex.then(t => { if (t) { milky.material.map = t; milky.material.needsUpdate = true; } });
+  milkyUsers.push(milky.material);
   Sharpen.add(() => camera.position.length() > 5000 * LY_AU, sharpTexture('milkyway'), t => {   // the 4k artwork once out among it
     const old = milky.material.map;
     for (const m of [milky.material, ...galaxies.filter(g => g.material.map === old).map(g => g.material)]) { m.map = t; m.needsUpdate = true; }
@@ -108,7 +112,7 @@ export function createDeepSpace({ scene, camera, renderer }) {
   onLayers(() => { if (starPoints) starPoints.visible = layerOn('stars'); milky.visible = layerOn('galaxy'); for (const g of galaxies) g.visible = layerOn('galaxy'); });
 
   return {
-    GC, loadStars,
+    GC, needStars, set onStars(fn) { onStars = fn; },
     /** Which named stars get a label: the brightest ~28 as seen from the camera (+ the very nearest when close in). */
     rankStars(camSun) {
       const list = bodies.filter(b => b.star); if (!list.length) return;
@@ -117,6 +121,8 @@ export function createDeepSpace({ scene, camera, renderer }) {
       if (camSun < 80 * LY_AU) list.filter(b => b.ly < 12).forEach(b => { b.vis = true; });
     },
     frame({ camSun, fade }) {
+      if (camSun > 300 * LY_AU) milkyNeeded();
+      if (camSun > 400) needStars();   // 2.2 MB: once past the planets (or on a search, or idle on desktops)
       starUniforms.uPR.value = renderer.getPixelRatio();
       starUniforms.uFade.value = fade(0.02, 0.4, camSun, 'ly') * (1 - fade(2e4, 8e4, camSun, 'ly'));
       if (starPoints) starPoints.visible = layerOn('stars') && starUniforms.uFade.value > 0.002;

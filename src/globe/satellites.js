@@ -40,12 +40,21 @@ onmessage = e => {
 export const Sats = {
   list: [], byId: new Map(), state: null, worker: null,
   async load() {
-    const seen = new Set(), elements = [];
+    const seen = new Set(), elements = [], failed = [];
+    // fetch the groups four at a time (one after another cost seconds of round trips on phones; more at once would be
+    // rude to CelesTrak when a downloaded copy goes there directly), then take them in layer order
+    const groups = LAYERS.filter(x => x.sat).flatMap(l => l.sat), got = new Map(), queue = [...groups];
+    const worker = async () => { for (let g; (g = queue.shift());) got.set(g, await tles.load(g).then(r => ({ r }), e => ({ e }))); };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    // parsing ~12,000 element sets and making their dots in one go froze a phone for ~1.5 s right after the globe
+    // appeared: yield to the browser between groups and every 1,500 dots
+    const breathe = () => new Promise(r => setTimeout(r, 0));
     for (const l of LAYERS.filter(x => x.sat)) {
       let n = 0;
       for (const g of l.sat) {
-        let res;
-        try { res = await tles.load(g); } catch (e) { toast(`Satellites (${e.message})`, 4200); continue; }
+        await breathe();
+        const { r: res, e } = got.get(g);
+        if (e) { console.warn('satellites', g, e.message); failed.push(g); continue; }   // one group missing is no news
         if (res.source === 'stale cache') console.warn(`${g}: using TLEs cached ${Math.round(res.ageMs / 3600e3)} h ago`);
         for (const t of parseTle(res.txt)) {
           if (seen.has(t.id)) continue; seen.add(t.id);
@@ -55,7 +64,9 @@ export const Sats = {
       }
       setCount(l.id, n);
     }
-    for (const s of this.list) {
+    if (!this.list.length && failed.length) toast('Satellites are unavailable right now; they are retried on the next visit', 5000);
+    for (const [k, s] of this.list.entries()) {
+      if (k % 1500 === 1499) await breathe();
       const l = L[s.layer], col = C.Color.fromCssColorString(l.color).withAlpha(l.alpha ?? 1);
       s.pt = satPts.add({ position: C.Cartesian3.ZERO, pixelSize: l.size, color: col, outlineWidth: 0, id: s, show: false, scaleByDistance: new C.NearFarScalar(5.0e5, 2.0, 1.5e8, 0.55),
         // 10,000 Starlinks would cover the whole disc like fur from beyond the GEO belt (and are far too faint to see): fade them out

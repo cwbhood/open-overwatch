@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { LY_AU } from '../core/units.js';
 import { SimClock, jdFromMs } from '../core/time.js';
-import { smoothLog, Sharpen } from './util.js';
+import { smoothLog, Sharpen, PHONE } from './util.js';
 import { bodies, byKey, defineLayer, applyLayers } from './world.js';
 import { createSky } from './sky.js';
 import { createPlanets } from './planets.js';
@@ -131,12 +131,15 @@ if (EMBED) {   // inside the globe: no splash, no opening flight; render one fra
   loop.resume();
   setTimeout(() => {
     document.querySelector('#load').classList.add('gone'); ui.start();
-    nav.focusOn(first, first.key === 'earth' ? 0.0012 : 3, 3);
+    nav.focusOn(first, first.key === 'earth' ? 0.0012 : 3, 3, !PHONE);   // phones: no card over the view at start
     ui.caption('The Solar System, right now', 'Every planet, moon, asteroid and spacecraft is where it really is at this moment. Scroll out, or pick a step below.', 'Tip: try the guided tour in the left panel.', 9000);
   }, 700);
 }
 const settle = p => p.catch(e => console.warn(e)).finally(() => { applyLayers(); ui.renderLayers(); });
-const loads = [moons.load(), small.load(), craft.load(), deep.loadStars(), web.load()];
+const loads = [moons.load(), small.load(), craft.load()];   // stars, galaxies and most textures load as you approach them
+deep.onStars = () => { applyLayers(); ui.renderLayers(); };
+if (!PHONE) setTimeout(() => { deep.needStars(); web.load().catch(e => console.warn(e)).finally(() => applyLayers()); }, 6000);   // desktops: in the background
+document.querySelector('#q').addEventListener('focus', () => deep.needStars(), { once: true });   // searching for a star
 loads.forEach(settle);
 
 /* GPU warm-up while idle. three.js uploads a texture and compiles a shader the first time something is drawn, so the

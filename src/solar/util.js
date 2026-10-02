@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { SITE } from '../core/assets.js';
 
-export const PHONE = matchMedia('(max-width: 900px)').matches;
+export const PHONE = matchMedia('(max-width: 900px)').matches || (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600);
 
 // every custom shader must carry these, or it fights the logarithmic depth buffer
 export const LOGDEPTH_V = '#include <common>\n#include <logdepthbuf_pars_vertex>\n';
@@ -48,6 +48,8 @@ export function swapTexture(u, t) { const old = u.value; u.value = t; if (old &&
 export const Sharpen = {
   camera: null, items: [],
   add(when, path, apply, opts) { if (!PHONE) this.items.push({ when, path, apply, opts }); },
+  /** Same, on every device: textures that load only once they are about to be seen (phones were downloading 9 MB up front). */
+  need(when, path, apply, opts) { this.items.push({ when, path, apply, opts }); },
   /** On-screen radius of a body in CSS pixels. */
   px(b) { const c = this.camera; return b.radius / Math.max(c.position.distanceTo(b.pos), 1e-12) * innerHeight / (2 * Math.tan(c.fov * Math.PI / 360)); },
   tick() {

@@ -68,7 +68,7 @@ export function setBase(id) {
 export function showPlaceNames(on) { if (labelLayer) labelLayer.show = on; }
 
 // ---- shader shells (equirectangular earth_fx texture on an ellipsoid; EllipsoidGeometry's st = lon/lat)
-const FX_TEX = PHONE ? 'brand/textures/earth_fx_4k.jpg' : 'brand/textures/earth_fx_8k.jpg';
+const FX_TEX = PHONE ? 'brand/textures/earth_fx_2k.jpg' : 'brand/textures/earth_fx_8k.jpg';   // phones: 0.9 MB instead of 2.6
 const FX_GLSL = `
 uniform sampler2D fx; uniform float fade; uniform float ocean; uniform float cshadow;
 czm_material czm_getMaterial(czm_materialInput mi) {
@@ -173,7 +173,7 @@ function earthShell(lift, source, blending, extra = {}) {
   appearance.getRenderState = function () { const rs = C.clone(this.renderState, false); rs.depthMask = false; rs.blending = blending; return rs; };
   const geometry = new C.EllipsoidGeometry({ radii: new C.Cartesian3(R_EQ + lift, R_EQ + lift, R_PO + lift), stackPartitions: PHONE ? 128 : 256, slicePartitions: PHONE ? 256 : 512,
     vertexFormat: C.MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat });
-  const primitive = scene.primitives.add(new C.Primitive({ geometryInstances: new C.GeometryInstance({ geometry }), appearance, asynchronous: false, compressVertices: false }));
+  const primitive = scene.primitives.add(new C.Primitive({ geometryInstances: new C.GeometryInstance({ geometry }), appearance, asynchronous: false, compressVertices: false, allowPicking: false }));   // taps go through to the satellites
   return { primitive, material };
 }
 const PREMULTIPLIED = { enabled: true, equationRgb: C.BlendEquation.ADD, equationAlpha: C.BlendEquation.ADD,
