@@ -15,8 +15,10 @@ import io, json, os, subprocess, sys, tarfile, time, urllib.request
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 OUT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, '_site'))
 SKIP_ROOT = ('brand/source/', 'brand/blend/', '.github/', 'brand/models/previews/')
+# everything an archived app loads at run time (missing ones are skipped per tag); keep in sync with what the pages fetch
 APP_PATHS = ['open-overwatch.html', 'globe.html', 'README.txt', 'brand/emblem', 'brand/hero', 'brand/sprites',
-             'brand/models', 'brand/textures/night', 'brand/social/og-1200x630.png']
+             'brand/models', 'brand/textures/night', 'brand/textures/earth_fx_8k.jpg', 'brand/textures/earth_fx_4k.jpg',
+             'brand/textures/sky', 'brand/textures/sky_1k', 'brand/social/og-1200x630.png']
 SKIP_VERSION = ('brand/models/previews/', 'brand/sprites/raw/')
 # every group globe.html (LAYERS sat:) and open-overwatch.html (Sats.GROUPS) can ask for
 TLE_GROUPS = ['stations', 'visual', 'last-30-days', 'military', 'radar', 'gps-ops', 'glo-ops', 'galileo', 'beidou',

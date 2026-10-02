@@ -170,9 +170,14 @@ $('#credits').appendChild(viewer.cesiumWidget.creditContainer);
 scene.backgroundColor = C.Color.fromCssColorString('#04060a');
 // stars: NASA SVS Deep Star Maps 2020 (Hipparcos-2, Tycho-2, Gaia DR2) as cube faces in ICRF axes, Milky Way included
 // (brand/tools/make_skybox.py; 1024 px faces on phones)
+// A texture Cesium can't load stops its render loop for good ("An error occurred while rendering"), so every texture file
+// is loaded here first and only handed over once it is in; if one is missing the scene simply goes without it.
+const loadImage = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('could not load ' + src)); i.src = src; });
 { const p = matchMedia('(max-width: 820px)').matches ? 'brand/textures/sky_1k/' : 'brand/textures/sky/';
-  scene.skyBox = new C.SkyBox({ sources: { positiveX: p + 'px.jpg', negativeX: p + 'nx.jpg', positiveY: p + 'py.jpg',
-    negativeY: p + 'ny.jpg', positiveZ: p + 'pz.jpg', negativeZ: p + 'nz.jpg' } }); }
+  const faces = { positiveX: 'px', negativeX: 'nx', positiveY: 'py', negativeY: 'ny', positiveZ: 'pz', negativeZ: 'nz' };
+  Promise.all(Object.entries(faces).map(([k, f]) => loadImage(p + f + '.jpg').then(img => [k, img])))
+    .then(list => { scene.skyBox = new C.SkyBox({ sources: Object.fromEntries(list) }); })
+    .catch(e => console.warn('Star map unavailable, keeping the default sky:', e.message)); }
 /* ------------------------------------------------------------------ Earth
    From space: NASA Blue Marble NG (day) and VIIRS Black Marble (night lights, 500 m) streamed from NASA GIBS, real sun
    lighting with Cesium's ground atmosphere, and three shader shells. Two read brand/textures/earth_fx_*.jpg
@@ -322,7 +327,7 @@ czm_material czm_getMaterial(czm_materialInput mi) {
   return m;
 }`;
 function earthShell(lift, source, blending) {
-  const material = new C.Material({ fabric: { uniforms: { fx: FX_TEX, fade: 1.0, ocean: 0.0, cshadow: 1.0 }, source }, translucent: true });
+  const material = new C.Material({ fabric: { uniforms: { fx: C.Material.DefaultImageId, fade: 1.0, ocean: 0.0, cshadow: 1.0 }, source }, translucent: true });
   const appearance = new C.MaterialAppearance({ material, flat: true, translucent: true, closed: true, faceForward: false,
     materialSupport: C.MaterialAppearance.MaterialSupport.TEXTURED,
     renderState: { depthTest: { enabled: true }, depthMask: false, cull: { enabled: true, face: C.CullFace.BACK }, blending } });
@@ -364,6 +369,9 @@ czm_material czm_getMaterial(czm_materialInput mi) {
 const fxShell = earthShell(1500, FX_GLSL, PREMULTIPLIED);
 const limbShell = earthShell(1.15e5, LIMB_GLSL, PREMULTIPLIED); // 1.5 km up: thinner shells z-fight with the coarse far-zoom globe mesh
 const cloudShell = earthShell(9000, CLOUD_GLSL, C.BlendingState.ALPHA_BLEND);
+const Fx = { ok: false }; // the glint/shadow and cloud shells stay hidden until earth_fx is in (see loadImage)
+loadImage(FX_TEX).then(img => { fxShell.material.uniforms.fx = img; cloudShell.material.uniforms.fx = img; Fx.ok = true; Earth.apply(); })
+  .catch(e => console.warn('Clouds and sun glint unavailable:', e.message));
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const Earth = {
@@ -383,8 +391,8 @@ const Earth = {
     const sfx = smooth(1.2e5, 6.0e5, h), sc = smooth(7.0e4, 2.5e5, h) * (L.clouds.on ? 1 : 0); // clouds stay full at ISS height
     const sea = (1 - marbleLayer.alpha) * smooth(2.5e4, 8.0e4, h) * (baseId === 'imagery' ? 1 : 0); // the dark map keeps its own sea
     fxShell.material.uniforms.fade = sfx; fxShell.material.uniforms.ocean = sea; fxShell.material.uniforms.cshadow = sc;
-    fxShell.primitive.show = sfx > 0.001 || sea > 0.001 || sc > 0.001;
-    cloudShell.material.uniforms.fade = sc; cloudShell.primitive.show = sc > 0.001;
+    fxShell.primitive.show = Fx.ok && (sfx > 0.001 || sea > 0.001 || sc > 0.001);
+    cloudShell.material.uniforms.fade = sc; cloudShell.primitive.show = Fx.ok && sc > 0.001;
   },
 };
 window.Earth = Earth;

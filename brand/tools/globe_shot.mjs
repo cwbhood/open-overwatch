@@ -18,7 +18,7 @@ try {
     '*airplanes.live*', '*earthquake.usgs.gov*', '*wheretheiss.at*'] });
   await p.send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false });
   const loaded = p.waitFor('Page.loadEventFired', { timeoutMs: 60000 });
-  await p.send('Page.navigate', { url: 'http://localhost:8787/globe.html' });
+  await p.send('Page.navigate', { url: process.env.OO_URL || 'http://localhost:8787/globe.html' }); // OO_URL: e.g. the live site
   await loaded;
   await sleep(6000);
   const gpu = await p.eval(`(() => { const gl = OO3D.viewer.scene.context._gl; const e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); })()`);
