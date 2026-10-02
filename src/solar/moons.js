@@ -6,7 +6,7 @@ import { orbitPath } from '../core/kepler.js';
 import { moonOffset, moonPeriod } from '../core/moons.js';
 import { fetchAsset } from '../core/assets.js';
 import { distance } from '../core/format.js';
-import { STAR_TEXTURE } from './util.js';
+import { STAR_TEXTURE, PHONE, loadTexture } from './util.js';
 import { globeMaterial } from './planets.js';
 import { addBody, byKey, layer, layerOn, onLayers } from './world.js';
 
@@ -32,8 +32,10 @@ const LOOK = { // surface colour, fact
   Triton: ['#d8c7c0', 'It orbits backwards, so it was probably captured from the Kuiper belt. Voyager 2 saw nitrogen geysers there in 1989.'],
   Charon: ['#a7a19a', 'Half Pluto\'s size: the pair circle a point between them, each always showing the other the same face.'],
 };
-// No global maps are bundled for these moons yet: each gets a procedural surface in its own colour, in the spirit of
-// the real one (craters, Io's volcanic spots, Europa's cracks, Titan's haze, Iapetus' two faces), seeded by its id.
+// Surfaces: real global maps (brand/textures/moons, USGS / NASA / ESA, see maps.json) where they exist, swapped in once
+// loaded. Until then, and for the five Uranian moons Voyager 2 saw only half of, a procedural surface in the moon's
+// colour (craters, Io's spots, Europa's cracks, haze, Iapetus' two faces) seeded by its id. Titan keeps the haze: its
+// map is the surface under it, which no visible-light camera sees.
 const SURFACE = { Io: 'io', Europa: 'lined', Enceladus: 'lined', Titan: 'haze', Triton: 'haze', Iapetus: 'twoface' };
 function surfaceTexture(seed, hex, style) {
   const W = 512, H = 256, c = document.createElement('canvas'), g = c.getContext('2d'); c.width = W; c.height = H;
@@ -47,9 +49,9 @@ function surfaceTexture(seed, hex, style) {
   g.fillStyle = hex; g.fillRect(0, 0, W, H);
   for (let k = 0; k < 260; k++) blob(rnd() * W, lat(), 6 + rnd() * 34, `rgba(${rnd() < 0.5 ? '0,0,0' : '255,255,255'},${0.03 + rnd() * 0.06})`);
   g.filter = 'blur(6px)'; g.drawImage(c, 0, 0); g.filter = 'none';     // soft albedo patches, not discs
-  if (style === 'twoface') {               // leading hemisphere (centred on u = 0, see the orientation below) dark
+  if (style === 'twoface') {               // leading hemisphere (90°W, u = 0.25) dark
     const grd = g.createLinearGradient(0, 0, W, 0);
-    [[0, 0.82], [0.17, 0.75], [0.3, 0], [0.7, 0], [0.83, 0.75], [1, 0.82]].forEach(([o, a]) => grd.addColorStop(o, `rgba(25,18,12,${a})`));
+    [[0, 0], [0.08, 0.75], [0.25, 0.82], [0.42, 0.75], [0.55, 0], [1, 0]].forEach(([o, a]) => grd.addColorStop(o, `rgba(25,18,12,${a})`));
     g.fillStyle = grd; g.fillRect(0, 0, W, H);
   }
   if (style === 'io') for (let k = 0; k < 90; k++) blob(rnd() * W, lat(), 1.5 + rnd() * 5, rnd() < 0.6 ? 'rgba(60,30,10,.7)' : 'rgba(230,120,40,.55)');
@@ -59,6 +61,16 @@ function surfaceTexture(seed, hex, style) {
     for (let k = 0; k < n; k++) { const x = rnd() * W, y = lat(), r = 1 + Math.pow(rnd(), 3) * 14; blob(x, y, r * 1.25, 'rgba(255,255,255,.07)'); blob(x, y, r, 'rgba(0,0,0,.16)'); }
   }
   if (style === 'haze') { const grd = g.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, 'rgba(255,255,255,.12)'); grd.addColorStop(0.5, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(255,255,255,.12)'); g.fillStyle = grd; g.fillRect(0, 0, W, H); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+const NO_MAP = new Set(['Titan']);
+/** Iapetus' map has its brightness evened out; darken the leading hemisphere (Cassini Regio) as it really looks. */
+function darkenLeading(tex) {
+  const img = tex.image, c = document.createElement('canvas'), g = c.getContext('2d'); c.width = img.width; c.height = img.height;
+  g.drawImage(img, 0, 0); g.globalCompositeOperation = 'multiply';
+  const grd = g.createLinearGradient(0, 0, c.width, 0);
+  [[0, 1], [0.1, 0.35], [0.25, 0.18], [0.4, 0.35], [0.5, 1], [1, 1]].forEach(([o, v]) => grd.addColorStop(o, `rgb(${v * 255},${v * 240},${v * 225})`));
+  g.fillStyle = grd; g.fillRect(0, 0, c.width, c.height);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
 const span = p => p < 2 ? (p * 24).toFixed(1) + ' hours' : p.toFixed(1) + ' days';
@@ -88,11 +100,17 @@ export function createMoons({ scene, sunView, renderer }) {
   return {
     async load() {
       const { moons } = await fetchAsset('data/solar/moons.json', 'json');
+      const maps = (await fetchAsset('brand/textures/moons/maps.json', 'json').catch(() => null))?.maps || {};
       for (const m of moons) {
         const [surface, fact] = LOOK[m.name] || ['#bbbbbb', ''], R = m.radius_km * KM_AU;
         const group = new THREE.Group(); scene.add(group);
         const mat = globeMaterial(sunView, {}); mat.uniforms.map.value = surfaceTexture(m.id, surface, SURFACE[m.name]);
-        const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32), mat); mesh.scale.setScalar(R); group.add(mesh);
+        // texture longitude 0 (u = 0.5) faces the planet, 90°W (u = 0.25) leads: matches the lookAt below
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32).rotateY(-Math.PI / 2), mat); mesh.scale.setScalar(R); group.add(mesh);
+        const map = maps[m.name];
+        if (map && !NO_MAP.has(m.name)) loadTexture(PHONE ? map.file_1k : map.file).then(t => {
+          if (!t) return; const old = mat.uniforms.map.value; mat.uniforms.map.value = m.name === 'Iapetus' ? darkenLeading(t) : t; old.dispose();
+        });
         const label = '#' + new THREE.Color(surface).lerp(white, 0.35).getHexString();
         const orbit = new THREE.LineLoop(undefined, new THREE.LineBasicMaterial({ color: label, transparent: true, opacity: 0.45, depthWrite: false })); orbits.add(orbit);
         const planetName = () => byKey[m.planet]?.name || m.planet;
@@ -115,7 +133,9 @@ export function createMoons({ scene, sunView, renderer }) {
         const P = byKey[b.parent]; if (!P) continue;
         moonOffset(b.m, jd, off); b.pos.set(P.pos.x + off.x, P.pos.y + off.y, P.pos.z + off.z);
         b.group.position.copy(b.pos); b.path.position.copy(P.pos);
-        b.mesh.up.copy(b.normal); b.mesh.lookAt(P.pos);            // tidally locked: +z to the planet, so u = 0 leads
+        // tidally locked: +z to the planet. Map north is the IAU pole, on the north side of the invariable plane, so a
+        // retrograde moon (Triton) has north against its orbit normal and its leading side at 90°E instead of 90°W
+        b.mesh.up.copy(b.normal); if (b.m.i > 90) b.mesh.up.negate(); b.mesh.lookAt(P.pos);
       }
     },
     frame({ camera }) {
