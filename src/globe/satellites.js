@@ -56,7 +56,9 @@ export const Sats = {
     }
     for (const s of this.list) {
       const l = L[s.layer], col = C.Color.fromCssColorString(l.color).withAlpha(l.alpha ?? 1);
-      s.pt = satPts.add({ position: C.Cartesian3.ZERO, pixelSize: l.size, color: col, outlineWidth: 0, id: s, show: false, scaleByDistance: new C.NearFarScalar(5.0e5, 2.0, 1.5e8, 0.55) });
+      s.pt = satPts.add({ position: C.Cartesian3.ZERO, pixelSize: l.size, color: col, outlineWidth: 0, id: s, show: false, scaleByDistance: new C.NearFarScalar(5.0e5, 2.0, 1.5e8, 0.55),
+        // 10,000 Starlinks would cover the whole disc like fur from beyond the GEO belt (and are far too faint to see): fade them out
+        translucencyByDistance: s.layer === 'starlink' ? new C.NearFarScalar(4.0e7, 1.0, 1.6e8, 0.0) : undefined });
     }
     this.worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' })));
     this.worker.onmessage = e => { this.state = { t: e.data.t, buf: e.data.buf }; };

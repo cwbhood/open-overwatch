@@ -62,6 +62,15 @@ export function planetSpread(jd) {
   return 360 - gap;
 }
 
+/** Moon's share of the Earth-Moon mass: Earth's centre sits this fraction of the Moon's distance from the barycentre. */
+export const MOON_MASS_FRACTION = 1 / (81.30056 + 1);
+
+/** Heliocentric position of Earth's centre (not the Earth-Moon barycentre, which is ~4,700 km away from it). */
+export function earthPosition(jd, out = {}) {
+  const b = planetPosition('earth', jd), m = moonGeocentric(jd), k = MOON_MASS_FRACTION;
+  out.x = b.x - k * m.x; out.y = b.y - k * m.y; out.z = b.z - k * m.z; return out;
+}
+
 /** Geocentric Moon (Schlyter's elements + the 10 largest longitude, 4 latitude and 2 distance terms), AU. */
 export function moonGeocentric(jd, out = {}) {
   const d = jd - 2451543.5, r = DEG;

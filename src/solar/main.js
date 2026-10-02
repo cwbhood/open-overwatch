@@ -14,6 +14,7 @@ import { createSpacecraft } from './spacecraft.js';
 import { createDeepSpace } from './deepspace.js';
 import { createStory } from './story.js';
 import { createUI } from './ui.js';
+import { createEmbed, EMBED } from './embed.js';
 
 const showError = m => { const el = document.querySelector('#err'); el.style.display = 'block'; el.textContent = 'Something went wrong: ' + m; };
 addEventListener('error', e => showError(e.message));
@@ -80,15 +81,25 @@ function update(jd) {
   for (const b of bodies) if (b.update && b.key !== 'moon') b.update(jd);
   byKey.moon.update(jd);                                      // after Earth
 }
+// the render loop can pause: inside the globe page this view sleeps while the globe is showing
+const loop = {
+  running: false,
+  resume() { if (this.running) return; this.running = true; lastT = performance.now(); requestAnimationFrame(frame); },
+  pause() { this.running = false; },
+};
+const embed = createEmbed({ camera, controls, nav, clock, loop, update });
 function frame(t) {
+  if (!loop.running) return;
   const dt = Math.min((t - lastT) / 1000, 0.1); lastT = t;
   update(clock.tick(Math.max(dt, 0)));
-  nav.frame(); controls.update(); camera.updateMatrixWorld();
+  if (!embed.frame(view)) nav.frame();
+  controls.update(); camera.updateMatrixWorld();
   view.camSun = camera.position.length(); view.camFocus = camera.position.distanceTo(controls.target);
   sunView.set(0, 0, 0).applyMatrix4(camera.matrixWorldInverse);
   sky.frame(view); planets.frame(view); small.frame(view); craft.frame(view); deep.frame(view);
   story.updatePulse(); ui.frame(view);
   renderer.render(scene, camera);
+  embed.api.ready = true;
   requestAnimationFrame(frame);
 }
 
@@ -97,14 +108,20 @@ update(clock.jd);
 const startKey = new URLSearchParams(location.search).get('focus') || 'earth', first = byKey[startKey] || byKey.earth;
 camera.position.copy(first.pos).add(new THREE.Vector3(0.6, -1, 0.35).normalize().multiplyScalar(first.key === 'earth' ? 0.004 : 3));
 controls.target.copy(first.pos); nav.focus = first;
-requestAnimationFrame(frame);
-setTimeout(() => {
-  document.querySelector('#load').classList.add('gone'); ui.start();
-  nav.focusOn(first, first.key === 'earth' ? 0.0012 : 3, 3);
-  ui.caption('The Solar System, right now', 'Every planet, moon, asteroid and spacecraft is where it really is at this moment. Scroll out, or pick a step below.', 'Tip: try the guided tour in the left panel.', 9000);
-}, 700);
+if (EMBED) {   // inside the globe: no splash, no opening flight; render one frame (to be ready) and wait for the hand-over
+  document.querySelector('#load').classList.add('gone'); document.body.classList.add('embedded'); ui.start();
+  loop.resume(); requestAnimationFrame(() => requestAnimationFrame(() => { if (!embed.api.active) loop.pause(); }));
+  for (const a of document.querySelectorAll('a[href="globe.html"]')) a.addEventListener('click', e => { e.preventDefault(); embed.api.goToEarth(); });
+} else {
+  loop.resume();
+  setTimeout(() => {
+    document.querySelector('#load').classList.add('gone'); ui.start();
+    nav.focusOn(first, first.key === 'earth' ? 0.0012 : 3, 3);
+    ui.caption('The Solar System, right now', 'Every planet, moon, asteroid and spacecraft is where it really is at this moment. Scroll out, or pick a step below.', 'Tip: try the guided tour in the left panel.', 9000);
+  }, 700);
+}
 const settle = p => p.catch(e => console.warn(e)).finally(() => { applyLayers(); ui.renderLayers(); });
 settle(small.load()); settle(craft.load()); settle(deep.loadStars());
 applyLayers();
 
-window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, nav, story, renderer, LY: LY_AU };
+window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, nav, story, renderer, LY: LY_AU, embed: embed.api, loop };

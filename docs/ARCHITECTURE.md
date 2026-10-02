@@ -57,6 +57,17 @@ shells, Sun/Moon directions), `layers` (switches + dock), `follow` (follow camer
 band, presets, picking, card, lighting) and `main` (wiring, timers, boot). `state.js` holds the selection and late-bound
 hooks so feature modules never import the UI. `window.OO3D` is the console handle.
 
+## One zoom from street to galaxy
+
+`src/globe/space.js` loads `solar.html?embed=1` in an iframe once the globe camera climbs past 80,000 km, and hands
+the camera over beyond 300,000 km (looking back at Earth): position, view direction and up vector go across as
+Earth-centred vectors in ecliptic J2000 (Cesium Earth-fixed → ICRF with Cesium's IERS-based matrix → ecliptic), plus the
+vertical field of view. The Solar System view places them around Earth's *centre* (not the Earth–Moon barycentre,
+4,700 km away), so Earth sits in the same pixels at the switch; the two cross-fade in 0.7 s and the star backgrounds line
+up. It then rolls the view to ecliptic north over 1.6 s. Zooming into Earth there (below 220,000 km, not mid-flight)
+hands the camera back the same way. Only one renderer draws at a time: Cesium's render loop stops while the Solar
+System is showing, and the Solar System's loop sleeps while the globe is.
+
 ## Data that is built offline
 
 The browser never queries catalogues with millions of rows. Scripts in `brand/tools/` download once (cached in the

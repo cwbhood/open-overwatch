@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { DEG, AU_KM, LY_AU, eqToEcl, eclToEq, radecToEcl, GALACTIC } from '../src/core/units.js';
 import { J2000, jdFromMs, msFromJd, formatUtc, SimClock, REAL_TIME } from '../src/core/time.js';
 import { solveKepler, orbitPoint, orbitPath, positionAt, periodDays } from '../src/core/kepler.js';
-import { PLANET_KEYS, planetPosition, moonGeocentric, planetSpread } from '../src/core/planets.js';
+import { PLANET_KEYS, planetPosition, moonGeocentric, planetSpread, earthPosition } from '../src/core/planets.js';
 import { bodyAxes, IAU_ROTATION } from '../src/core/rotation.js';
 import { viewSmallBodies, decodeElements, cometElements, packSmallBodies } from '../src/core/smallbodies.js';
 import { lightTime, distance, viewWidth, esc } from '../src/core/format.js';
@@ -67,7 +67,7 @@ test('kepler: geometry and periods', () => {
 test('planets: within the formulae\'s stated accuracy of JPL Horizons (2026-10-02)', () => {
   const tolArcmin = { mercury: 1, venus: 1, earth: 1, mars: 2, jupiter: 12, saturn: 15, neptune: 2 };
   for (const [k, ref] of Object.entries({ ...H.bodies, earth: H.bodies.emb })) {
-    if (k === 'emb') continue;
+    if (k === 'emb' || k === 'earth_center') continue;
     const p = planetPosition(k, H.jd_tt), r = vec(ref);
     assert.ok(angleDeg(p, r) * 60 < tolArcmin[k], `${k}: ${(angleDeg(p, r) * 60).toFixed(2)}′`);
     assert.ok(Math.abs(len(p) / len(r) - 1) < 2e-3, `${k} distance`);
@@ -79,6 +79,13 @@ test('planets: the Moon within 0.2 deg and 0.5% of Horizons', () => {
   const m = moonGeocentric(H.jd_tt), r = vec(H.moon_geo);
   assert.ok(angleDeg(m, r) < 0.2, `${angleDeg(m, r).toFixed(3)} deg`);
   assert.ok(Math.abs(len(m) / len(r) - 1) < 5e-3);
+});
+
+test("planets: Earth's centre is offset from the barycentre like Horizons says (~4,700 km toward the anti-Moon side)", () => {
+  const ours = earthPosition(H.jd_tt), emb = planetPosition('earth', H.jd_tt);
+  const d = { x: ours.x - emb.x, y: ours.y - emb.y, z: ours.z - emb.z };
+  const ref = { x: H.bodies.earth_center[0] - H.bodies.emb[0], y: H.bodies.earth_center[1] - H.bodies.emb[1], z: H.bodies.earth_center[2] - H.bodies.emb[2] };
+  assert.ok(Math.abs(len(d) / len(ref) - 1) < 0.03 && angleDeg(d, ref) < 1, `${(len(d) * AU_KM).toFixed(0)} km vs ${(len(ref) * AU_KM).toFixed(0)} km`);
 });
 
 test('planets: alignment spread is a sensible arc', () => {

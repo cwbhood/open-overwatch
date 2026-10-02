@@ -1,7 +1,7 @@
 // The Sun, the eight planets and the Moon: real-size textured globes, lit by the Sun, spinning by the IAU models.
 import * as THREE from 'three';
 import { KM_AU, DEG } from '../core/units.js';
-import { PLANET_KEYS, PHYSICAL, planetElements, planetPosition, moonGeocentric } from '../core/planets.js';
+import { PLANET_KEYS, PHYSICAL, planetElements, planetPosition, earthPosition, moonGeocentric } from '../core/planets.js';
 import { bodyAxes } from '../core/rotation.js';
 import { orbitPath, periodDays } from '../core/kepler.js';
 import { distance, lightTime, period } from '../core/format.js';
@@ -85,7 +85,7 @@ export function createPlanets({ scene, sunView, renderer }) {
     loadTexture(planetTexture(key)).then(t => { mesh.material.uniforms.map.value = t; mesh.visible = !!t; });
     if (atm) { const h = halo(sunView, atm, key === 'earth' ? 1.1 : 0.6); h.scale.set(R, R * (1 - flat), R); spin.add(h); }
     const b = addBody({ key, name, kind: 'planet', color, radius: R, pos: new THREE.Vector3(), group, spin, mesh, big: true, fact: FACTS[key],
-      update(jd) { planetPosition(key, jd, b.pos); group.position.copy(b.pos); orient(key, jd, spin.quaternion); },
+      update(jd) { (key === 'earth' ? earthPosition : (j, o) => planetPosition(key, j, o))(jd, b.pos); group.position.copy(b.pos); orient(key, jd, spin.quaternion); },
       info() {
         const el = planetElements(key, b.jd ?? 0), dE = b.pos.distanceTo(byKey.earth.pos);
         return [['Distance from Sun', distance(b.pos.length())], ['From Earth', key === 'earth' ? '—' : distance(dE) + ' · light ' + lightTime(dE)],

@@ -22,7 +22,7 @@ Housekeeping to do before publishing: add `src`
 to `APP_PATHS` in `.github/build_site.py` and to the release zip list (archived versions import modules from `src/`).
 
 ## Stage 2 — the signature: one zoom from street to galaxy
-- [ ] Seamless globe ↔ Solar System hand-off (matched camera, shared clock, no page jump feel)
+- [x] Seamless globe ↔ Solar System hand-off (matched camera and field of view, cross-fade, roll to the ecliptic, both directions)
 - [ ] One time control for everything (satellites, planets, asteroids)
 - [ ] Every tracked object in orbit (full public catalogue incl. debris) + close-approach finder
 - [ ] Moons of Jupiter and Saturn; cosmic-web finale beyond the Local Group

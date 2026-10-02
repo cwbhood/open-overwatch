@@ -55,6 +55,7 @@ export function createUI({ camera, controls, clock, nav, story, small, deep }) {
     $('#card').style.display = 'block'; $('#card').dataset.key = b.key;
   }
   $('#cardX').onclick = () => showCard(null);
+  $('#cardB').addEventListener('click', e => { const a = e.target.closest('a[href="globe.html"]'); if (a && window.OOSS?.embed?.active !== undefined && document.body.classList.contains('embedded')) { e.preventDefault(); window.OOSS.embed.goToEarth(); } });
   setInterval(() => { // live numbers, unless the reader is selecting text
     const k = $('#card').dataset.key, sel = getSelection();
     if (k && byKey[k] && $('#card').style.display !== 'none' && (!sel || sel.isCollapsed)) showCard(byKey[k]);
