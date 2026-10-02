@@ -6,12 +6,19 @@ Leaflet 1.9.4 + satellite.js 5.0.0 from CDNs. No build step, no dependencies.
 ## Files
 - `index.html` — the landing page (GitHub Pages root). Hero clip/stills from brand/tools/lander_hero.py, feature icons
   from brand/tools/feature_icons.py, phone clips from the capture footage; live ISS (wheretheiss.at) + USGS in the hero.
-- `open-overwatch.html` — the entire app: CSS (18-335), HTML skeleton (337-406), one inline script (408-2093).
-  Lines 409-410 are giant data tables (COUNTRY, COUNTRY_ALIAS); don't read them in full.
-- `globe.html` — PROTOTYPE 3D view on CesiumJS 1.146 (CDN): space to street, Moon, ~10k satellites (SGP4 in a worker),
-  OpenSky + adsb.lol mil aircraft, USGS quakes. Lessons: 4x MSAA and a single 8k imagery texture both broke globe
-  rendering; city lights are a tile pyramid (brand/textures/night, made by brand/tools/make_night.py) shown only above
-  300 km, where sun shading is on; ground atmosphere hides night lights, so it is off.
+- `open-overwatch.html` — the entire app: CSS (18-342), HTML skeleton (344-414), one inline script (416-2116).
+  Lines 417-418 are giant data tables (COUNTRY, COUNTRY_ALIAS); don't read them in full.
+- `globe.html` — 3D view on CesiumJS 1.146 (CDN), needs the helper. Satellites: CelesTrak TLEs (Cache Storage, 2 h),
+  SGP4 in a worker for the dots; the nearest 40 within 4,000 km get glTF models (brand/models/*.glb, Blender-built,
+  +X ram / +Z zenith / solar_* nodes rotate about Y toward the sun), exact SGP4 per frame keyed to the Cesium clock.
+  Objects within 5 km of the ISS/CSS are "docked" (no model, no dot). Aircraft: OpenSky snapshot (15 min) + adsb.lol mil,
+  dead-reckoned up to 15 min; the nearest 200 within 300 km (camera < 600 km) get models (brand/models/aircraft) with
+  heading, pitch from vertical rate and bank from turn rate. Follow camera = own preUpdate re-centring (Cesium's
+  trackedEntity lags a tick ≈ 115 m at orbital speed). Lessons: 4x MSAA and one 8k single-tile imagery texture broke
+  globe rendering; city lights are a tile pyramid shown only above 300 km (where sun shading is on); ground atmosphere
+  hides night lights so it is off; below 300 km the scene light is an overhead fill (globe unlit there anyway);
+  satellites in Earth's shadow get a CustomShader ambient term. A hidden Browser pane runs 0 fps: drive frames with
+  viewer.render() when testing. MODEL_FIX = -90° about Z undoes Cesium's glTF forward-axis turn.
 - `serve.js` / `serve.py` — twin local helpers: serve the folder on http://127.0.0.1:8787 and relay an https host
   allowlist at `/proxy?url=…` for sources that send no CORS header. Keep the two in sync.
 - `Start Open Overwatch.bat` / `.vbs` — Windows launchers.
@@ -31,9 +38,9 @@ Preview config `open-overwatch` in `.claude/launch.json` (starts serve.js withou
 Then open http://localhost:8787/open-overwatch.html. On the boot screen, "Enter silent" skips audio.
 
 ## Script sections (line numbers drift as the file changes)
-helpers 413 · store 452 · log/toast 459 · network+relay 490 · map 541 · canvas renderer (Glyphs.draw) 589 ·
-layer registry 724 · feed scheduler 776 · detail panel 801 · tabs 840 · AIRCRAFT 851 ·
-SATELLITES 1091 · point/vector layers 1246 · PRESETS 1583 · BRIEF 1644 · AUDIO 1759 · SETUP 1927 · SEARCH 2029 · INIT 2046
+helpers 421 · store 460 · log/toast 467 · network+relay 498 · map 549 · canvas renderer (Glyphs.draw) 597 ·
+layer registry 732 · feed scheduler 784 · detail panel 809 · tabs 848 · AIRCRAFT 859 ·
+SATELLITES 1105 · point/vector layers 1269 · PRESETS 1606 · BRIEF 1667 · AUDIO 1782 · SETUP 1950 · SEARCH 2052 · INIT 2069
 
 ## Adding a layer (the contract the code enforces)
 1. `Layers.add({id, group, name, desc, color, default, points})` before INIT. `group` must be one of `UI.groups`
@@ -52,8 +59,9 @@ A top-level exception anywhere aborts INIT, so test every new layer in the brows
 Broken/stale feeds: RainViewer IR satellite (discontinued), RainViewer radar maxNativeZoom 12 (real limit is lower),
 submarine cables (GitHub mirror is stale; the live TeleGeography fallback isn't relayed), GDACS only shows ~1-2 days
 (100-result cap), 3 of 5 radio-browser hosts gone, GDELT flaky. GDELT now sends CORS headers (could skip the relay).
-Top fixes: unescaped HTML in detail panels (SondeHub uploader_callsign = XSS path), header overlap below ~1500px,
-satellite failures shown as green "ok", emergency squawk alert missed for aircraft already in view.
+Fixed 2026-10-01: detail panels escape all values (Detail.kv escapes; head() `sub` callers pass escaped text; links
+must be http(s)), header tiers instead of overlap (desktop only), satellite failures now red + 20 min retry with stale-
+cache fallback, emergency alerts fire on the transition into emergency from any feed (Air.raiseEmergency).
 Agreed plan: foundation pass first (feeds + top bugs + git), then a small layer helper, then new features.
 
 ## Blender (for 3D assets)

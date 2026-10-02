@@ -12,6 +12,14 @@ QUICK START (Windows)
      (needs Python 3 or Node.js; the .bat finds whichever you have)
   Mac / Linux:  python3 serve.py   or   node serve.js
 
+3D GLOBE (beta)
+  With the helper running, open http://127.0.0.1:8787/globe.html (or press "3D globe" under the
+  Layers rail). One CesiumJS globe from deep space to street level: ~10,000 satellites at their real
+  heights, the Moon, live aircraft, earthquakes, and real day/night with city lights. Satellites and
+  aircraft near the camera turn into 3D models; click one and press "Follow in 3D" (or double-click it)
+  to orbit it while it moves. Esc stops following. It needs the helper (it will say so if you open the
+  file directly).
+
 WHY THE HELPER
   Most sources allow requests straight from a web page. A few do not (they send no CORS header):
   the ADS-B aggregators (adsb.lol, airplanes.live, adsb.fi), OpenSky, NYC DOT cameras, NOAA NHC
@@ -24,6 +32,8 @@ WHY THE HELPER
 
 FILES
   open-overwatch.html        the map (self-contained; libraries load from cdnjs/jsdelivr)
+  globe.html                 the 3D globe (CesiumJS from jsdelivr; models and textures in brand/)
+  brand/                     logo, start-screen art, 3D models, promo video and the scripts that make them
   serve.py                   helper, Python 3 standard library
   serve.js                   helper, Node 18+ / Bun
   Start Open Overwatch.bat   Windows launcher (console window stays open)

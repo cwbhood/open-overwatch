@@ -181,6 +181,34 @@ model-viewer{width:100%;height:100%;--poster-color:transparent;--progress-bar-co
 .spec b{color:var(--ink);font-weight:500}
 .hint{position:absolute;left:var(--gut);bottom:14px;font:11px var(--mono);letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase}
 
+/* launch in the browser: version picker + version history (data: versions.json, built by .github/build_site.py) */
+.launch{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,56px);border:1px solid var(--line-strong);background:linear-gradient(160deg,#0a1119,#05080c);padding:clamp(22px,3.4vw,40px);position:relative;margin-top:34px}
+.launch::before{content:"";position:absolute;inset:-1px;border-top:2px solid var(--accent);pointer-events:none}
+.launch .lab{display:block;font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px}
+.launch select{width:100%;appearance:none;-webkit-appearance:none;background:var(--panel-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237dffa6' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center/18px;border:1px solid var(--line-strong);color:var(--ink);font:700 22px/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;padding:14px 46px 14px 16px;cursor:pointer}
+.launch select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.launch .vnotes{margin:16px 0 0;color:var(--ink-dim);font-size:15.5px;white-space:pre-line;min-height:3em}
+.launch .vnotes b{color:var(--ink);font-weight:600}
+.launch .lbtns{display:grid;gap:12px;align-content:start}
+.launch .lbtns .btn{justify-content:center}
+.launch .lbtns .btn[aria-disabled=true]{opacity:.35;pointer-events:none}
+.launch .lnote{margin:6px 0 0;font-size:14px;color:var(--ink-faint)}
+.launch .lnote a{color:var(--ink-dim)}
+@media (max-width:820px){.launch{grid-template-columns:1fr}}
+.vh{margin-top:40px}
+.vh .vhh{font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding-bottom:10px;border-bottom:1px solid var(--line-strong)}
+.vrow{display:grid;grid-template-columns:110px 130px 1fr auto;gap:8px 18px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line)}
+.vrow .vt{font:700 22px/1 var(--display);letter-spacing:.06em}
+.vrow .vt small{display:inline-block;margin-left:8px;font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--bg);background:var(--accent);padding:2px 6px;vertical-align:3px}
+.vrow .vd{font:13px var(--mono);color:var(--ink-faint)}
+.vrow .vs{color:var(--ink-dim);font-size:15.5px}
+.vrow .vl{display:flex;gap:14px;flex-wrap:wrap;font:13px var(--mono)}
+.vrow .vl a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}
+.vrow .vl a:hover{border-bottom-color:var(--accent)}
+.vrow .vl span{color:var(--ink-faint)}
+.vrow.muted{display:block;color:var(--ink-faint);font-size:15px}
+@media (max-width:820px){.vrow{grid-template-columns:auto 1fr}.vrow .vs,.vrow .vl{grid-column:1/-1}}
+
 /* how / download */
 .split{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(40px,6vw,90px);align-items:start}
 @media (max-width:900px){.split{grid-template-columns:1fr}}
@@ -234,8 +262,8 @@ footer a{color:var(--ink-dim)}
 <nav id="nav">
   <div class="wrap">
     <a class="brand" href="#top"><img src="brand/emblem/emblem-256.png" alt="">Open Overwatch</a>
-    <div class="links"><a href="#features">Features</a><a href="#live">Live</a><a href="#fleet">Fleet</a><a href="#get">Download</a><a class="gh" href="https://github.com/cwbhood/open-overwatch">GitHub</a></div>
-    <a class="btn small primary" href="open-overwatch.html">Launch map</a>
+    <div class="links"><a href="#features">Features</a><a href="#launch">Versions</a><a href="#live">Live</a><a href="#fleet">Fleet</a><a href="#get">Download</a><a class="gh" href="https://github.com/cwbhood/open-overwatch">GitHub</a></div>
+    <a class="btn small primary" href="#launch">Launch map</a>
   </div>
 </nav>
 
@@ -262,7 +290,7 @@ footer a{color:var(--ink-dim)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 20h16"/></svg>
         Download full version</a>
     </div>
-    <p class="cta-note rv">Runs in any browser · the download adds live aircraft tracking</p>
+    <p class="cta-note rv">Runs in any browser · the download adds live aircraft tracking · <a href="#launch">every version</a></p>
 
     <aside class="feed rv" aria-live="polite">
       <header><span><span class="dot"></span>Live feed</span><b id="utc">--:--:-- UTC</b></header>
@@ -283,6 +311,29 @@ footer a{color:var(--ink-dim)}
   </div>
   <div class="wrap stats-note">One real sweep of the app, 1 Oct 2026, 21:13 UTC.</div>
 </div>
+
+<section id="launch">
+  <div class="wrap">
+    <div class="eyebrow rv">Launch in your browser</div>
+    <h2 class="rv">Pick a version.<br>Hit launch.</h2>
+    <div class="launch rv">
+      <div>
+        <label class="lab" for="verSel">Version</label>
+        <select id="verSel" aria-describedby="verNotes"><option value="">Current</option></select>
+        <p class="vnotes" id="verNotes">The newest version is selected. Every earlier release stays online, exactly as it shipped.</p>
+      </div>
+      <div class="lbtns">
+        <a class="btn primary" id="goMap" href="open-overwatch.html">Launch the live map</a>
+        <a class="btn" id="goGlobe" href="globe.html">Launch the 3D globe <span class="mono" style="color:var(--ink-faint)">beta</span></a>
+        <p class="lnote">Runs right here, no install: satellites, quakes, storms, ships, news and cameras. Live aircraft need the <a href="#get">download</a> (a tiny local helper).</p>
+      </div>
+    </div>
+    <div class="vh rv">
+      <div class="vhh">Version history</div>
+      <div id="verList"><div class="vrow muted">Loading versions…</div></div>
+    </div>
+  </div>
+</section>
 
 <section id="features">
   <div class="wrap">
@@ -371,7 +422,7 @@ footer a{color:var(--ink-dim)}
         <a class="btn primary" id="dlBtn" href="https://github.com/cwbhood/open-overwatch/releases/latest/download/open-overwatch.zip">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 20h16"/></svg>Download .zip</a>
         <div style="height:12px"></div>
-        <a class="btn" href="open-overwatch.html">Open in browser instead</a>
+        <a class="btn" href="#launch">Open in browser instead</a>
         <ul>
           <li>Needs Python 3 or Node 18+ for the helper</li>
           <li>Updates: grab the new zip, same folder</li>
@@ -525,6 +576,32 @@ fetch('https://api.github.com/repos/' + REPO + '/releases/latest').then(r => r.o
   if (!d) return;
   $('#ver').textContent = 'Version ' + d.tag_name + ' · ' + new Date(d.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · Win · Mac · Linux';
 }).catch(() => {});
+// version picker + history from versions.json (built by .github/build_site.py on every publish)
+const RELEASES = 'https://github.com/' + REPO + '/releases';
+const fmtDate = iso => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+fetch('versions.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject()).then(data => {
+  const vs = data.versions || []; if (!vs.length) throw 0;
+  const sel = $('#verSel'), byTag = Object.fromEntries(vs.map(v => [v.tag, v]));
+  sel.innerHTML = vs.map((v, i) => `<option value="${esc(v.tag)}">${esc(v.tag)}${i ? '' : ' · latest'} · ${esc(fmtDate(v.date))}</option>`).join('');
+  const want = new URLSearchParams(location.search).get('v');
+  if (want && byTag[want]) sel.value = want;
+  const apply = () => {
+    const v = byTag[sel.value];
+    $('#goMap').href = v.map;
+    const g = $('#goGlobe'); if (v.globe) { g.href = v.globe; g.removeAttribute('aria-disabled'); g.title = ''; } else { g.removeAttribute('href'); g.setAttribute('aria-disabled', 'true'); g.title = 'The 3D globe arrived in a later version'; }
+    $('#verNotes').innerHTML = `<b>${esc(v.title)}</b>${v.notes ? '\n' + esc(v.notes) : ''}`;
+  };
+  sel.addEventListener('change', apply); apply();
+  $('#verList').innerHTML = vs.map((v, i) => `<div class="vrow">
+    <div class="vt">${esc(v.tag)}${i ? '' : '<small>latest</small>'}</div>
+    <div class="vd">${esc(fmtDate(v.date))}</div>
+    <div class="vs">${esc(v.title)}</div>
+    <div class="vl"><a href="${esc(v.map)}">Map</a>${v.globe ? `<a href="${esc(v.globe)}">3D globe</a>` : '<span>no 3D globe</span>'}<a href="${RELEASES}/tag/${encodeURIComponent(v.tag)}">Notes</a><a href="${RELEASES}/download/${encodeURIComponent(v.tag)}/open-overwatch.zip">.zip</a></div>
+  </div>`).join('');
+}).catch(() => { // no versions.json (e.g. opened from a local copy): launch what is in this folder
+  $('#verSel').innerHTML = '<option>This copy</option>'; $('#verSel').disabled = true;
+  $('#verList').innerHTML = '<div class="vrow muted">The full version history is on the published site: <a href="https://cwbhood.github.io/open-overwatch/#launch">cwbhood.github.io/open-overwatch</a>.</div>';
+});
 </script>
 </body>
 </html>

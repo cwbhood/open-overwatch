@@ -139,10 +139,14 @@ const bigStore = {
 };
 const store = { get(k, d) { try { const v = localStorage.getItem('oo3d.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('oo3d.' + k, JSON.stringify(v)); return true; } catch (e) { return false; } } };
 
+if (location.protocol === 'file:') { // textures, models and the aircraft relay all need the local helper
+  document.querySelector('#boot div').innerHTML = 'The 3D globe needs the local helper.<br>Run <b>Start Open Overwatch.bat</b>, then open<br><b style="text-transform:none">http://127.0.0.1:8787/globe.html</b>';
+  throw new Error('opened as a file: start the helper and use http://127.0.0.1:8787/globe.html');
+}
 /* ------------------------------------------------------------------ relay (same helper as the classic map) */
 const RELAY = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && location.protocol.startsWith('http') ? location.origin + '/proxy?url=' : null;
 async function getJSON(url, { relay = false, timeout = 45000 } = {}) {
-  if (relay && !RELAY) throw new Error('needs the local helper (serve.js / serve.py)');
+  if (relay && !RELAY) throw new Error('live aircraft need the download version (its local helper relays them)');
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeout);
   try { const r = await fetch(relay ? RELAY + encodeURIComponent(url) : url, { signal: ctl.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); return await r.json(); }
   finally { clearTimeout(t); }

@@ -14,6 +14,11 @@ Made with Blender 5.2 (headless, scripted), a little Python, and the app itself.
 - `sprites/` — top-down aircraft icons for globe.html (airliner, prop, heli, fighter, heavy, tprop × civ/mil/emg),
   96 px with the layer-colour glow; `raw/` holds the plain 256 px Blender renders. Rebuild: `blender ... tools\plane_sprites.py -- brand\sprites`
   then `python tools\plane_sprites.py --post brand\sprites`.
+- `models/` — glTF models for globe.html: satellites `iss, css, hubble, soyuz, starlink, gnss, geo, weather, smallsat,
+  rocketbody` (tools/sat_models_stations.py, tools/sat_models_fleet.py; previews/ has 2x2 review sheets) and
+  `aircraft/<shape>_<civ|mil>.glb` (tools/plane_models.py, same geometry as the sprites). Axes: +X forward, +Z up,
+  metres; `solar_*` nodes turn about Y; the helicopter's `rotor` node spins. `test/axes.glb` is an axis-marker model.
+- `textures/night/` — city-lights tile pyramid for the globe's night side (tools/make_night.py).
 - `blend/` — `emblem.blend`, `globe.blend` (textures load from `textures/`).
 - `textures/` — 8k Earth maps made by `tools/make_textures.py` from `source/`.
 - `source/` — downloaded public-domain Earth data (see Credits).

@@ -23,8 +23,8 @@ jobs:
           cp brand/hero/*.webp "$D/brand/hero/"
           cp brand/social/og-1200x630.png "$D/brand/social/"
           cp -r brand/textures/night "$D/brand/textures/"
-          cp brand/models/*.glb "$D/brand/models/"
-          if [ -d brand/models/test ]; then cp -r brand/models/test "$D/brand/models/"; fi
+          cp -r brand/models/. "$D/brand/models/"   # satellites, aircraft/ and test/ (3D planes need aircraft/)
+          rm -rf "$D/brand/models/previews"
           echo "$GITHUB_REF_NAME" > "$D/VERSION.txt"
           (cd dist && zip -qr open-overwatch.zip open-overwatch)
           ls -la dist
