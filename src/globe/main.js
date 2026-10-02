@@ -13,6 +13,7 @@ import { Quakes } from './quakes.js';
 import { updateStats, updateBand, PRESETS, Lighting, select } from './ui.js';
 import { Space } from './space.js';
 import { Quality, LEVELS } from './quality.js';
+import { Conj } from './conjunctions.js';
 
 function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
@@ -30,6 +31,7 @@ Quality.follow(q => { AirModels.max = q.air; SatModels.max = q.sat; cloudShell.m
 scene.preUpdate.addEventListener((sc, time) => { Follow.track(time); Lighting.update(); });
 scene.preRender.addEventListener((sc, time) => { SatModels.updateSun(time); Sats.update(Time.nowMs()); Earth.update(camHeight()); Space.update(); });
 PRESETS.space = () => Space.go();
+PRESETS.conj = () => Conj.openList();
 setInterval(() => SatModels.refresh(), 400);
 setInterval(() => AirModels.refresh(), 500);
 setInterval(() => Air.update(Date.now()), 250);
@@ -57,7 +59,7 @@ every(15 * 60e3, () => Air.opensky(), 'Civil aircraft');
 every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
 
-window.OO3D = {
+window.OO3D = { Conj,
   viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {

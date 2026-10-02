@@ -25,7 +25,9 @@ SKIP_VERSION = ('brand/models/previews/', 'brand/sprites/raw/')
 # every group globe.html (LAYERS sat:) and open-overwatch.html (Sats.GROUPS) can ask for
 TLE_GROUPS = ['stations', 'visual', 'last-30-days', 'military', 'radar', 'gps-ops', 'glo-ops', 'galileo', 'beidou',
               'weather', 'goes', 'resource', 'science', 'iridium-NEXT', 'geo', 'oneweb', 'starlink',
-              'cosmos-2251-debris', 'iridium-33-debris']
+              'cosmos-2251-debris', 'iridium-33-debris', 'fengyun-1c-debris', 'active']
+SOCRATES_CSV = 'https://celestrak.org/SOCRATES/sort-minRange.csv'
+SOCRATES_KEEP = 300    # the closest upcoming conjunctions, for the globe's close-approach list
 
 
 def git(*args, binary=False):
@@ -68,6 +70,39 @@ def mirror_tles(dest):
         json.dump(index, f, indent=1)
 
 
+def mirror_socrates(path):
+    """Best effort: SOCRATES close approaches (CSV, every conjunction under 5 km in the next 7 days) -> the closest
+    upcoming ones as JSON, in the shape src/core/socrates.js parseSocrates() returns (the globe reads this file)."""
+    import csv, datetime
+    try:
+        req = urllib.request.Request(SOCRATES_CSV, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
+        rows = list(csv.DictReader(io.StringIO(urllib.request.urlopen(req, timeout=120).read().decode('utf-8', 'replace'))))
+        now = datetime.datetime.now(datetime.timezone.utc)
+
+        def obj(r, n):
+            name = r[f'OBJECT_NAME_{n}'].strip(); status = ''
+            if name.endswith(']') and '[' in name:
+                name, status = name[:name.rindex('[')].strip(), name[name.rindex('[') + 1:-1]
+            return {'id': str(int(r[f'NORAD_CAT_ID_{n}'])), 'name': name, 'status': status, 'dse': float(r.get(f'DSE_{n}') or 0) or None}
+        out = []
+        for r in rows:
+            try:
+                t = datetime.datetime.fromisoformat(r['TCA'].strip().replace(' ', 'T')).replace(tzinfo=datetime.timezone.utc)
+                if t <= now:
+                    continue
+                out.append({'a': obj(r, 1), 'b': obj(r, 2), 'tca': int(t.timestamp() * 1000), 'rangeKm': float(r['TCA_RANGE']),
+                            'speedKmS': float(r['TCA_RELATIVE_SPEED']), 'maxProb': float(r['MAX_PROB']) if r.get('MAX_PROB') else None})
+            except (KeyError, ValueError):
+                continue
+        out.sort(key=lambda x: (x['rangeKm'], x['tca']))
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump({'updated': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'source': 'CelesTrak SOCRATES (' + SOCRATES_CSV + ')',
+                       'screened': len(rows), 'rows': out[:SOCRATES_KEEP]}, f, separators=(',', ':'))
+        print(f'socrates: {len(rows)} conjunctions, kept {min(len(out), SOCRATES_KEEP)}')
+    except Exception as e:
+        print(f'socrates: FAILED {e}')
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     n = extract('HEAD', ['.'], OUT, SKIP_ROOT)
@@ -94,6 +129,7 @@ def main():
         json.dump({'latest': versions[0]['tag'] if versions else None, 'versions': versions}, f, indent=1)
     print(f'versions.json: {len(versions)} versions')
     mirror_tles(os.path.join(OUT, 'data', 'tle'))
+    mirror_socrates(os.path.join(OUT, 'data', 'socrates.json'))
 
 
 if __name__ == '__main__':

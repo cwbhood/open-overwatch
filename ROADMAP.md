@@ -24,7 +24,9 @@ to `APP_PATHS` in `.github/build_site.py` and to the release zip list (archived 
 ## Stage 2 — the signature: one zoom from street to galaxy
 - [x] Seamless globe ↔ Solar System hand-off (matched camera and field of view, cross-fade, roll to the ecliptic, both directions)
 - [x] One time control for everything: globe time bar (satellites follow it, aircraft hide off-live), carried across the hand-off both ways
-- [ ] Every tracked object in orbit (full public catalogue incl. debris) + close-approach finder
+- [x] Everything CelesTrak publishes in orbit (all active satellites + the three big debris clouds; the full catalogue is
+      Space-Track's and can't be redistributed) + "Near misses": SOCRATES close approaches, watched live at the TCA
+      (data appears once the site build runs: `active`, `fengyun-1c-debris` and `socrates.json` are new in build_site.py)
 - [x] Major moons (Mars to Pluto, 20): Horizons-fitted orbits, tidally locked, orbit lines and labels near their planet
 - [x] Cosmic-web finale: 43,480 2MRS galaxies, cluster labels on the real overdensities, a ladder rung and the tour's last stop
 

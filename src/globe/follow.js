@@ -26,7 +26,7 @@ export const Follow = {
     const from = C.Matrix4.multiplyByPoint(inv, camera.positionWC, new C.Cartesian3());
     this.glide = { from, to: new C.Cartesian3(-r, -r, r * 0.55), t0: performance.now(), dur: 2200 };
     Object.assign(this, { obj, getPos, ent, minPx });
-    ent.model.minimumPixelSize = 0;   // true size while you're next to it
+    if (ent.model) ent.model.minimumPixelSize = 0;   // true size while you're next to it (markers have no model)
     ctrl.minimumZoomDistance = 2;
     hooks.clearPresets();
     toast(`Following ${obj.name || obj.flight || obj.hex} · drag to orbit it, scroll to zoom, Esc to stop`, 4200);

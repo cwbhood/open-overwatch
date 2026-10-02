@@ -10,6 +10,7 @@ user enters in the 2D map's Setup tab (stored only in their browser).
 | What | Source | How | Freshness · accuracy | Licence / terms |
 |---|---|---|---|---|
 | Satellite orbits (TLE) | [CelesTrak](https://celestrak.org) GP groups | site copy refreshed every 6 h by the build; CelesTrak direct as fallback; 2 h browser cache | TLE epochs are hours old; SGP4 error grows ~1–3 km/day | free, at most one download per group per 2 h |
+| Close approaches | CelesTrak [SOCRATES](https://celestrak.org/SOCRATES/) (`sort-minRange.csv`) | site build keeps the 300 closest upcoming → `data/socrates.json`, every 6 h | conjunctions under 5 km over the next 7 days, from the same public element sets (SGP4 error: km) | free, credit CelesTrak |
 | Planets | JPL [approximate positions](https://ssd.jpl.nasa.gov/planets/approx_pos.html) (Standish) | computed in the browser | arcminutes, 1800–2050 (tested against Horizons) | public domain (NASA) |
 | Moon | [Schlyter](https://stjarnhimlen.se/comp/ppcomp.html) elements + perturbations | computed in the browser | < 0.2° (tested) | published method |
 | 20 major moons | JPL [Horizons](https://ssd.jpl.nasa.gov/horizons/) osculating elements, 5 dates over 2026 | `make_moons.py` fits linear node / periapsis / mean-longitude rates → `data/solar/moons.json` | < 0.4° in 2026 (tested) | public domain (NASA) |

@@ -23,7 +23,7 @@ function syncTime() {
   const ms = Time.nowMs(), k = Time.live ? 1 : Time.rate;
   const iso = new Date(ms).toISOString();
   $('#tNow').textContent = NARROW.matches ? iso.slice(5, 16).replace('T', ' ') : iso.slice(0, 16).replace('T', ' ') + ' UTC';   // phones: MM-DD hh:mm
-  const mode = Time.live ? 'live' : Time.offLive() ? (RATE_TEXT[k] || k + '×') + ' · not live' : RATE_TEXT[k] || k + '×';
+  const mode = Time.live ? 'live' : Time.offLive() ? (k === 1 ? 'real speed' : RATE_TEXT[k] || k + '×') + ' · not live' : RATE_TEXT[k] || k + '×';
   $('#tMode').textContent = mode; $('#tMode').classList.toggle('off', Time.offLive());
   document.querySelectorAll('#timebar [data-rate]').forEach(b => b.classList.toggle('on', +b.dataset.rate === (Time.live ? 1 : Time.rate)));
 }
