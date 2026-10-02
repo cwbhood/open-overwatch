@@ -9,7 +9,10 @@ set /p VER=New version number (e.g. 0.6):
 if "%VER%"=="" goto :eof
 set /p MSG=What changed? (one line): 
 if "%MSG%"=="" set MSG=Update
-powershell -NoProfile -Command "(Get-Content -Raw -Encoding UTF8 'open-overwatch.html') -replace \"const OW_VERSION = '[^']*'\", \"const OW_VERSION = '%VER%'\" | Set-Content -NoNewline -Encoding UTF8 'open-overwatch.html'"
+rem No carets or inner double quotes in this line (cmd strips ^ outside its quote pairing, which broke the pattern),
+rem and write UTF-8 without a BOM (Windows PowerShell's Set-Content -Encoding UTF8 adds one).
+powershell -NoProfile -Command "$f = Join-Path (Get-Location) 'open-overwatch.html'; $t = [IO.File]::ReadAllText($f); $t = $t -replace 'const OW_VERSION = ''[0-9A-Za-z.\-]*''', 'const OW_VERSION = ''%VER%'''; [IO.File]::WriteAllText($f, $t, (New-Object Text.UTF8Encoding $false))"
+findstr /c:"const OW_VERSION = '%VER%'" open-overwatch.html >nul || (echo The version number in open-overwatch.html was not updated. & goto :fail)
 git add -A || goto :fail
 git commit -m "v%VER%: %MSG%" || goto :fail
 git tag -a "v%VER%" -m "%MSG%" || goto :fail
