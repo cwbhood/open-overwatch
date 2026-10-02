@@ -1,0 +1,13 @@
+# local / generated
+.claude/
+__pycache__/
+*.pyc
+*.log
+dist/
+# big or regenerable brand files (rebuild commands in brand/README.md)
+brand/video/
+brand/tools/_*/
+brand/tools/_*.log
+brand/models/previews/
+brand/hero/*.png
+brand/lander/hero-*.png

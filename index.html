@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#04060a">
+<title>Open Overwatch · the whole planet, live</title>
+<meta name="description" content="A free live situation map: aircraft, military flights, satellites, ships, storms, quakes and cameras on one dark ops-room screen, straight from open data. No account, no tracking.">
+<link rel="icon" href="brand/emblem/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="brand/emblem/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Open Overwatch · the whole planet, live">
+<meta property="og:description" content="Aircraft, satellites, ships, storms and quakes on one live map. Free, open data, runs in your browser.">
+<meta property="og:image" content="https://cwbhood.github.io/open-overwatch/brand/social/og-1200x630.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+<style>
+:root{
+  --bg:#04060a; --panel:#080c12; --panel-2:#0e141c; --line:#182230; --line-strong:#26343f;
+  --ink:#e6edf3; --ink-dim:#8b9bab; --ink-faint:#55667a;
+  --accent:#7dffa6; --accent-dim:rgba(125,255,166,.14);
+  --civ:#5fd3ff; --mil:#ffb44d; --emg:#ff4d5e; --sat:#d9ccff; --ship:#62e0c8; --qk:#ff7b4f; --evt:#ffd45c; --cam:#ff6fb5;
+  --display:"Big Shoulders Display","Arial Narrow",sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --gut:clamp(16px,4vw,56px); --max:1240px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+a{color:inherit}
+img,video{display:block;max-width:100%}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 var(--gut)}
+.mono{font-family:var(--mono)}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:22px;height:1px;background:currentColor}
+h1,h2,h3{font-family:var(--display);font-weight:900;text-transform:uppercase;letter-spacing:.01em;line-height:.92;margin:0}
+h2{font-size:clamp(44px,6.4vw,86px)}
+h3{font-size:30px;font-weight:700;letter-spacing:.03em}
+.lede{color:var(--ink-dim);font-size:clamp(17px,1.5vw,20px);max-width:620px}
+
+/* ---- nav */
+nav{position:fixed;inset:0 0 auto;z-index:50;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
+nav.solid{background:rgba(4,6,10,.82);backdrop-filter:blur(12px);border-color:var(--line)}
+nav .wrap{display:flex;align-items:center;gap:28px;height:68px;max-width:none}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;font:900 22px/1 var(--display);letter-spacing:.08em;text-transform:uppercase}
+.brand img{width:34px;height:34px}
+nav .links{display:flex;gap:26px;margin-left:auto;font:500 13px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+nav .links a{text-decoration:none;color:var(--ink-dim)}
+nav .links a:hover{color:var(--ink)}
+@media (max-width:860px){nav .links{display:none} nav .btn{margin-left:auto}}
+
+/* ---- buttons */
+.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 24px;border:1px solid var(--line-strong);background:rgba(8,12,18,.7);
+  color:var(--ink);text-decoration:none;font:600 14px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);transition:background .2s,color .2s,transform .2s}
+.btn:hover{background:var(--panel-2);transform:translateY(-1px)}
+.btn.primary{background:var(--accent);color:#04060a;border-color:var(--accent);box-shadow:0 0 40px rgba(125,255,166,.35)}
+.btn.primary:hover{background:#a6ffc2}
+.btn.small{padding:11px 16px;font-size:12px}
+.btn svg{width:16px;height:16px}
+
+/* ---- hero */
+.hero{position:relative;min-height:100svh;display:flex;align-items:flex-end;overflow:hidden;isolation:isolate}
+.hero-media{position:absolute;inset:0;z-index:-2}
+.hero-media img,.hero-media video{width:100%;height:100%;object-fit:cover;object-position:70% 50%}
+.hero-media video{position:absolute;inset:0;opacity:0;transition:opacity 1.2s}
+.hero-media video.on{opacity:1}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(90deg,rgba(4,6,10,.92) 0%,rgba(4,6,10,.55) 38%,rgba(4,6,10,0) 62%),
+             linear-gradient(0deg,var(--bg) 0%,rgba(4,6,10,0) 28%)}
+.hero .wrap{width:100%;max-width:none;padding-bottom:clamp(40px,9vh,110px);padding-top:120px}
+.hero h1{font-size:clamp(64px,10.5vw,168px);text-shadow:0 0 60px rgba(4,6,10,.7)}
+.hero h1 .glow{color:var(--accent);text-shadow:0 0 34px rgba(125,255,166,.55)}
+.hero .lede{margin:26px 0 34px;color:#c3cfdb}
+.cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.cta-note{font:13px/1.4 var(--mono);color:var(--ink-faint);margin-top:16px;letter-spacing:.04em}
+.hud{position:absolute;inset:84px var(--gut) 26px;pointer-events:none;z-index:-1}
+.hud i{position:absolute;width:26px;height:26px;border:1px solid rgba(125,255,166,.45)}
+.hud i:nth-child(1){top:0;left:0;border-width:1px 0 0 1px}.hud i:nth-child(2){top:0;right:0;border-width:1px 1px 0 0}
+.hud i:nth-child(3){bottom:0;left:0;border-width:0 0 1px 1px}.hud i:nth-child(4){bottom:0;right:0;border-width:0 1px 1px 0}
+.scan{position:absolute;left:0;right:0;height:120px;top:-120px;z-index:-1;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(125,255,166,.06) 85%,rgba(125,255,166,.22) 100%);animation:scan 7s linear infinite}
+@keyframes scan{to{top:110%}}
+.feed{position:absolute;right:var(--gut);bottom:clamp(40px,9vh,110px);width:340px;border:1px solid var(--line-strong);
+  background:rgba(6,9,14,.72);backdrop-filter:blur(10px);font:12.5px/1.5 var(--mono);z-index:2}
+.feed header{display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--ink-dim);letter-spacing:.14em;text-transform:uppercase;font-size:11px}
+.feed header b{color:var(--accent);font-weight:500}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);margin-right:8px;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+.feed .row{padding:11px 14px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:78px 1fr;gap:4px 10px}
+.feed .row:last-child{border:0}
+.feed .k{color:var(--ink-faint);letter-spacing:.1em;font-size:11px;padding-top:2px}
+.feed .v{color:var(--ink)}
+.feed .v small{display:block;color:var(--ink-dim);font-size:11.5px}
+.feed .sat{color:var(--sat)} .feed .qk{color:var(--qk)}
+@media (max-width:1100px){.feed{position:static;width:auto;margin-top:34px;max-width:440px}}
+@media (max-width:760px){
+  .hero{align-items:flex-end}
+  .hero-media{bottom:auto;height:100svh}
+  .hero-media img{object-position:50% 20%}
+  .hero::before{background:linear-gradient(0deg,var(--bg) 0%,var(--bg) calc(100% - 100svh),rgba(4,6,10,.9) calc(100% - 52svh),rgba(4,6,10,0) calc(100% - 30svh))}
+  .hero .wrap{padding-top:50svh}
+  .hero h1{font-size:clamp(56px,17vw,96px)}
+  .hud{display:none}
+  .brand{font-size:17px;gap:9px}
+  .brand img{width:28px;height:28px}
+}
+
+/* ---- stat strip */
+.stats{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:linear-gradient(180deg,#060a10,#04060a)}
+.stats .wrap{display:grid;grid-template-columns:repeat(5,1fr)}
+.stat{padding:30px 18px;border-left:1px solid var(--line)}
+.stat:first-child{border-left:0;padding-left:0}
+.stat b{display:block;font:900 clamp(40px,4.6vw,64px)/1 var(--display);letter-spacing:.02em}
+.stat span{font:12px/1.4 var(--mono);color:var(--ink-dim);letter-spacing:.12em;text-transform:uppercase}
+.stats-note{font:12px var(--mono);color:var(--ink-faint);padding:0 0 22px;letter-spacing:.06em}
+@media (max-width:860px){.stats .wrap{grid-template-columns:repeat(2,1fr)} .stat{border-left:0;padding-left:0;border-top:1px solid var(--line)} .stat:nth-child(-n+2){border-top:0}}
+
+/* ---- sections */
+section{padding:clamp(80px,12vw,150px) 0}
+.head{display:grid;gap:22px;margin-bottom:56px}
+
+/* features */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.card{background:var(--bg);padding:26px 28px 32px;position:relative;overflow:hidden;transition:background .3s}
+.card::before{content:"";position:absolute;inset:auto -20% -60% -20%;height:80%;background:radial-gradient(closest-side,var(--c),transparent);opacity:0;transition:opacity .4s}
+.card:hover{background:#060a10}
+.card:hover::before{opacity:.13}
+.card img{width:min(220px,70%);aspect-ratio:1;object-fit:contain;margin:-6px auto 6px;filter:drop-shadow(0 20px 30px rgba(0,0,0,.6));transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.card:hover img{transform:translateY(-8px) scale(1.04)}
+.card h3{color:var(--c)}
+.card p{color:var(--ink-dim);margin:10px 0 0;font-size:16px}
+.card .tag{position:absolute;top:18px;right:20px;font:11px var(--mono);letter-spacing:.14em;color:var(--ink-faint)}
+@media (max-width:980px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:620px){.grid{grid-template-columns:1fr}}
+.more{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.chip{font:12.5px var(--mono);padding:8px 13px;border:1px solid var(--line-strong);color:var(--ink-dim);letter-spacing:.04em}
+.chip::before{content:"";display:inline-block;width:6px;height:6px;margin-right:9px;background:var(--c,var(--accent));border-radius:50%;vertical-align:1px}
+
+/* live demo (phone) */
+.demo{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,7vw,110px);align-items:center}
+.phone{justify-self:center;width:min(340px,82vw);aspect-ratio:9/19.5;border-radius:46px;padding:12px;background:linear-gradient(145deg,#1b2430,#090d13);
+  box-shadow:0 0 0 1px #2a3644,0 40px 90px rgba(0,0,0,.7),0 0 120px rgba(125,255,166,.12);position:relative}
+.phone .screen{width:100%;height:100%;border-radius:36px;overflow:hidden;background:#000;position:relative}
+.phone video,.phone img{width:100%;height:100%;object-fit:cover}
+.phone .notch{position:absolute;top:22px;left:50%;translate:-50% 0;width:92px;height:26px;border-radius:20px;background:#000;z-index:2}
+.tabs{display:grid;gap:2px;margin-top:34px}
+.tab{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:16px;padding:16px 18px;border-left:2px solid var(--line);transition:border-color .2s,background .2s}
+.tab:hover{background:#070b11}
+.tab:focus-visible{outline:1px solid var(--c)}
+.tab[aria-selected=true]{border-color:var(--c);background:linear-gradient(90deg,rgba(255,255,255,.035),transparent)}
+.tab .n{font:500 12px var(--mono);color:var(--ink-faint);padding-top:6px;width:24px;flex:none}
+.tab .tx{display:grid;gap:4px;flex:1}
+.tab b{font:700 24px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+.tab[aria-selected=true] b{color:var(--c)}
+.tab .d{color:var(--ink-dim);font-size:15px}
+.tab .bar{height:2px;background:var(--line);overflow:hidden;display:none;margin-top:8px}
+.tab[aria-selected=true] .bar{display:block}
+.tab .bar i{display:block;height:100%;width:0;background:var(--c)}
+@media (max-width:900px){.demo{grid-template-columns:1fr}}
+
+/* fleet */
+.fleet{background:radial-gradient(ellipse at 50% 40%,#0b1320 0%,var(--bg) 65%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden}
+.viewer{position:relative;height:clamp(380px,62vh,640px);margin:0 calc(var(--gut) * -1)}
+model-viewer{width:100%;height:100%;--poster-color:transparent;--progress-bar-color:var(--accent)}
+.viewer .ring{position:absolute;left:50%;top:50%;width:min(760px,90vw);aspect-ratio:1;translate:-50% -50%;border-radius:50%;
+  border:1px solid rgba(217,204,255,.14);pointer-events:none}
+.viewer .ring::after{content:"";position:absolute;inset:12%;border-radius:50%;border:1px dashed rgba(217,204,255,.1)}
+.picker{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+.picker button{all:unset;cursor:pointer;font:500 12.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:10px 14px;border:1px solid var(--line-strong);color:var(--ink-dim)}
+.picker button:hover{color:var(--ink)}
+.picker button[aria-pressed=true]{border-color:var(--sat);color:var(--sat);background:rgba(217,204,255,.07)}
+.spec{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;margin-top:22px;font:12.5px var(--mono);color:var(--ink-dim);letter-spacing:.06em}
+.spec b{color:var(--ink);font-weight:500}
+.hint{position:absolute;left:var(--gut);bottom:14px;font:11px var(--mono);letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase}
+
+/* how / download */
+.split{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(40px,6vw,90px);align-items:start}
+@media (max-width:900px){.split{grid-template-columns:1fr}}
+.steps{counter-reset:s;display:grid;gap:0;border-top:1px solid var(--line)}
+.steps li{list-style:none;counter-increment:s;display:grid;grid-template-columns:60px 1fr;padding:22px 0;border-bottom:1px solid var(--line)}
+.steps li::before{content:"0" counter(s);font:500 13px var(--mono);color:var(--accent);padding-top:4px}
+.steps b{display:block;font:700 22px/1.2 var(--display);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.steps p{margin:0;color:var(--ink-dim);font-size:16px}
+code{font:14px var(--mono);background:var(--panel-2);border:1px solid var(--line);padding:2px 7px;color:var(--ink)}
+.dl{border:1px solid var(--line-strong);background:linear-gradient(160deg,#0a1119,#05080c);padding:34px;position:relative}
+.dl::before{content:"";position:absolute;inset:-1px;border-top:2px solid var(--accent);pointer-events:none}
+.dl .ver{font:12px var(--mono);color:var(--ink-dim);letter-spacing:.1em;text-transform:uppercase;margin:6px 0 24px}
+.dl .btn{width:100%;justify-content:center}
+.dl ul{margin:24px 0 0;padding:0;list-style:none;font-size:15px;color:var(--ink-dim);display:grid;gap:10px}
+.dl li::before{content:"→ ";color:var(--accent);font-family:var(--mono)}
+.table{display:grid;grid-template-columns:1fr auto auto;font:13px var(--mono);border:1px solid var(--line);margin-top:30px}
+.table div{padding:11px 14px;border-bottom:1px solid var(--line)}
+.table .h{color:var(--ink-faint);letter-spacing:.12em;font-size:11px;text-transform:uppercase}
+.y{color:var(--accent)} .n{color:var(--ink-faint)}
+
+/* principles */
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+.pillars div{border-top:1px solid var(--line-strong);padding-top:20px}
+.pillars b{font:700 22px/1.2 var(--display);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:8px}
+.pillars p{margin:0;color:var(--ink-dim);font-size:15.5px}
+@media (max-width:900px){.pillars{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.pillars{grid-template-columns:1fr}}
+
+/* final cta + footer */
+.final{position:relative;text-align:center;overflow:hidden;padding:clamp(110px,16vw,200px) 0}
+.final img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 100%;z-index:-1;opacity:.85}
+.final::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,var(--bg) 0%,rgba(4,6,10,.2) 45%,rgba(4,6,10,.6) 100%);z-index:-1}
+.final{isolation:isolate}
+.final img.emblem{width:120px;margin:0 auto 26px;filter:drop-shadow(0 0 40px rgba(125,255,166,.35))}
+.final h2{font-size:clamp(52px,8vw,120px)}
+.final .cta{justify-content:center;margin-top:36px}
+footer{border-top:1px solid var(--line);padding:40px 0 60px;font-size:14px;color:var(--ink-faint)}
+footer .wrap{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+footer p{margin:0 0 8px}
+footer a{color:var(--ink-dim)}
+@media (max-width:760px){footer .wrap{grid-template-columns:1fr}}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.scan,.dot{animation:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="brand/emblem/emblem-256.png" alt="">Open Overwatch</a>
+    <div class="links"><a href="#features">Features</a><a href="#live">Live</a><a href="#fleet">Fleet</a><a href="#get">Download</a><a class="gh" href="https://github.com/cwbhood/open-overwatch">GitHub</a></div>
+    <a class="btn small primary" href="open-overwatch.html">Launch map</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-media">
+    <picture>
+      <source media="(max-width:760px)" srcset="brand/lander/hero-tall.webp" type="image/webp">
+      <source srcset="brand/lander/hero-wide.webp" type="image/webp">
+      <img src="brand/lander/hero-wide.jpg" alt="The International Space Station over the night side of Earth, with live flight paths arcing across the Atlantic">
+    </picture>
+    <video id="heroVid" muted playsinline preload="none" poster="brand/lander/hero-poster.jpg" aria-hidden="true"></video>
+  </div>
+  <div class="hud"><i></i><i></i><i></i><i></i></div>
+  <div class="scan"></div>
+  <div class="wrap">
+    <div class="eyebrow rv">Live situation map · open data · free</div>
+    <h1 class="rv">The whole<br>planet, <span class="glow">live.</span></h1>
+    <p class="lede rv">Aircraft, military flights, satellites, ships, storms, quakes and street cameras, all on one dark ops-room screen, straight from public feeds. No account, no tracking, no install needed.</p>
+    <div class="cta rv">
+      <a class="btn primary" href="open-overwatch.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 12 18 6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+        Launch the live map</a>
+      <a class="btn" href="#get">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 20h16"/></svg>
+        Download full version</a>
+    </div>
+    <p class="cta-note rv">Runs in any browser · the download adds live aircraft tracking</p>
+
+    <aside class="feed rv" aria-live="polite">
+      <header><span><span class="dot"></span>Live feed</span><b id="utc">--:--:-- UTC</b></header>
+      <div class="row"><span class="k">ISS</span><span class="v sat" id="iss">acquiring…<small>wheretheiss.at</small></span></div>
+      <div class="row"><span class="k">QUAKES</span><span class="v qk" id="qk">listening…<small>USGS, M2.5+, last 24 h</small></span></div>
+      <div class="row"><span class="k">IN THE APP</span><span class="v">20+ layers, 6 groups<small>all refreshing while you watch</small></span></div>
+    </aside>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="wrap">
+    <div class="stat rv"><b data-n="11737" style="color:var(--civ)">0</b><span>aircraft tracked</span></div>
+    <div class="stat rv"><b data-n="248" style="color:var(--mil)">0</b><span>military flights</span></div>
+    <div class="stat rv"><b data-n="205" style="color:var(--sat)">0</b><span>satellites propagated</span></div>
+    <div class="stat rv"><b data-n="44" style="color:var(--qk)">0</b><span>quakes in 24 h</span></div>
+    <div class="stat rv"><b data-n="10" style="color:var(--evt)">0</b><span>active storms</span></div>
+  </div>
+  <div class="wrap stats-note">One real sweep of the app, 1 Oct 2026, 21:13 UTC.</div>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <div class="head">
+      <div class="eyebrow rv">What you see</div>
+      <h2 class="rv">Everything moving.<br>One screen.</h2>
+      <p class="lede rv">Layers you switch on and off like an air-traffic controller. Click anything for the full picture: callsign, altitude, orbit, magnitude, wind speed, live camera frame.</p>
+    </div>
+    <div class="grid">
+      <article class="card rv" style="--c:var(--civ)"><span class="tag">AIR</span><img src="brand/lander/icons/aircraft.webp" alt="" loading="lazy"><h3>Aircraft</h3><p>Every ADS-B transponder in range, worldwide. Civil, military and emergency squawks, each colour-coded, with trails and type.</p></article>
+      <article class="card rv" style="--c:var(--sat)"><span class="tag">SPACE</span><img src="brand/lander/icons/satellite.webp" alt="" loading="lazy"><h3>Satellites</h3><p>Orbits computed in your browser from CelesTrak data with SGP4: the ISS, Tiangong, weather sats and GPS, with ground tracks.</p></article>
+      <article class="card rv" style="--c:var(--ship)"><span class="tag">SEA</span><img src="brand/lander/icons/ship.webp" alt="" loading="lazy"><h3>Ships</h3><p>AIS vessel positions: the Baltic out of the box, the whole world's shipping with a free aisstream.io key.</p></article>
+      <article class="card rv" style="--c:var(--qk)"><span class="tag">GROUND</span><img src="brand/lander/icons/quake.webp" alt="" loading="lazy"><h3>Earthquakes</h3><p>USGS quakes as they're reported, sized by magnitude, plus GDACS disaster alerts and NASA natural events.</p></article>
+      <article class="card rv" style="--c:var(--evt)"><span class="tag">WEATHER</span><img src="brand/lander/icons/storm.webp" alt="" loading="lazy"><h3>Storms</h3><p>Hurricanes and typhoons with forecast cones, precipitation radar, severe-weather alerts and the aurora forecast.</p></article>
+      <article class="card rv" style="--c:var(--emg)"><span class="tag">EYES</span><img src="brand/lander/icons/camera.webp" alt="" loading="lazy"><h3>Cameras</h3><p>Public traffic cameras from London, New York, California, Singapore and Finland. Click one for the latest frame.</p></article>
+    </div>
+    <div class="more rv">
+      <span class="chip" style="--c:var(--emg)">Emergency squawk alerts</span>
+      <span class="chip" style="--c:var(--civ)">World news (GDELT)</span>
+      <span class="chip" style="--c:var(--qk)">Active fires (NASA FIRMS)</span>
+      <span class="chip" style="--c:#fff2a8">Weather balloons</span>
+      <span class="chip" style="--c:#3f8fb5">Submarine cables</span>
+      <span class="chip" style="--c:var(--accent)">Aurora forecast</span>
+      <span class="chip" style="--c:var(--ink-dim)">Day / night terminator</span>
+      <span class="chip" style="--c:#b48cff">Generative soundtrack</span>
+      <span class="chip" style="--c:var(--ink)">Daily brief</span>
+    </div>
+  </div>
+</section>
+
+<section id="live" style="padding-top:0">
+  <div class="wrap demo">
+    <div>
+      <div class="eyebrow rv">Recorded live, not mocked up</div>
+      <h2 class="rv">See it<br>in motion.</h2>
+      <p class="lede rv">Real captures from the app. Same screen on your phone and your desktop.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-clip="air_world" style="--c:var(--civ)"><span class="n">01</span><span class="tx"><b>Every aircraft on Earth</b><span class="d">11,737 transponders in one sweep.</span><span class="bar"><i></i></span></span></button>
+        <button class="tab" role="tab" data-clip="mil" style="--c:var(--mil)"><span class="n">02</span><span class="tx"><b>Military air picture</b><span class="d">Tankers, transports and fighters, worldwide.</span><span class="bar"><i></i></span></span></button>
+        <button class="tab" role="tab" data-clip="space" style="--c:var(--sat)"><span class="n">03</span><span class="tx"><b>The ISS, right now</b><span class="d">Orbit, footprint and ground track at 27,575 km/h.</span><span class="bar"><i></i></span></span></button>
+        <button class="tab" role="tab" data-clip="hazards" style="--c:var(--qk)"><span class="n">04</span><span class="tx"><b>Storms &amp; quakes</b><span class="d">Hurricane tracks over live radar.</span><span class="bar"><i></i></span></span></button>
+        <button class="tab" role="tab" data-clip="ui" style="--c:var(--accent)"><span class="n">05</span><span class="tx"><b>The console</b><span class="d">Counters, search and alerts.</span><span class="bar"><i></i></span></span></button>
+      </div>
+    </div>
+    <div class="phone rv"><div class="notch"></div><div class="screen">
+      <video id="phoneVid" muted playsinline preload="none" poster="brand/lander/clips/air_world.jpg"></video>
+    </div></div>
+  </div>
+</section>
+
+<section class="fleet" id="fleet">
+  <div class="wrap">
+    <div class="head" style="text-align:center;justify-items:center;margin-bottom:10px">
+      <div class="eyebrow rv">Built in Blender</div>
+      <h2 class="rv">Meet the fleet.</h2>
+      <p class="lede rv">Hand-modelled spacecraft for the new 3D globe view. Drag to orbit, scroll to zoom.</p>
+    </div>
+    <div class="viewer rv">
+      <div class="ring"></div>
+      <model-viewer id="mv" src="brand/models/iss.glb" alt="3D model of the International Space Station" camera-controls auto-rotate
+        auto-rotate-delay="0" rotation-per-second="14deg" interaction-prompt="none" shadow-intensity="0" exposure="1.15"
+        environment-image="neutral" camera-orbit="35deg 72deg auto" loading="lazy" disable-pan><div slot="progress-bar"></div></model-viewer>
+      <span class="hint">drag · zoom · release</span>
+    </div>
+    <div class="picker" id="picker"></div>
+    <div class="spec" id="spec"></div>
+  </div>
+</section>
+
+<section id="get">
+  <div class="wrap split">
+    <div>
+      <div class="eyebrow rv">Get it</div>
+      <h2 class="rv">Two ways<br>in.</h2>
+      <p class="lede rv">The web version runs right here. The download adds a tiny local helper. A few feeds (the ADS-B aircraft networks, OpenSky, NOAA hurricane cones, some cameras) refuse requests from web pages, and the helper relays just those.</p>
+      <ol class="steps rv">
+        <li><div><b>Download &amp; unzip</b><p>One folder, about 7 MB. Nothing to install.</p></div></li>
+        <li><div><b>Double-click the launcher</b><p><code>Start Open Overwatch.bat</code> on Windows, or <code>python3 serve.py</code> / <code>node serve.js</code> on Mac and Linux.</p></div></li>
+        <li><div><b>Watch the world</b><p>Your browser opens the map at <code>127.0.0.1:8787</code>. Every layer lights up.</p></div></li>
+      </ol>
+    </div>
+    <div class="rv">
+      <div class="dl">
+        <h3>Open Overwatch</h3>
+        <div class="ver" id="ver">Latest release · Windows · macOS · Linux</div>
+        <a class="btn primary" id="dlBtn" href="https://github.com/cwbhood/open-overwatch/releases/latest/download/open-overwatch.zip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 20h16"/></svg>Download .zip</a>
+        <div style="height:12px"></div>
+        <a class="btn" href="open-overwatch.html">Open in browser instead</a>
+        <ul>
+          <li>Needs Python 3 or Node 18+ for the helper</li>
+          <li>Updates: grab the new zip, same folder</li>
+          <li>Source &amp; changelog on <a href="https://github.com/cwbhood/open-overwatch">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="table rv">
+        <div class="h">Layer</div><div class="h">Web</div><div class="h">Download</div>
+        <div>Satellites, quakes, storms, ships</div><div class="y">●</div><div class="y">●</div>
+        <div>News, radar, aurora, cameras</div><div class="y">●</div><div class="y">●</div>
+        <div>Live aircraft &amp; military flights</div><div class="n">—</div><div class="y">●</div>
+        <div>Hurricane cones, NYC cams</div><div class="n">—</div><div class="y">●</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="pillars">
+      <div class="rv"><b>Open data only</b><p>USGS, NOAA, NASA, CelesTrak, GDACS, adsb.lol and other public and volunteer feeds. Nothing scraped, nothing secret.</p></div>
+      <div class="rv"><b>No account</b><p>No sign-up, no cookies, no analytics. Your settings stay in your browser.</p></div>
+      <div class="rv"><b>One file</b><p>The whole app is a single HTML page. Read it, fork it, host it anywhere.</p></div>
+      <div class="rv"><b>Plays nice</b><p>It rate-limits itself, caches orbits for two hours and backs off when a feed struggles.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <img class="bg" src="brand/hero/hero-wide.webp" alt="" loading="lazy">
+  <div class="wrap">
+    <img class="emblem rv" src="brand/emblem/emblem-512.png" alt="">
+    <h2 class="rv">Eyes on.</h2>
+    <div class="cta rv">
+      <a class="btn primary" href="open-overwatch.html">Launch the live map</a>
+      <a class="btn" href="globe.html">Try the 3D globe <span class="mono" style="color:var(--ink-faint)">beta</span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p><a class="brand" href="#top" style="font-size:18px;color:var(--ink)"><img src="brand/emblem/emblem-256.png" alt="" style="width:26px;height:26px">Open Overwatch</a></p>
+      <p>A hobby project built on public data. For awareness and curiosity, not for navigation, safety or operational decisions.</p>
+    </div>
+    <div>
+      <p>Data: adsb.lol, adsb.fi, airplanes.live, OpenSky, CelesTrak, USGS, NOAA/NHC/NWS, NASA EONET &amp; FIRMS, GDACS, GDELT, Digitraffic, aisstream.io, SondeHub, RainViewer, TeleGeography. Basemap © Esri. Night lights: NASA Black Marble.</p>
+      <p><a href="https://github.com/cwbhood/open-overwatch">GitHub</a> · <a href="https://github.com/cwbhood/open-overwatch/releases">Releases</a> · <a href="https://github.com/cwbhood/open-overwatch/issues">Report a bug</a></p>
+    </div>
+  </div>
+</footer>
+
+<script>
+const REPO = 'cwbhood/open-overwatch';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// nav background once scrolled
+const nav = $('#nav');
+addEventListener('scroll', () => nav.classList.toggle('solid', scrollY > 40), { passive: true });
+
+// hero clip: wide screens only (phones keep the tall still), plays once and holds the last frame
+const hv = $('#heroVid');
+if (!reduce && matchMedia('(min-width:761px)').matches && !(navigator.connection && navigator.connection.saveData)) {
+  hv.innerHTML = '<source src="brand/lander/hero-loop.webm" type="video/webm"><source src="brand/lander/hero-loop.mp4" type="video/mp4">';
+  hv.preload = 'auto';
+  hv.addEventListener('canplaythrough', () => { hv.classList.add('on'); hv.play().catch(() => {}); }, { once: true });
+  hv.load();
+}
+
+// reveal on scroll + counters
+const counters = el => {
+  const n = +el.dataset.n, t0 = performance.now(), dur = 1600;
+  const step = t => { const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 4);
+    el.textContent = Math.round(n * e).toLocaleString('en-US'); if (p < 1) requestAnimationFrame(step); };
+  reduce ? (el.textContent = n.toLocaleString('en-US')) : requestAnimationFrame(step);
+};
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  e.target.classList.add('in');
+  e.target.querySelectorAll('[data-n]').forEach(counters);
+  io.unobserve(e.target);
+}), { threshold: .15 });
+document.querySelectorAll('.rv').forEach((el, i) => { el.style.transitionDelay = (i % 6) * 70 + 'ms'; io.observe(el); });
+
+// live feed: UTC clock, ISS position, USGS quakes
+setInterval(() => { $('#utc').textContent = new Date().toISOString().slice(11, 19) + ' UTC'; }, 1000);
+const fmt = (v, p, n) => Math.abs(v).toFixed(1) + '°' + (v >= 0 ? p : n);
+async function iss() {
+  try {
+    const d = await (await fetch('https://api.wheretheiss.at/v1/satellites/25544', { cache: 'no-store' })).json();
+    $('#iss').innerHTML = esc(fmt(d.latitude, 'N', 'S') + ' ' + fmt(d.longitude, 'E', 'W')) +
+      '<small>' + esc(Math.round(d.altitude) + ' km up · ' + Math.round(d.velocity).toLocaleString('en-US') + ' km/h · ' + d.visibility) + '</small>';
+  } catch (e) { $('#iss').innerHTML = 'signal lost<small>retrying…</small>'; }
+}
+async function quakes() {
+  try {
+    const d = await (await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson')).json();
+    const big = d.features.reduce((a, f) => (!a || f.properties.mag > a.properties.mag ? f : a), null);
+    $('#qk').innerHTML = esc(d.features.length + ' quakes') +
+      (big ? '<small>largest M' + esc(big.properties.mag.toFixed(1) + ' · ' + big.properties.place) + '</small>' : '');
+  } catch (e) { $('#qk').innerHTML = 'feed unavailable<small>USGS</small>'; }
+}
+iss(); quakes(); setInterval(iss, 5000); setInterval(quakes, 120000);
+
+// phone demo: tabs cycle through the recorded clips
+const pv = $('#phoneVid'), tabs = [...document.querySelectorAll('.tab')];
+let cur = 0, auto = true;
+function show(i) {
+  cur = i;
+  tabs.forEach((t, j) => { t.setAttribute('aria-selected', j === i); t.querySelector('.bar i').style.width = '0'; });
+  const c = tabs[i].dataset.clip;
+  pv.poster = 'brand/lander/clips/' + c + '.jpg';
+  pv.src = 'brand/lander/clips/' + c + '.mp4';
+  if (!reduce) pv.play().catch(() => {});
+}
+pv.addEventListener('timeupdate', () => { if (pv.duration) tabs[cur].querySelector('.bar i').style.width = (pv.currentTime / pv.duration * 100) + '%'; });
+pv.addEventListener('ended', () => auto ? show((cur + 1) % tabs.length) : (pv.currentTime = 0, pv.play()));
+tabs.forEach((t, i) => t.addEventListener('click', () => { auto = false; show(i); }));
+new IntersectionObserver(([e]) => { if (e.isIntersecting) { if (!pv.src) show(0); else if (!reduce) pv.play().catch(() => {}); } else pv.pause(); },
+  { threshold: .3 }).observe(pv);
+
+// fleet viewer
+const FLEET = [
+  ['iss', 'ISS', 'International Space Station', '109 m', '~420 km LEO'],
+  ['css', 'Tiangong', 'China Space Station', '55 m', '~390 km LEO'],
+  ['hubble', 'Hubble', 'Space telescope', '13 m', '~530 km LEO'],
+  ['soyuz', 'Soyuz MS', 'Crew vehicle', '11 m', 'docked / LEO'],
+  ['starlink', 'Starlink', 'Broadband constellation', 'flat panel', '~550 km LEO'],
+  ['gnss', 'GPS', 'Navigation satellite', 'twin wings', '20,200 km MEO'],
+  ['geo', 'GEO comsat', 'Geostationary relay', '30+ m span', '35,786 km GEO'],
+  ['weather', 'Weather sat', 'Earth observation', 'single wing', 'polar / GEO'],
+  ['smallsat', 'Smallsat', 'CubeSat-class', 'tiny', 'LEO'],
+  ['rocketbody', 'Rocket body', 'Spent upper stage', 'debris', 'all over'],
+];
+const mv = $('#mv'), picker = $('#picker'), spec = $('#spec');
+function pick(k) {
+  const f = FLEET.find(x => x[0] === k);
+  mv.src = 'brand/models/' + f[0] + '.glb';
+  mv.alt = '3D model: ' + f[2];
+  spec.innerHTML = '<span><b>' + f[1] + '</b> · ' + f[2] + '</span><span>size <b>' + f[3] + '</b></span><span>orbit <b>' + f[4] + '</b></span>';
+  picker.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k));
+}
+FLEET.forEach(f => { const b = document.createElement('button'); b.dataset.k = f[0]; b.textContent = f[1]; b.onclick = () => pick(f[0]); picker.append(b); });
+pick('iss');
+
+// latest release label (falls back to the static text)
+fetch('https://api.github.com/repos/' + REPO + '/releases/latest').then(r => r.ok ? r.json() : null).then(d => {
+  if (!d) return;
+  $('#ver').textContent = 'Version ' + d.tag_name + ' · ' + new Date(d.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · Win · Mac · Linux';
+}).catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#04060a">
+<title>Open Overwatch · Orbital</title>
+<link rel="icon" href="brand/emblem/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.146.0/Build/Cesium/Widgets/widgets.css">
+<style>
+/* Open Overwatch · Orbital (prototype): one CesiumJS globe from deep space to street level, floating glass UI. */
+:root{
+  --bg:#04060a; --glass:rgba(8,12,18,.62); --glass-strong:rgba(8,12,18,.82); --edge:rgba(125,255,166,.16); --edge-dim:rgba(230,237,243,.08);
+  --ink:#e6edf3; --dim:#8b9bab; --faint:#55667a; --accent:#7dffa6;
+  --civ:#5fd3ff; --mil:#ffb44d; --emg:#ff4d5e; --sat:#d9ccff; --gnss:#ffd45c; --geo:#b48cff; --wx:#62e0c8; --qk:#ff7b4f;
+  --display:"Big Shoulders Display","Arial Narrow",sans-serif; --body:"Barlow",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 var(--body);overflow:hidden;-webkit-font-smoothing:antialiased}
+#globe{position:fixed;inset:0}
+.cesium-viewer-bottom{display:none!important} /* credits are re-hosted in #credits */
+.glass{background:var(--glass);border:1px solid var(--edge-dim);border-radius:14px;backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+
+/* top bar */
+#top{position:fixed;top:14px;left:14px;right:14px;display:flex;align-items:center;gap:12px;pointer-events:none;z-index:5}
+#top>*{pointer-events:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px}
+.brand img{width:34px;height:34px}
+.brand b{font:900 21px/1 var(--display);letter-spacing:.06em;text-transform:uppercase}
+.brand small{display:block;font:500 10px/1.2 var(--mono);letter-spacing:.16em;color:var(--accent);text-transform:uppercase;margin-top:3px}
+.stats{display:flex;gap:2px;padding:6px;margin-left:auto}
+.stat{padding:4px 12px;border-radius:9px;text-align:center;min-width:64px}
+.stat b{display:block;font:600 17px/1.1 var(--mono)}
+.stat span{font:500 9.5px/1 var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.links{display:flex;gap:6px;padding:6px}
+.links a,.chipbtn{display:inline-flex;align-items:center;padding:8px 12px;border-radius:9px;font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-decoration:none;border:1px solid transparent;background:none}
+.links a:hover,.chipbtn:hover{color:var(--ink);border-color:var(--edge-dim)}
+
+/* layer dock */
+#dock{position:fixed;left:14px;top:84px;width:250px;padding:12px;z-index:4;max-height:calc(100% - 200px);overflow:auto}
+#dock h3{margin:2px 4px 8px;font:700 12px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.ly{display:flex;align-items:center;gap:10px;width:100%;padding:8px 8px;border-radius:9px;border:0;background:none;text-align:left}
+.ly:hover{background:rgba(230,237,243,.05)}
+.ly i{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c);flex:0 0 auto;transition:opacity .2s}
+.ly .n{margin-left:auto;font:500 11px/1 var(--mono);color:var(--faint)}
+.ly .t{font-weight:500}
+.ly.off{color:var(--faint)} .ly.off i{opacity:.2;box-shadow:none}
+.sep{height:1px;background:var(--edge-dim);margin:8px 4px}
+.note{font-size:11.5px;color:var(--faint);margin:8px 6px 2px;line-height:1.35}
+
+/* altitude band + presets */
+#band{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:6px;z-index:5}
+.alt{padding:4px 14px 4px 10px;border-right:1px solid var(--edge-dim);margin-right:2px;min-width:170px}
+.alt b{display:block;font:900 20px/1 var(--display);letter-spacing:.12em;color:var(--accent);text-transform:uppercase}
+.alt span{font:500 11px/1.4 var(--mono);color:var(--dim)}
+.go{padding:10px 14px;border-radius:9px;border:1px solid transparent;background:none;font:600 12px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.go:hover{color:var(--ink);border-color:var(--edge-dim);background:rgba(230,237,243,.04)}
+.go.on{color:var(--accent);border-color:var(--edge)}
+
+/* detail card */
+#card{position:fixed;right:14px;top:84px;width:320px;padding:16px 18px;z-index:4;transform:translateX(120%);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+#card.show{transform:none}
+#card .k{font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--c,var(--accent))}
+#card h2{margin:6px 0 10px;font:900 30px/1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+#card dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0}
+#card dt{font:500 10.5px/1.6 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+#card dd{margin:0;font:500 13px/1.6 var(--mono);text-align:right}
+#card .x{position:absolute;right:10px;top:10px;border:0;background:none;color:var(--faint);font-size:18px;padding:4px 8px}
+#card .acts{display:flex;gap:6px;margin-top:12px}
+
+#hover{position:fixed;pointer-events:none;z-index:6;padding:5px 9px;border-radius:7px;font:500 11.5px/1.2 var(--mono);background:var(--glass-strong);border:1px solid var(--edge-dim);display:none;white-space:nowrap}
+#credits{position:fixed;right:12px;bottom:10px;max-width:46vw;z-index:3;font:400 10px/1.3 var(--body);color:var(--faint);text-align:right}
+#credits a{color:var(--faint)}
+#toast{position:fixed;left:50%;top:84px;transform:translateX(-50%);padding:9px 14px;z-index:7;font:500 12px/1.2 var(--mono);opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+#boot{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:var(--bg);transition:opacity .8s}
+#boot.out{opacity:0;pointer-events:none}
+#boot div{font:500 12px/1.6 var(--mono);color:var(--dim);letter-spacing:.14em;text-transform:uppercase}
+@media (max-width:820px){
+  #dock{top:auto;bottom:86px;left:10px;right:10px;width:auto;max-height:34vh;display:none} #dock.open{display:block}
+  #top{gap:8px;left:10px;right:10px;top:10px} .brand{padding:7px} .brand b,.brand small{display:none} /* emblem only: the bar must fit 360 px */
+  .stats{padding:4px} .stats .stat:nth-child(n+4){display:none} .stat{min-width:52px;padding:4px 8px} .stat b{font-size:15px}
+  .links{padding:4px} .links a{display:none} /* keep the Layers button: it is the only way to open the dock on a phone */
+  .alt b{font-size:16px;white-space:nowrap} .alt span{white-space:nowrap}
+  #band{left:10px;right:10px;transform:none;bottom:10px;overflow-x:auto} .alt{min-width:120px}
+  #card{left:10px;right:10px;width:auto;top:auto;bottom:86px;transform:translateY(140%)} #card.show{transform:none}
+  #credits{display:none}
+}
+</style>
+</head>
+<body>
+<div id="globe"></div>
+<header id="top">
+  <div class="brand glass"><img src="brand/emblem/emblem-256.png" alt=""><div><b>Open Overwatch</b><small>Orbital · prototype</small></div></div>
+  <div class="stats glass" id="stats">
+    <div class="stat"><b id="sAir">—</b><span>air</span></div>
+    <div class="stat"><b id="sMil">—</b><span>mil</span></div>
+    <div class="stat"><b id="sSat">—</b><span>sat</span></div>
+    <div class="stat"><b id="sQk">—</b><span>quakes</span></div>
+    <div class="stat"><b id="sUtc">--:--</b><span>utc</span></div>
+  </div>
+  <div class="links glass"><button class="chipbtn" id="btnDock">Layers</button><a href="open-overwatch.html">Classic map</a></div>
+</header>
+<aside id="dock" class="glass" aria-label="Layers"></aside>
+<nav id="band" class="glass">
+  <div class="alt"><b id="bandName">—</b><span id="bandAlt">—</span></div>
+  <button class="go" data-go="ground">Street</button>
+  <button class="go" data-go="air">Airspace</button>
+  <button class="go" data-go="earth">Earth</button>
+  <button class="go" data-go="geo">GEO belt</button>
+  <button class="go" data-go="moon">Moon</button>
+</nav>
+<section id="card" class="glass" aria-live="polite"></section>
+<div id="hover"></div>
+<div id="credits"></div>
+<div id="toast" class="glass"></div>
+<div id="boot"><div>Initialising orbital view…</div></div>
+
+<script>window.CESIUM_BASE_URL = 'https://cdn.jsdelivr.net/npm/cesium@1.146.0/Build/Cesium/';</script>
+<script src="https://cdn.jsdelivr.net/npm/cesium@1.146.0/Build/Cesium/Cesium.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => n == null || isNaN(n) ? '—' : Math.round(n).toLocaleString('en-US');
+const C = Cesium;
+const toast = (msg, ms = 2600) => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), ms); };
+// large caches (TLE groups ~1.3 MB for Starlink, the OpenSky snapshot) go to Cache Storage: localStorage caps at ~5 MB,
+// and a failed write would mean re-downloading and getting refused by CelesTrak's once-per-2-hours rule
+const bigStore = {
+  async get(k) { try { const r = await (await caches.open('oo3d')).match('/__oo3d/' + k); return r ? await r.json() : store.get(k, null); } catch (e) { return store.get(k, null); } },
+  async set(k, v) { try { await (await caches.open('oo3d')).put('/__oo3d/' + k, new Response(JSON.stringify(v), { headers: { 'content-type': 'application/json' } })); return true; } catch (e) { return store.set(k, v); } },
+};
+const store = { get(k, d) { try { const v = localStorage.getItem('oo3d.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('oo3d.' + k, JSON.stringify(v)); return true; } catch (e) { return false; } } };
+
+/* ------------------------------------------------------------------ relay (same helper as the classic map) */
+const RELAY = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && location.protocol.startsWith('http') ? location.origin + '/proxy?url=' : null;
+async function getJSON(url, { relay = false, timeout = 45000 } = {}) {
+  if (relay && !RELAY) throw new Error('needs the local helper (serve.js / serve.py)');
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeout);
+  try { const r = await fetch(relay ? RELAY + encodeURIComponent(url) : url, { signal: ctl.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); return await r.json(); }
+  finally { clearTimeout(t); }
+}
+async function getText(url, timeout = 90000) {
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeout);
+  try { const r = await fetch(url, { signal: ctl.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); return await r.text(); } finally { clearTimeout(t); }
+}
+
+/* ------------------------------------------------------------------ viewer */
+const viewer = new C.Viewer('globe', {
+  baseLayer: false, animation: false, timeline: false, baseLayerPicker: false, geocoder: false, homeButton: false,
+  sceneModePicker: false, navigationHelpButton: false, fullscreenButton: false, infoBox: false, selectionIndicator: false,
+  shouldAnimate: true, msaaSamples: 1, // 4x MSAA blanked the globe and sky in testing; FXAA below instead contextOptions: { webgl: { powerPreference: 'high-performance' } },
+});
+viewer.clock.clockStep = C.ClockStep.SYSTEM_CLOCK;
+const scene = viewer.scene, globe = scene.globe, camera = viewer.camera;
+$('#credits').appendChild(viewer.cesiumWidget.creditContainer);
+scene.backgroundColor = C.Color.fromCssColorString('#04060a');
+globe.baseColor = C.Color.fromCssColorString('#06090e');
+globe.enableLighting = true;            // real sun: day side imagery, night side city lights
+globe.lightingFadeOutDistance = 3.0e5;  // below ~300 km everything is lit, so the street map is always readable
+globe.lightingFadeInDistance = 1.6e6;
+globe.nightFadeOutDistance = 3.0e5;
+globe.nightFadeInDistance = 1.6e6;
+globe.showGroundAtmosphere = false;   // its night-side darkening hides the city-lights layer completely
+scene.skyAtmosphere.hueShift = -0.08; scene.skyAtmosphere.saturationShift = -0.1; scene.skyAtmosphere.brightnessShift = -0.05;
+scene.fog.enabled = true;
+if (!scene.moon) scene.moon = new C.Moon();
+scene.moon.show = true; scene.sun.show = true;
+const ctrl = scene.screenSpaceCameraController;
+ctrl.maximumZoomDistance = 6.0e8;       // past the Moon (~384,000 km)
+ctrl.minimumZoomDistance = 150;
+scene.postProcessStages.fxaa.enabled = true;
+
+const ESRI = 'https://services.arcgisonline.com/ArcGIS/rest/services/';
+const esriCredit = new C.Credit('Imagery © Esri, Maxar, Earthstar Geographics · Esri, HERE, Garmin, © OpenStreetMap contributors');
+const BASES = {
+  imagery: { name: 'Satellite imagery', url: ESRI + 'World_Imagery/MapServer/tile/{z}/{y}/{x}', max: 19, look: { brightness: 0.78, saturation: 0.75, contrast: 1.08 }, labels: ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}' },
+  dark: { name: 'Dark map', url: ESRI + 'Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', max: 16, look: { brightness: 1.1, saturation: 1, contrast: 1 }, labels: ESRI + 'Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}' },
+};
+let baseLayer = null, labelLayer = null, nightLayer = null;
+function setBase(id) {
+  const b = BASES[id] || BASES.imagery; store.set('base', id);
+  if (baseLayer) viewer.imageryLayers.remove(baseLayer, true);
+  if (labelLayer) viewer.imageryLayers.remove(labelLayer, true);
+  baseLayer = viewer.imageryLayers.addImageryProvider(new C.UrlTemplateImageryProvider({ url: b.url, maximumLevel: b.max, credit: esriCredit }), 0);
+  Object.assign(baseLayer, b.look);
+  labelLayer = viewer.imageryLayers.addImageryProvider(new C.UrlTemplateImageryProvider({ url: b.labels, maximumLevel: Math.min(b.max, 16) }), 1);
+  labelLayer.alpha = 0.85; labelLayer.show = false;
+  if (nightLayer) viewer.imageryLayers.raiseToTop(nightLayer);
+}
+setBase(store.get('base', 'imagery'));
+nightLayer = viewer.imageryLayers.addImageryProvider(new C.UrlTemplateImageryProvider({
+  url: 'brand/textures/night/{z}/{x}/{y}.jpg', tilingScheme: new C.GeographicTilingScheme(), maximumLevel: 4,
+  credit: 'Night lights: NASA Earth Observatory, Black Marble 2016' })); // a tile pyramid: one 8k single-tile texture broke globe rendering
+nightLayer.dayAlpha = 0.0; nightLayer.nightAlpha = 1.0;
+nightLayer.brightness = 3.3; // the lit-globe shader keeps only ~30% on the night side; this lifts the lights back
+
+/* ------------------------------------------------------------------ primitives */
+const satPts = scene.primitives.add(new C.PointPrimitiveCollection({ blendOption: C.BlendOption.TRANSLUCENT }));
+const airPts = scene.primitives.add(new C.PointPrimitiveCollection());
+const airIcons = scene.primitives.add(new C.BillboardCollection({ scene }));
+const qkPts = scene.primitives.add(new C.PointPrimitiveCollection());
+const orbitLines = scene.primitives.add(new C.PolylineCollection());
+
+// Blender-rendered top-down sprites (brand/tools/plane_sprites.py): shape by type, airframe + glow colour by layer
+const SPRITE_SIZE = { airliner: 30, prop: 26, heli: 26, fighter: 24, heavy: 36, tprop: 32 };
+const T_HELI = /^(H\d|EC\d|AS\d|S6|S7|S9|NH90|A1\d9|MI\d|KA\d|UH|AH|CH|B06|B4\d\d|LYNX|PUMA|TIGR|AW1|R44|R22|B505)/;
+const T_FIGHTER = /^(F1[4-8]|F22|F35|F5|FA|EUFI|RFAL|TOR|JAS|GRIF|HAWK|T38|T45|A10|MG\d|SU\d|M2T|MIR|L159|AV8|AJET|F4|J10|J20|LCA|KFIR|T50|M346)/;
+const T_TPROP = /^(C130|C30J|A400|C27J|CN35|C295|AN12$|AN2[46]|AN32|P3|E2|L188|ATLA|C160|Y8|Y9|V22)/;
+const T_HEAVY = /^(K35|KC|K46|C17|C5|E3|E6|E8|R135|C135|B52|B1|B2|IL7|AN12[45]|A33|A31|B74|B76|B77|DC10|MD11)/;
+const T_PROP = /^(C12|BE\d|PC12|PC21|PC9|T6|DHC|C208|G120|TEX|SR2|C17[0-9]|DA4|U28|MQ|RQ|L410|SW4)/;
+function airShape(r) {
+  const t = String(r.type || '').toUpperCase();
+  if (t) { if (T_HELI.test(t)) return 'heli'; if (T_FIGHTER.test(t)) return 'fighter'; if (T_TPROP.test(t)) return 'tprop'; if (T_HEAVY.test(t)) return 'heavy'; if (T_PROP.test(t)) return 'prop'; }
+  if (!r.ground && r.gs != null && r.gs < 85 && (r.alt || 0) < 5000) return 'prop'; // slow and low without a type: turboprop/GA
+  return 'airliner';
+}
+const AIR_ICON_RANGE = 2.5e6;
+const DR_MAX_S = 900; // dead-reckoning horizon: the global snapshot refreshes every 15 min // planes become heading icons below ~2,500 km camera distance
+
+/* ------------------------------------------------------------------ layer registry */
+const LAYERS = [
+  { id: 'stations', group: 'Space', name: 'Space stations', color: '#7dffa6', on: true, sat: ['stations'], size: 7 },
+  { id: 'visual', group: 'Space', name: 'Bright satellites', color: '#e6edf3', on: true, sat: ['visual'], size: 3.5 },
+  { id: 'gnss', group: 'Space', name: 'Navigation (GPS · Galileo · GLONASS · BeiDou)', color: '#ffd45c', on: true, sat: ['gps-ops', 'galileo', 'glo-ops', 'beidou'], size: 4 },
+  { id: 'geo', group: 'Space', name: 'Geostationary belt', color: '#b48cff', on: true, sat: ['geo'], size: 3.5 },
+  { id: 'weather', group: 'Space', name: 'Weather satellites', color: '#62e0c8', on: true, sat: ['weather'], size: 4 },
+  { id: 'starlink', group: 'Space', name: 'Starlink', color: '#d9ccff', on: true, sat: ['starlink'], size: 1.6, alpha: 0.55 },
+  { id: 'air', group: 'Air', name: 'Civil aircraft (OpenSky, every 15 min)', color: '#5fd3ff', on: true },
+  { id: 'mil', group: 'Air', name: 'Military aircraft (adsb.lol, every 60 s)', color: '#ffb44d', on: true },
+  { id: 'quakes', group: 'Earth', name: 'Earthquakes M2.5+ · 24 h', color: '#ff7b4f', on: true },
+  { id: 'night', group: 'Earth', name: 'City lights on the night side', color: '#fff1d0', on: true },
+  { id: 'labels', group: 'Earth', name: 'Place names when close', color: '#8b9bab', on: true },
+];
+const L = Object.fromEntries(LAYERS.map(l => [l.id, l]));
+for (const l of LAYERS) l.on = store.get('ly.' + l.id, l.on);
+function buildDock() {
+  const el = $('#dock'); let html = '', g = '';
+  for (const l of LAYERS) {
+    if (l.group !== g) { html += (g ? '<div class="sep"></div>' : '') + `<h3>${esc(l.group)}</h3>`; g = l.group; }
+    html += `<button class="ly ${l.on ? '' : 'off'}" data-ly="${l.id}" style="--c:${l.color}"><i></i><span class="t">${esc(l.name)}</span><span class="n" id="n-${l.id}"></span></button>`;
+  }
+  html += `<div class="sep"></div><h3>Base map</h3>` + Object.entries(BASES).map(([id, b]) => `<button class="ly ${store.get('base', 'imagery') === id ? '' : 'off'}" data-base="${id}" style="--c:#e6edf3"><i></i><span class="t">${esc(b.name)}</span></button>`).join('');
+  html += `<p class="note">Drag to orbit, scroll to zoom, right-drag to tilt. Click anything for details.</p>`;
+  el.innerHTML = html;
+}
+buildDock();
+$('#dock').addEventListener('click', e => {
+  const b = e.target.closest('[data-ly]'), base = e.target.closest('[data-base]');
+  if (base) { setBase(base.dataset.base); buildDock(); return; }
+  if (!b) return; const l = L[b.dataset.ly]; l.on = !l.on; store.set('ly.' + l.id, l.on); b.classList.toggle('off', !l.on); applyVisibility();
+});
+$('#btnDock').addEventListener('click', () => $('#dock').classList.toggle('open'));
+function setCount(id, n) { const el = $('#n-' + id); if (el) el.textContent = n ? fmt(n) : ''; }
+function applyVisibility() {
+  for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent;
+  airPts.show = airIcons.show = true;
+  for (const a of Air.map.values()) { const on = L[a.mil ? 'mil' : 'air'].on; a.pt.show = on && !a.ent; a.icon.show = on && !a.ent; if (!on && a.ent) AirModels.drop(a); }
+  qkPts.show = L.quakes.on;
+  updateBand();
+  updateStats();
+}
+
+/* ------------------------------------------------------------------ satellites: CelesTrak TLEs, SGP4 in a worker */
+const WORKER_SRC = `
+importScripts('https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js');
+let recs = [];
+onmessage = e => {
+  const m = e.data;
+  if (m.type === 'load') { recs = m.tles.map(([l1, l2]) => { try { return satellite.twoline2satrec(l1, l2); } catch (err) { return null; } }); return; }
+  if (m.type === 'tick') {
+    const t0 = new Date(m.t), t1 = new Date(m.t + 1000), g0 = satellite.gstime(t0), g1 = satellite.gstime(t1);
+    const out = new Float32Array(recs.length * 6);
+    for (let i = 0; i < recs.length; i++) {
+      const r = recs[i]; let ok = false;
+      if (r) {
+        const a = satellite.propagate(r, t0), b = satellite.propagate(r, t1);
+        if (a.position && b.position && !isNaN(a.position.x)) {
+          const p = satellite.eciToEcf(a.position, g0), q = satellite.eciToEcf(b.position, g1);
+          out.set([p.x, p.y, p.z, q.x - p.x, q.y - p.y, q.z - p.z], i * 6); ok = true;
+        }
+      }
+      if (!ok) out[i * 6] = NaN;
+    }
+    postMessage({ t: m.t, buf: out }, [out.buffer]);
+  }
+};`;
+const Sats = {
+  list: [], byId: new Map(), state: null, worker: null,
+  async load() {
+    const seen = new Set(), tles = [];
+    for (const l of LAYERS.filter(x => x.sat)) {
+      let n = 0;
+      for (const g of l.sat) {
+        let txt = null; const cached = await bigStore.get('tle.' + g);
+        if (cached && Date.now() - cached.t < 2 * 3600e3) txt = cached.txt; // CelesTrak asks for at most one download per group per 2 h
+        else {
+          try { txt = await getText(`https://celestrak.org/NORAD/elements/gp.php?GROUP=${encodeURIComponent(g)}&FORMAT=TLE`); if (!(await bigStore.set('tle.' + g, { t: Date.now(), txt }))) console.warn('TLE cache full for', g); }
+          catch (e) { if (cached) txt = cached.txt; else { toast(`Satellites (${g}) failed: ${e.message}`); continue; } }
+          await new Promise(r => setTimeout(r, 1200));
+        }
+        const lines = txt.split(/\r?\n/).map(s => s.trimEnd()).filter(Boolean);
+        for (let i = 0; i + 2 < lines.length + 1; i += 3) {
+          const name = lines[i].trim(), l1 = lines[i + 1], l2 = lines[i + 2];
+          if (!l1 || !l2 || l1[0] !== '1' || l2[0] !== '2') continue;
+          const id = l1.slice(2, 7).trim(); if (seen.has(id)) continue; seen.add(id);
+          const s = { kind: 'sat', id, name, layer: l.id, l1, l2, idx: tles.length };
+          tles.push([l1, l2]); this.list.push(s); this.byId.set(id, s); n++;
+        }
+      }
+      setCount(l.id, n);
+    }
+    for (const s of this.list) {
+      const l = L[s.layer], col = C.Color.fromCssColorString(l.color).withAlpha(l.alpha ?? 1);
+      s.pt = satPts.add({ position: C.Cartesian3.ZERO, pixelSize: l.size, color: col, outlineWidth: 0, id: s, show: false,
+        scaleByDistance: new C.NearFarScalar(5.0e5, 2.0, 1.5e8, 0.55) });
+    }
+    const blob = new Blob([WORKER_SRC], { type: 'text/javascript' });
+    this.worker = new Worker(URL.createObjectURL(blob));
+    this.worker.onmessage = e => { this.state = { t: e.data.t, buf: e.data.buf }; this.ready = true; };
+    this.worker.postMessage({ type: 'load', tles });
+    const tick = () => this.worker.postMessage({ type: 'tick', t: Date.now() });
+    tick(); setInterval(tick, 1000);
+    updateStats();
+  },
+  scratch: new C.Cartesian3(),
+  update(now) { // extrapolate from the last worker tick: p + v*dt (ECF, km)
+    const st = this.state; if (!st) return; const dt = (now - st.t) / 1000, b = st.buf;
+    for (const s of this.list) {
+      const i = s.idx * 6, x = b[i]; if (isNaN(x)) { s.pt.show = false; continue; }
+      s.pt.show = L[s.layer].on && !s.ent && !s.docked;
+      this.scratch.x = (x + b[i + 3] * dt) * 1000; this.scratch.y = (b[i + 1] + b[i + 4] * dt) * 1000; this.scratch.z = (b[i + 2] + b[i + 5] * dt) * 1000;
+      s.pt.position = this.scratch;
+    }
+  },
+  info(s) {
+    const rec = satellite.twoline2satrec(s.l1, s.l2), now = new Date(), pv = satellite.propagate(rec, now);
+    const gd = satellite.eciToGeodetic(pv.position, satellite.gstime(now));
+    const v = pv.velocity ? Math.hypot(pv.velocity.x, pv.velocity.y, pv.velocity.z) : null;
+    return { alt: gd.height, lat: satellite.degreesLat(gd.latitude), lon: satellite.degreesLong(gd.longitude), speed: v * 3600, period: 2 * Math.PI / rec.no, incl: rec.inclo * 180 / Math.PI };
+  },
+  orbit(s) { // one inertial orbit, drawn in the current Earth-fixed frame so it passes through the satellite
+    orbitLines.removeAll();
+    const rec = satellite.twoline2satrec(s.l1, s.l2), now = new Date(), g = satellite.gstime(now), per = 2 * Math.PI / rec.no, pts = [];
+    for (let k = 0; k <= 180; k++) {
+      const pv = satellite.propagate(rec, new Date(now.getTime() + k / 180 * per * 60000)); if (!pv.position) continue;
+      const f = satellite.eciToEcf(pv.position, g); pts.push(new C.Cartesian3(f.x * 1000, f.y * 1000, f.z * 1000));
+    }
+    orbitLines.add({ positions: pts, width: 1.6, material: C.Material.fromType('Color', { color: C.Color.fromCssColorString(L[s.layer].color).withAlpha(0.55) }) });
+  },
+};
+
+// ambient fill for satellite models in Earth's shadow (otherwise they render black)
+const SHADOW_FILL = new C.CustomShader({ fragmentShaderText: 'void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) { material.emissive += material.diffuse * 0.42; }' });
+let MODEL_FIX = C.Quaternion.fromAxisAngle(C.Cartesian3.UNIT_Z, -Math.PI / 2); // undoes Cesium's glTF forward-axis turn (+90° about Z), measured with axes.glb
+const SOLAR_AXIS = new C.Cartesian3(0, 0, -1);   // Blender +Y expressed in glTF node space
+
+/* ------------------------------------------------------------------ 3D satellite models (brand/models, built in Blender)
+   Satellites near the camera swap their point for a glTF model at real size, flying nose-first (+X along velocity,
+   +Z to zenith), with solar arrays (nodes solar_*) turned toward the real sun about the model's Y axis. Positions of
+   modelled satellites are exact SGP4 every frame (the worker's 1 s linear extrapolation drifts ~4 m, visible up close).
+   Blender exports Y-up glTF; Cesium converts it back to Z-up, so Blender axes == model axes (forward axis is set by
+   MODEL_FIX, measured with brand/models/test/axes.glb). A Blender +Y rotation is a rotation about glTF -Z for node
+   transformations, because node transforms are applied in glTF space. */
+const SatModels = {
+  dir: 'brand/models/', max: 40, range: 4.0e6, pool: new Map(), nodes: {}, followed: null, frame: 0,
+  // Follow camera offset scale in metres: the camera starts at (-r, -r, 0.55r) east/north/up of the satellite, i.e.
+  // ~1.5x r away, with r = the model's largest dimension (measured on the exported .glb files)
+  view: { iss: 110, css: 56, hubble: 19, soyuz: 11, starlink: 10.5, gnss: 13, geo: 30, weather: 10.5, smallsat: 8.5, rocketbody: 11, axes: 12 },
+  classify(s) {
+    const n = s.name.toUpperCase();
+    if (n === 'ISS (ZARYA)') return 'iss';
+    if (n === 'CSS (TIANHE)') return 'css';
+    if (/^(ISS|CSS) \(/.test(n)) return null;              // other station modules share the station's orbit and position
+    if (n === 'HST') return 'hubble';
+    if (/SOYUZ|PROGRESS|SHENZHOU|TIANZHOU|DRAGON|CYGNUS|STARLINER|HTV/.test(n)) return 'soyuz';
+    if (/STARLINK/.test(n)) return 'starlink';
+    if (/\bDEB\b/.test(n)) return null;                  // debris fragments: no model, they stay dots
+    if (/ R\/B|R\/B$/.test(n)) return 'rocketbody';
+    if (s.layer === 'gnss') return 'gnss';
+    if (s.layer === 'geo') return 'geo';
+    if (s.layer === 'weather') return 'weather';
+    return 'smallsat';
+  },
+  async solarNodes(type) { // read node names straight from the GLB's JSON chunk
+    if (type in this.nodes) return this.nodes[type]; // null = file missing; don't refetch
+    try {
+      const buf = await (await fetch(this.dir + type + '.glb')).arrayBuffer(), dv = new DataView(buf);
+      const len = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, len)));
+      this.nodes[type] = (json.nodes || []).map(n => n.name).filter(n => /^solar_/.test(n || ''));
+    } catch (e) { console.warn('model', type, e); this.nodes[type] = null; }
+    return this.nodes[type];
+  },
+  sunEcf: new C.Cartesian3(1, 0, 0),
+  updateSun(time) {
+    const p = C.Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(time);
+    const m = C.Transforms.computeIcrfToFixedMatrix(time) || C.Transforms.computeTemeToPseudoFixedMatrix(time);
+    C.Cartesian3.normalize(C.Matrix3.multiplyByVector(m, p, this.sunEcf), this.sunEcf);
+  },
+  state(s, time = viewer.clock.currentTime) { // exact position, attitude and array angle at the clock time (cached per instant)
+    const key = time.dayNumber * 86400 + time.secondsOfDay;
+    if (s._k === key && s._st) return s._st;
+    s.rec = s.rec || satellite.twoline2satrec(s.l1, s.l2);
+    const now = C.JulianDate.toDate(time).getTime(), d0 = new Date(now), d1 = new Date(now + 1000);
+    const a = satellite.propagate(s.rec, d0), b = satellite.propagate(s.rec, d1);
+    const st = s._st || (s._st = { pos: new C.Cartesian3(), quat: new C.Quaternion(), solar: new C.Quaternion(), ok: false });
+    s._k = key;
+    if (!a.position || !b.position || isNaN(a.position.x)) { st.ok = false; return st; }
+    const p = satellite.eciToEcf(a.position, satellite.gstime(d0)), q = satellite.eciToEcf(b.position, satellite.gstime(d1));
+    C.Cartesian3.fromElements(p.x * 1000, p.y * 1000, p.z * 1000, st.pos);
+    const Z = C.Cartesian3.normalize(st.pos, new C.Cartesian3());
+    const v = new C.Cartesian3((q.x - p.x) * 1000, (q.y - p.y) * 1000, (q.z - p.z) * 1000);
+    const X = C.Cartesian3.normalize(C.Cartesian3.subtract(v, C.Cartesian3.multiplyByScalar(Z, C.Cartesian3.dot(v, Z), new C.Cartesian3()), new C.Cartesian3()), new C.Cartesian3());
+    const Y = C.Cartesian3.cross(Z, X, new C.Cartesian3());
+    const R = new C.Matrix3(X.x, Y.x, Z.x, X.y, Y.y, Z.y, X.z, Y.z, Z.z); // columns = body axes in Earth-fixed coordinates
+    C.Quaternion.multiply(C.Quaternion.fromRotationMatrix(R, st.quat), MODEL_FIX, st.quat);
+    // arrays: rotate about body +Y so their +Z normal points at the sun: theta = atan2(sun.x, sun.z) in body axes
+    const th = Math.atan2(C.Cartesian3.dot(this.sunEcf, X), C.Cartesian3.dot(this.sunEcf, Z));
+    C.Quaternion.fromAxisAngle(SOLAR_AXIS, th, st.solar);
+    const sd = C.Cartesian3.dot(st.pos, this.sunEcf); // in Earth's shadow: behind the Earth and inside its cylinder
+    st.shadow = sd < 0 && C.Cartesian3.magnitude(C.Cartesian3.subtract(st.pos, C.Cartesian3.multiplyByScalar(this.sunEcf, sd, new C.Cartesian3()), new C.Cartesian3())) < 6371000;
+    st.ok = true; return st;
+  },
+  async ensure(s) {
+    if (s.ent) return s.ent;
+    const type = s.model === undefined ? (s.model = this.classify(s)) : s.model;
+    if (!type) return null;
+    const solar = await this.solarNodes(type);
+    if (solar === null || s.ent) return s.ent || null;  // model file missing (or added while awaiting)
+    const nodeTransformations = {};
+    for (const n of solar) nodeTransformations[n] = new C.NodeTransformationProperty({ rotation: new C.CallbackProperty(t => this.state(s, t).solar, false) });
+    s.ent = viewer.entities.add({
+      position: new C.CallbackProperty(t => { const st = this.state(s, t); return st.ok ? st.pos : undefined; }, false),
+      orientation: new C.CallbackProperty(t => this.state(s, t).quat, false),
+      model: { uri: this.dir + type + '.glb', minimumPixelSize: 34, maximumScale: 4.0e4, nodeTransformations, runAnimations: false,
+        customShader: new C.CallbackProperty(t => this.state(s, t).shadow ? SHADOW_FILL : undefined, false) },
+    });
+    s.ent.sat = s; s.pt.show = false; this.pool.set(s.id, s);
+    return s.ent;
+  },
+  drop(s) {
+    if (!s.ent || s === this.followed || s === selected) return;
+    viewer.entities.remove(s.ent); s.ent = null; this.pool.delete(s.id);
+    s.pt.show = L[s.layer].on && !s.docked;
+  },
+  refresh() { // which satellites get a model: the nearest within range, plus the selected and followed ones
+    const st = Sats.state; if (!st) return;
+    const cam = camera.positionWC, b = st.buf, dt = (Date.now() - st.t) / 1000, near = [];
+    for (const s of Sats.list) {
+      if (!L[s.layer].on || s.model === null) continue;
+      const i = s.idx * 6; if (isNaN(b[i])) continue;
+      const dx = (b[i] + b[i + 3] * dt) * 1000 - cam.x, dy = (b[i + 1] + b[i + 4] * dt) * 1000 - cam.y, dz = (b[i + 2] + b[i + 5] * dt) * 1000 - cam.z;
+      const d2 = dx * dx + dy * dy + dz * dz; if (d2 < this.range * this.range) near.push([d2, s]);
+    }
+    near.sort((p, q) => p[0] - q[0]);
+    // docked vehicles and station modules have their own TLEs at the station's position: no model, no dot.
+    // Checked over the whole catalogue (not just near the camera), so Follow/selection can never pick a docked one.
+    const pos = s => { const i = s.idx * 6; return [b[i] + b[i + 3] * dt, b[i + 1] + b[i + 4] * dt, b[i + 2] + b[i + 5] * dt]; };
+    this.stations = this.stations || Sats.list.filter(x => ['iss', 'css'].includes(this.classify(x)));
+    const docked = new Set();
+    for (const st of this.stations) {
+      const i0 = st.idx * 6; if (isNaN(b[i0])) continue; const P = pos(st);
+      for (const s of Sats.list) { if (s === st) continue; const i = s.idx * 6; if (isNaN(b[i])) continue; const Q = pos(s); if (Math.hypot(Q[0] - P[0], Q[1] - P[1], Q[2] - P[2]) < 5) docked.add(s); }
+    }
+    for (const s of Sats.list) { const was = s.docked; s.docked = docked.has(s); if (was !== s.docked && s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked; if (s.docked && s.ent && s !== this.followed) this.drop(s); }
+    const want = new Set(near.filter(x => !docked.has(x[1])).slice(0, this.max).map(x => x[1]));
+    if (this.followed) want.add(this.followed); if (selected && selected.kind === 'sat' && !selected.docked) want.add(selected);
+    for (const s of [...this.pool.values()]) if (!want.has(s)) this.drop(s);
+    for (const s of want) if (!s.ent && L[s.layer].on) this.ensure(s);
+  },
+  get followed() { return Follow.obj && Follow.obj.kind === 'sat' ? Follow.obj : null; },
+  async follow(s) {
+    if (s.docked) { // follow the station it is docked to
+      const st = Sats.list.find(x => ['iss', 'css'].includes(x.model ?? this.classify(x)) && x.ent) || Sats.list.find(x => x.name === 'ISS (ZARYA)');
+      if (st) { toast(`${s.name} is docked to ${st.name} · following the station`); s = st; }
+    }
+    const ent = await this.ensure(s);
+    if (!ent) { toast('No 3D model for this object'); return; }
+    if (!this.state(s).ok) { toast('No position for this object right now'); return; }
+    Follow.start(s, t => { const st = this.state(s, t); return st.ok ? st.pos : null; }, this.view[s.model] || 40, ent, 34);
+  },
+  unfollow() { if (this.followed) Follow.stop(); },
+};
+
+/* ------------------------------------------------------------------ follow camera (satellites and aircraft)
+   Runs before every frame (scene.preUpdate): re-centres the camera on the object's exact position for this frame and
+   keeps the user's orbit offset, so you can drag around it and zoom while it moves. (Cesium's trackedEntity lags one
+   tick behind its target — ~115 m at orbital speed.) The start glides in from wherever the camera is. */
+const Follow = {
+  obj: null, getPos: null, ent: null, minPx: 34, glide: null, _T: new C.Matrix4(),
+  start(obj, getPos, r, ent, minPx) {
+    release();
+    const p = getPos(viewer.clock.currentTime); if (!p) return;
+    const T = C.Transforms.eastNorthUpToFixedFrame(p), inv = C.Matrix4.inverseTransformation(T, new C.Matrix4());
+    const from = C.Matrix4.multiplyByPoint(inv, camera.positionWC, new C.Cartesian3());
+    this.glide = { from, to: new C.Cartesian3(-r, -r, r * 0.55), t0: performance.now(), dur: 2200 };
+    Object.assign(this, { obj, getPos, ent, minPx });
+    ent.model.minimumPixelSize = 0;   // true size while you're next to it
+    ctrl.minimumZoomDistance = 2;
+    $('#band').querySelectorAll('.go').forEach(x => x.classList.remove('on'));
+    toast(`Following ${obj.name || obj.flight || obj.hex} · drag to orbit it, scroll to zoom, Esc to stop`, 4200);
+    if (selected === obj) select(obj);
+  },
+  stop() {
+    const o = this.obj; if (!o) return;
+    if (this.ent && this.ent.model) this.ent.model.minimumPixelSize = this.minPx;
+    this.obj = this.getPos = this.ent = this.glide = null;
+    camera.lookAtTransform(C.Matrix4.IDENTITY); ctrl.minimumZoomDistance = 150;
+    if (selected === o) select(o);
+  },
+  track(time) {
+    if (!this.obj) return;
+    const p = this.getPos(time); if (!p) return;
+    const T = C.Transforms.eastNorthUpToFixedFrame(p, C.Ellipsoid.WGS84, this._T);
+    let offset;
+    if (this.glide) {
+      const g = this.glide, k = Math.min(1, (performance.now() - g.t0) / g.dur), e = 1 - Math.pow(1 - k, 3);
+      const d0 = Math.max(1, C.Cartesian3.magnitude(g.from)), d1 = C.Cartesian3.magnitude(g.to), d = Math.exp(Math.log(d0) + (Math.log(d1) - Math.log(d0)) * e);
+      const dir = C.Cartesian3.normalize(C.Cartesian3.lerp(C.Cartesian3.normalize(g.from, new C.Cartesian3()), C.Cartesian3.normalize(g.to, new C.Cartesian3()), e, new C.Cartesian3()), new C.Cartesian3());
+      offset = C.Cartesian3.multiplyByScalar(dir, d, new C.Cartesian3());
+      if (k >= 1) this.glide = null;
+    } else offset = C.Cartesian3.clone(camera.position); // camera.position is in the object's frame while following
+    camera.lookAtTransform(T, offset);
+  },
+};
+setInterval(() => SatModels.refresh(), 400);
+
+/* ------------------------------------------------------------------ aircraft: OpenSky snapshot + adsb.lol military, dead-reckoned */
+const Air = {
+  map: new Map(), fetchedAt: {},
+  upsert(a) {
+    let r = this.map.get(a.hex);
+    if (!r) {
+      r = { ...a, kind: 'air' };
+      r.pt = airPts.add({ position: C.Cartesian3.ZERO, pixelSize: 2.4, id: r, scaleByDistance: new C.NearFarScalar(2.0e5, 2.2, 2.0e7, 0.7), distanceDisplayCondition: new C.DistanceDisplayCondition(AIR_ICON_RANGE * 0.8, 1e12) });
+      r.icon = airIcons.add({ position: C.Cartesian3.ZERO, id: r, alignedAxis: C.Cartesian3.UNIT_Z, scaleByDistance: new C.NearFarScalar(2.0e4, 1.5, AIR_ICON_RANGE, 0.6), distanceDisplayCondition: new C.DistanceDisplayCondition(0, AIR_ICON_RANGE) });
+      this.map.set(a.hex, r);
+    } else if (r.mil && !a.mil && Date.now() - r.ts < 180e3) return; // keep fresher military data
+    else {
+      // turn rate (deg/s) from consecutive fixes, for banking the 3D model; only over short gaps
+      const dt = (a.ts - r.ts) / 1000;
+      r.turn = (a.track != null && r.track != null && dt >= 2 && dt <= 120) ? (((a.track - r.track + 540) % 360) - 180) / dt : 0;
+      Object.assign(r, a);
+    }
+    const col = C.Color.fromCssColorString(r.emerg ? '#ff4d5e' : r.mil ? '#ffb44d' : '#5fd3ff');
+    r.pt.color = col; r.icon.rotation = -C.Math.toRadians(r.track || 0);
+    const shape = airShape(r), img = `brand/sprites/${shape}_${r.emerg ? 'emg' : r.mil ? 'mil' : 'civ'}.png`;
+    if (r.sprite !== img) { r.sprite = img; r.shape = shape; r.icon.image = img; r.icon.width = r.icon.height = SPRITE_SIZE[shape]; }
+    const on = L[r.mil ? 'mil' : 'air'].on; r.pt.show = on && !r.ent; r.icon.show = on && !r.ent;
+    if (r.ent) AirModels.restyle(r);
+  },
+  async opensky() {
+    let rows = null; const c = await bigStore.get('opensky');
+    if (c && Date.now() - c.t < 15 * 60e3) rows = c.rows; // anonymous OpenSky: 400 credits/day, a global snapshot costs 4
+    else {
+      const d = await getJSON('https://opensky-network.org/api/states/all', { relay: true, timeout: 60000 });
+      rows = (d.states || []).filter(s => s[5] != null && s[6] != null).map(s => [s[0], (s[1] || '').trim(), s[2], s[5], s[6], s[8] ? 0 : s[7], s[8] ? 1 : 0, s[9], s[10], s[14], s[11]]);
+      await bigStore.set('opensky', { t: Date.now(), rows });
+    }
+    const now = Date.now();
+    for (const [hex, cs, country, lon, lat, alt, ground, vel, trk, sq, vr] of rows)
+      this.upsert({ hex, flight: cs, country, lon, lat, alt: alt || 0, ground: !!ground, gs: vel, track: trk, vr: vr ?? 0, squawk: sq, emerg: ['7500', '7600', '7700'].includes(sq), mil: false, ts: (c && rows === c.rows) ? c.t : now, src: 'OpenSky' });
+    this.fetchedAt.air = now; setCount('air', rows.length); updateStats();
+  },
+  async military() {
+    const d = await getJSON('https://api.adsb.lol/v2/mil', { relay: true });
+    const now = Date.now(); let n = 0;
+    for (const a of d.ac || []) {
+      if (a.lat == null || a.lon == null) continue; n++;
+      const ground = a.alt_baro === 'ground';
+      this.upsert({ hex: a.hex, flight: (a.flight || '').trim(), type: a.t, reg: a.r, lon: a.lon, lat: a.lat, alt: ground ? 0 : (a.alt_baro || 0) * 0.3048, ground, gs: a.gs != null ? a.gs * 0.514444 : null, track: a.track, vr: a.baro_rate != null ? a.baro_rate * 0.00508 : 0, squawk: a.squawk, emerg: ['7500', '7600', '7700'].includes(a.squawk), mil: true, ts: now - (a.seen_pos || 0) * 1000, src: 'adsb.lol' });
+    }
+    setCount('mil', n); updateStats();
+  },
+  prune() { const now = Date.now(); for (const [k, r] of this.map) if (now - r.ts > (r.mil ? 5 * 60e3 : 20 * 60e3) && r !== Follow.obj && r !== selected) { AirModels.drop(r, true); airPts.remove(r.pt); airIcons.remove(r.icon); this.map.delete(k); } },
+  update(now) { // dead reckoning along the track (same horizon as the 3D models)
+    for (const r of this.map.values()) {
+      if (!L[r.mil ? 'mil' : 'air'].on) continue;
+      let lat = r.lat, lon = r.lon;
+      if (!r.ground && r.gs > 15 && r.track != null) {
+        const d = r.gs * Math.min(DR_MAX_S, (now - r.ts) / 1000) / 6371000, th = r.track * Math.PI / 180, p1 = lat * Math.PI / 180, l1 = lon * Math.PI / 180;
+        const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(th));
+        const l2 = l1 + Math.atan2(Math.sin(th) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+        lat = p2 * 180 / Math.PI; lon = l2 * 180 / Math.PI;
+      }
+      const pos = C.Cartesian3.fromDegrees(lon, lat, Math.max(0, r.alt || 0) + 60);
+      r.pt.position = pos; r.icon.position = pos; r.cur = { lat, lon };
+    }
+  },
+};
+/* ------------------------------------------------------------------ 3D aircraft (brand/models/aircraft, built in Blender)
+   The nearest aircraft to the camera (when it is below ~600 km) swap their icon for a glTF model at real size, flown
+   every frame from the last fix: dead reckoning along the track, climb/descent from the vertical rate (pitch), and a
+   bank from the measured turn rate. Same axes as the satellites (+X nose, +Z up), so the same MODEL_FIX applies. */
+const AirModels = {
+  max: 200, range: 3.0e5, ceiling: 6.0e5, pool: new Map(),
+  view: { airliner: 38, prop: 28, heli: 18, fighter: 17, heavy: 50, tprop: 40 },
+  get followed() { return Follow.obj && Follow.obj.kind === 'air' ? Follow.obj : null; },
+  posAt(r, ms) { // geodetic position at time ms: dead reckoning, horizontally up to 15 min (the OpenSky refresh, so planes
+    // never freeze mid-air between snapshots) and vertically up to 1 min
+    const dts = Math.max(0, (ms - r.ts) / 1000), dt = Math.min(DR_MAX_S, dts);
+    let lat = r.lat, lon = r.lon;
+    if (!r.ground && r.gs > 15 && r.track != null) {
+      const d = r.gs * dt / 6371000, th = r.track * Math.PI / 180, p1 = lat * Math.PI / 180, l1 = lon * Math.PI / 180;
+      const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(th));
+      const l2 = l1 + Math.atan2(Math.sin(th) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+      lat = p2 * 180 / Math.PI; lon = l2 * 180 / Math.PI;
+    }
+    const alt = Math.max(0, (r.alt || 0) + (r.ground ? 0 : (r.vr || 0) * Math.min(60, dts))) + (r.ground ? 3 : 0);
+    return { lat, lon, alt };
+  },
+  state(r, time = viewer.clock.currentTime) {
+    const key = time.dayNumber * 86400 + time.secondsOfDay;
+    if (r._k === key && r._st) return r._st;
+    const st = r._st || (r._st = { pos: new C.Cartesian3(), quat: new C.Quaternion() });
+    r._k = key;
+    const g = this.posAt(r, C.JulianDate.toDate(time).getTime());
+    C.Cartesian3.fromDegrees(g.lon, g.lat, g.alt, C.Ellipsoid.WGS84, st.pos);
+    const enu = C.Transforms.eastNorthUpToFixedFrame(st.pos), E = new C.Cartesian3(enu[0], enu[1], enu[2]), N = new C.Cartesian3(enu[4], enu[5], enu[6]), U = new C.Cartesian3(enu[8], enu[9], enu[10]);
+    const h = C.Math.toRadians(r.track || 0);
+    const pitch = r.ground ? 0 : Math.max(-0.35, Math.min(0.35, Math.atan2(r.vr || 0, Math.max(30, r.gs || 0))));
+    const bank = r.ground ? 0 : Math.max(-0.5, Math.min(0.5, Math.atan((r.gs || 0) * C.Math.toRadians(r.turn || 0) / 9.81)));
+    const f = C.Cartesian3.add(C.Cartesian3.multiplyByScalar(E, Math.sin(h), new C.Cartesian3()), C.Cartesian3.multiplyByScalar(N, Math.cos(h), new C.Cartesian3()), new C.Cartesian3());
+    const X = C.Cartesian3.normalize(C.Cartesian3.add(C.Cartesian3.multiplyByScalar(f, Math.cos(pitch), new C.Cartesian3()), C.Cartesian3.multiplyByScalar(U, Math.sin(pitch), new C.Cartesian3()), new C.Cartesian3()), new C.Cartesian3());
+    const Y0 = C.Cartesian3.normalize(C.Cartesian3.cross(U, X, new C.Cartesian3()), new C.Cartesian3());   // left wing
+    const Z0 = C.Cartesian3.cross(X, Y0, new C.Cartesian3());
+    const Z = C.Cartesian3.normalize(C.Cartesian3.subtract(C.Cartesian3.multiplyByScalar(Z0, Math.cos(bank), new C.Cartesian3()), C.Cartesian3.multiplyByScalar(Y0, Math.sin(bank), new C.Cartesian3()), new C.Cartesian3()), new C.Cartesian3()); // right turn = right wing down
+    const Y = C.Cartesian3.cross(Z, X, new C.Cartesian3());
+    const R = new C.Matrix3(X.x, Y.x, Z.x, X.y, Y.y, Z.y, X.z, Y.z, Z.z);
+    C.Quaternion.multiply(C.Quaternion.fromRotationMatrix(R, st.quat), MODEL_FIX, st.quat);
+    return st;
+  },
+  uri(r) { return `brand/models/aircraft/${r.shape || 'airliner'}_${r.mil ? 'mil' : 'civ'}.glb`; },
+  restyle(r) { // shape/colour can change when a fresher fix arrives (e.g. a type code or a squawk)
+    const m = r.ent.model; if (!m) return;
+    const uri = this.uri(r); if (m.uri.getValue() !== uri) m.uri = uri;
+    m.silhouetteColor = C.Color.fromCssColorString('#ff4d5e'); m.silhouetteSize = r.emerg ? 2.0 : 0.0;
+  },
+  ensure(r) {
+    if (r.ent) return r.ent;
+    const rotor = new C.NodeTransformationProperty({ rotation: new C.CallbackProperty(t => C.Quaternion.fromAxisAngle(C.Cartesian3.UNIT_Y, (t.secondsOfDay * 2 * Math.PI * 4.5) % (2 * Math.PI)), false) });
+    r.ent = viewer.entities.add({
+      position: new C.CallbackProperty(t => this.state(r, t).pos, false),
+      orientation: new C.CallbackProperty(t => this.state(r, t).quat, false),
+      model: { uri: this.uri(r), minimumPixelSize: 26, maximumScale: 2.0e4, nodeTransformations: { rotor }, silhouetteColor: C.Color.fromCssColorString('#ff4d5e'), silhouetteSize: r.emerg ? 2.0 : 0.0 },
+    });
+    r.ent.air = r; r.pt.show = false; r.icon.show = false; this.pool.set(r.hex, r);
+    return r.ent;
+  },
+  drop(r, force = false) {
+    if (!r.ent || (!force && (r === Follow.obj || r === selected))) return;
+    if (r === Follow.obj) Follow.stop();
+    viewer.entities.remove(r.ent); r.ent = null; this.pool.delete(r.hex);
+    const on = L[r.mil ? 'mil' : 'air'].on; r.pt.show = on; r.icon.show = on;
+  },
+  refresh() {
+    const want = new Set();
+    if (camHeight() < this.ceiling) {
+      const cam = camera.positionWC, near = [];
+      for (const r of Air.map.values()) {
+        if (!L[r.mil ? 'mil' : 'air'].on || !r.cur) continue;
+        const p = C.Cartesian3.fromDegrees(r.cur.lon, r.cur.lat, r.alt || 0, C.Ellipsoid.WGS84, this._p || (this._p = new C.Cartesian3()));
+        const d = C.Cartesian3.distance(p, cam); if (d < this.range) near.push([d, r]);
+      }
+      near.sort((a, b) => a[0] - b[0]);
+      for (const [, r] of near.slice(0, this.max)) want.add(r);
+    }
+    if (this.followed) want.add(this.followed); if (selected && selected.kind === 'air') want.add(selected);
+    for (const r of [...this.pool.values()]) if (!want.has(r)) this.drop(r);
+    for (const r of want) if (!r.ent && Air.map.has(r.hex)) this.ensure(r);
+  },
+  follow(r) { const ent = this.ensure(r); Follow.start(r, t => this.state(r, t).pos, this.view[r.shape] || 38, ent, 26); },
+};
+setInterval(() => AirModels.refresh(), 500);
+
+function every(ms, fn, label) { const run = () => fn().catch(e => { console.warn(label, e); toast(`${label}: ${e.message}`); }); run(); return setInterval(run, ms); }
+
+/* ------------------------------------------------------------------ earthquakes (USGS, CORS-enabled) */
+const Quakes = {
+  list: [],
+  async load() {
+    const d = await getJSON('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson');
+    qkPts.removeAll(); this.list = [];
+    for (const f of d.features || []) {
+      const [lon, lat, depth] = f.geometry.coordinates, m = f.properties.mag || 0;
+      const q = { kind: 'quake', mag: m, place: f.properties.place, time: f.properties.time, depth, lat, lon, url: f.properties.url };
+      q.pt = qkPts.add({ position: C.Cartesian3.fromDegrees(lon, lat, 0), pixelSize: 4 + m * 2.2, color: C.Color.fromCssColorString('#ff7b4f').withAlpha(0.75), outlineColor: C.Color.fromCssColorString('#ff7b4f'), outlineWidth: 1, id: q, show: L.quakes.on, disableDepthTestDistance: 0 });
+      this.list.push(q);
+    }
+    setCount('quakes', this.list.length); updateStats();
+  },
+};
+
+/* ------------------------------------------------------------------ stats, altitude band, presets */
+function updateStats() {
+  let air = 0, mil = 0; for (const r of Air.map.values()) r.mil ? mil++ : air++;
+  $('#sAir').textContent = fmt(air); $('#sMil').textContent = fmt(mil);
+  $('#sSat').textContent = fmt(Sats.list.filter(s => L[s.layer].on).length); $('#sQk').textContent = fmt(Quakes.list.length);
+}
+setInterval(() => { $('#sUtc').textContent = new Date().toISOString().slice(11, 16); }, 1000);
+const BANDS = [[1.0e8, 'Cislunar'], [3.0e7, 'Deep space'], [8.0e6, 'High orbit'], [1.2e6, 'Low orbit'], [1.5e5, 'Airspace'], [8.0e3, 'Region'], [-Infinity, 'Street']];
+function camHeight() { const c = camera.positionCartographic; return c ? c.height : C.Cartesian3.magnitude(camera.positionWC) - 6371000; } // ellipsoid height (a sphere radius goes negative near the poles)
+function updateBand() {
+  const h = camHeight(), name = (BANDS.find(([min]) => h >= min) || BANDS[BANDS.length - 1])[1];
+  $('#bandName').textContent = name;
+  $('#bandAlt').textContent = h > 1e6 ? fmt(h / 1000) + ' km above Earth' : h > 1e4 ? fmt(h / 1000) + ' km' : fmt(h) + ' m';
+  if (labelLayer) labelLayer.show = L.labels.on && h < 3.0e6;
+  const orbit = h > 3.0e5; // sun shading + city lights only from orbit; below that the map is fully lit
+  airIcons.show = h > 6.0e4; // from low down, flat top-down icons near the horizon look like upright cards; the 3D pool covers the view
+  globe.enableLighting = orbit; if (nightLayer) nightLayer.show = L.night.on && orbit; // the lights layer whites out the globe when lighting is off
+}
+camera.percentageChanged = 0.02; camera.changed.addEventListener(updateBand);
+setInterval(updateBand, 250); // also catches lookAt/follow moves, which don't always raise camera.changed (the city-lights layer must be off below 300 km)
+
+let lookingAtMoon = false;
+function moonPosition(time = viewer.clock.currentTime) {
+  const inertial = C.Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(time);
+  const m = C.Transforms.computeIcrfToFixedMatrix(time) || C.Transforms.computeTemeToPseudoFixedMatrix(time);
+  return C.Matrix3.multiplyByVector(m, inertial, new C.Cartesian3());
+}
+function release() { if (Follow.obj) Follow.stop(); if (lookingAtMoon) { camera.lookAtTransform(C.Matrix4.IDENTITY); lookingAtMoon = false; } }
+const PRESETS = {
+  ground: () => flyDeg(-0.1278, 51.495, 3500, -45),
+  air: () => flyDeg(2.5, 46, 1.4e6, -70),
+  earth: () => flyDeg(-25, 25, 2.2e7, -90),
+  geo: () => flyDeg(-40, 0, 1.6e8, -90),
+  moon: () => {
+    const mp = moonPosition();
+    camera.flyToBoundingSphere(new C.BoundingSphere(mp, 1737400), { offset: new C.HeadingPitchRange(0, -0.15, 9.0e6), duration: 4.5,
+      complete: () => { camera.lookAt(moonPosition(), new C.HeadingPitchRange(camera.heading, camera.pitch, C.Cartesian3.distance(camera.positionWC, moonPosition()))); lookingAtMoon = true; } });
+  },
+};
+function flyDeg(lon, lat, h, pitchDeg) { release(); camera.flyTo({ destination: C.Cartesian3.fromDegrees(lon, lat, h), orientation: { heading: 0, pitch: C.Math.toRadians(pitchDeg), roll: 0 }, duration: 3 }); }
+$('#band').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (!b) return; document.querySelectorAll('.go').forEach(x => x.classList.toggle('on', x === b)); PRESETS[b.dataset.go](); });
+
+/* ------------------------------------------------------------------ picking: hover tip + detail card */
+const handler = new C.ScreenSpaceEventHandler(scene.canvas);
+function pickObj(pos) { const p = scene.pick(pos), id = p && p.id; return id ? (id.kind ? id : id.sat || id.air || null) : null; } // points carry the object; model entities carry .sat / .air
+function tipFor(o) {
+  if (o.kind === 'sat') return `${o.name} · ${L[o.layer].name.split(' (')[0]}`;
+  if (o.kind === 'air') return `${o.flight || o.hex} · ${o.ground ? 'on ground' : fmt((o.alt || 0) / 0.3048) + ' ft'}${o.mil ? ' · military' : ''}`;
+  if (o.kind === 'quake') return `M${o.mag.toFixed(1)} · ${o.place}`;
+  return '';
+}
+let hoverRaf = 0;
+handler.setInputAction(m => {
+  if (hoverRaf) return; hoverRaf = requestAnimationFrame(() => {
+    hoverRaf = 0; const o = pickObj(m.endPosition), t = $('#hover');
+    if (!o) { t.style.display = 'none'; scene.canvas.style.cursor = ''; return; }
+    t.textContent = tipFor(o); t.style.display = 'block'; t.style.left = (m.endPosition.x + 14) + 'px'; t.style.top = (m.endPosition.y + 12) + 'px'; scene.canvas.style.cursor = 'pointer';
+  });
+}, C.ScreenSpaceEventType.MOUSE_MOVE);
+handler.setInputAction(c => { const o = pickObj(c.position); if (o) select(o); else closeCard(); }, C.ScreenSpaceEventType.LEFT_CLICK);
+
+let selected = null;
+function row(k, v) { return `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`; }
+function select(o) {
+  selected = o; orbitLines.removeAll(); const card = $('#card'); let html = '';
+  if (o.kind === 'sat') {
+    const i = Sats.info(o), l = L[o.layer];
+    html = `<div class="k" style="--c:${l.color}">${esc(l.name)}</div><h2>${esc(o.name)}</h2><dl>${row('NORAD', o.id)}${row('Altitude', fmt(i.alt) + ' km')}${row('Speed', fmt(i.speed) + ' km/h')}${row('Orbit period', i.period.toFixed(1) + ' min')}${row('Inclination', i.incl.toFixed(1) + '°')}${row('Over', i.lat.toFixed(2) + ', ' + i.lon.toFixed(2))}</dl>`;
+    Sats.orbit(o);
+  } else if (o.kind === 'air') {
+    html = `<div class="k" style="--c:${o.mil ? '#ffb44d' : '#5fd3ff'}">${o.mil ? 'Military aircraft' : 'Aircraft'} · ${esc(o.src)}</div><h2>${esc(o.flight || o.hex)}</h2><dl>${row('ICAO hex', o.hex)}${o.type ? row('Type', o.type) : ''}${o.reg ? row('Registration', o.reg) : ''}${o.country ? row('Country', o.country) : ''}${row('Altitude', o.ground ? 'on ground' : fmt((o.alt || 0) / 0.3048) + ' ft')}${row('Speed', o.gs != null ? fmt(o.gs / 0.514444) + ' kt' : '—')}${row('Track', o.track != null ? Math.round(o.track) + '°' : '—')}${row('Squawk', o.squawk || '—')}${row('Last fix', Math.round((Date.now() - o.ts) / 1000) + ' s ago')}</dl>`;
+  } else if (o.kind === 'quake') {
+    const link = /^https:\/\//.test(o.url) ? `<div class="acts"><a class="chipbtn" href="${esc(o.url)}" target="_blank" rel="noopener">USGS page</a></div>` : '';
+    html = `<div class="k" style="--c:#ff7b4f">Earthquake</div><h2>M${o.mag.toFixed(1)}</h2><dl>${row('Where', o.place)}${row('When', new Date(o.time).toISOString().slice(0, 16).replace('T', ' ') + ' UTC')}${row('Depth', fmt(o.depth) + ' km')}</dl>${link}`;
+  }
+  const following = Follow.obj === o;
+  const followBtn = (o.kind === 'sat' && SatModels.classify(o)) || o.kind === 'air' ? `<button class="chipbtn" id="btnFollow">${following ? 'Stop following' : 'Follow in 3D'}</button>` : '';
+  card.innerHTML = `<button class="x" aria-label="Close">×</button>${html}<div class="acts">${following ? '' : '<button class="chipbtn" id="btnFocus">Fly to</button>'}${followBtn}</div>`;
+  card.classList.add('show');
+  card.querySelector('.x').onclick = closeCard;
+  if ($('#btnFocus')) $('#btnFocus').onclick = () => focusOn(o);
+  if ($('#btnFollow')) $('#btnFollow').onclick = () => following ? Follow.stop() : o.kind === 'air' ? AirModels.follow(o) : SatModels.follow(o);
+}
+function closeCard() { selected = null; orbitLines.removeAll(); $('#card').classList.remove('show'); }
+function focusOn(o) {
+  release();
+  if (o.kind === 'sat') { const p = o.pt.position, h = C.Cartesian3.magnitude(p) - 6371000; camera.flyToBoundingSphere(new C.BoundingSphere(p, 1), { offset: new C.HeadingPitchRange(0, -0.6, Math.max(2.5e6, h * 0.6)), duration: 2.5 }); }
+  else if (o.kind === 'air') flyDeg(o.cur?.lon ?? o.lon, (o.cur?.lat ?? o.lat) - 0.35, 45000, -50);
+  else flyDeg(o.lon, o.lat - 1.2, 3.5e5, -60);
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (Follow.obj) Follow.stop(); else closeCard(); } });
+// double-click a satellite to follow it (replaces Cesium's default entity-tracking double-click)
+viewer.screenSpaceEventHandler.removeInputAction(C.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+handler.setInputAction(c => { const o = pickObj(c.position); if (o && o.kind === 'sat') { select(o); SatModels.follow(o); } else if (o && o.kind === 'air') { select(o); AirModels.follow(o); } }, C.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+// Model lighting. Cesium lights glTF models from the real sun, which leaves aircraft over a night-time map almost black.
+// Below 300 km the globe itself is unlit (see updateBand), so swapping the scene light there is safe: use a soft light
+// from overhead and slightly behind the viewer. Higher up the scene light must stay the sun (the globe's day/night
+// shading uses it); satellites in Earth's shadow get SHADOW_FILL instead, a per-model ambient term.
+const Lighting = {
+  sun: scene.light, fill: new C.DirectionalLight({ direction: new C.Cartesian3(0, 0, -1), intensity: 2.2 }),
+  update() {
+    if (camHeight() < 3.0e5) {
+      const up = C.Cartesian3.normalize(camera.positionWC, new C.Cartesian3());
+      const dir = C.Cartesian3.add(C.Cartesian3.negate(up, new C.Cartesian3()), C.Cartesian3.multiplyByScalar(camera.directionWC, 0.45, new C.Cartesian3()), new C.Cartesian3());
+      C.Cartesian3.normalize(dir, this.fill.direction);
+      if (scene.light !== this.fill) scene.light = this.fill;
+    } else if (scene.light !== this.sun) scene.light = this.sun;
+  },
+};
+scene.preUpdate.addEventListener((sc, time) => { Follow.track(time); Lighting.update(); });
+
+/* ------------------------------------------------------------------ frame loop + boot */
+scene.preRender.addEventListener((sc, time) => { SatModels.frame++; SatModels.updateSun(time); Sats.update(Date.now()); });
+setInterval(() => { Air.update(Date.now()); }, 250);
+setInterval(() => Air.prune(), 30e3);
+function bootDone() { $('#boot').classList.add('out'); setTimeout(() => $('#boot').remove(), 900); }
+camera.setView({ destination: C.Cartesian3.fromDegrees(-25, 30, 2.0e7) });
+updateBand(); applyVisibility();
+{ const t0 = Date.now(); const wait = setInterval(() => { if ((nightLayer && globe.tilesLoaded) || Date.now() - t0 > 8000) { clearInterval(wait); bootDone(); } }, 200); } // hold the boot screen until the globe has something to show
+Sats.load().catch(e => toast('Satellites failed: ' + e.message));
+every(15 * 60e3, () => Air.opensky(), 'Civil aircraft');
+every(60e3, () => Air.military(), 'Military aircraft');
+every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
+window.OO3D = { viewer, Sats, Air, Quakes, L, PRESETS, moonPosition, SatModels, AirModels, Follow,
+  // debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg`
+  debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {
+    const pos = C.Cartesian3.fromDegrees(lon, lat, h), enu = C.Transforms.eastNorthUpToFixedFrame(pos), R = C.Matrix4.getMatrix3(enu, new C.Matrix3());
+    const q = C.Quaternion.multiply(C.Quaternion.fromRotationMatrix(R), MODEL_FIX, new C.Quaternion());
+    return viewer.entities.add({ position: pos, orientation: q, model: { uri, minimumPixelSize: 0, nodeTransformations: { solar_1: { rotation: C.Quaternion.fromAxisAngle(SOLAR_AXIS, C.Math.toRadians(deg)) } } } });
+  } };
+</script>
+</body>
+</html>

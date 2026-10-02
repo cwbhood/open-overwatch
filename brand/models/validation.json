@@ -1,0 +1,831 @@
+{
+ "soyuz": {
+  "file": "C:\\Users\\desti\\OneDrive\\Documents\\open-overwatch\\brand\\models\\soyuz.glb",
+  "bytes": 342964,
+  "triangles_gltf": 6524,
+  "triangles_blender_import": 6524,
+  "dims_m_xyz_blender": [
+   7.95,
+   10.64,
+   3.55
+  ],
+  "bbox_min": [
+   -4.21,
+   -5.32,
+   -1.84
+  ],
+  "bbox_max": [
+   3.74,
+   5.32,
+   1.71
+  ],
+  "nodes": [
+   "solar_1",
+   "solar_2",
+   "soyuz_skin",
+   "soyuz"
+  ],
+  "solar_nodes": [
+   {
+    "name": "solar_1",
+    "what": "+Y wing",
+    "location_blender_zup": [
+     -3,
+     1.36,
+     0
+    ],
+    "translation_gltf_yup": [
+     -3,
+     0,
+     -1.36
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -0.56,
+     -0.21,
+     -0.07
+    ],
+    "local_bbox_max": [
+     0.56,
+     3.96,
+     0.05
+    ]
+   },
+   {
+    "name": "solar_2",
+    "what": "-Y wing",
+    "location_blender_zup": [
+     -3,
+     -1.36,
+     0
+    ],
+    "translation_gltf_yup": [
+     -3,
+     0,
+     1.36
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -0.56,
+     -3.96,
+     -0.08
+    ],
+    "local_bbox_max": [
+     0.56,
+     0.21,
+     0.05
+    ]
+   }
+  ],
+  "materials": [
+   "alu",
+   "cells_fine",
+   "panel_back",
+   "quilt",
+   "radiator",
+   "band",
+   "black",
+   "dark",
+   "glass",
+   "heat",
+   "white"
+  ],
+  "images": [
+   [
+    "cells",
+    "image/png"
+   ],
+   [
+    "quilt",
+    "image/png"
+   ],
+   [
+    "radiator",
+    "image/png"
+   ]
+  ],
+  "errors": [],
+  "ok": true
+ },
+ "hubble": {
+  "file": "C:\\Users\\desti\\OneDrive\\Documents\\open-overwatch\\brand\\models\\hubble.glb",
+  "bytes": 358320,
+  "triangles_gltf": 6864,
+  "triangles_blender_import": 6864,
+  "dims_m_xyz_blender": [
+   17.07,
+   19.0,
+   11.16
+  ],
+  "bbox_min": [
+   -7.22,
+   -9.5,
+   -5.58
+  ],
+  "bbox_max": [
+   9.85,
+   9.5,
+   5.58
+  ],
+  "nodes": [
+   "hubble_skin",
+   "solar_1",
+   "solar_2",
+   "hubble"
+  ],
+  "solar_nodes": [
+   {
+    "name": "solar_1",
+    "what": "SA3 +Y wing",
+    "location_blender_zup": [
+     -0.3,
+     1.6,
+     0
+    ],
+    "translation_gltf_yup": [
+     -0.3,
+     0,
+     -1.6
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -1.36,
+     -0.1,
+     -0.28
+    ],
+    "local_bbox_max": [
+     1.36,
+     7.9,
+     0.28
+    ]
+   },
+   {
+    "name": "solar_2",
+    "what": "SA3 -Y wing",
+    "location_blender_zup": [
+     -0.3,
+     -1.6,
+     0
+    ],
+    "translation_gltf_yup": [
+     -0.3,
+     0,
+     1.6
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -1.36,
+     -7.9,
+     -0.28
+    ],
+    "local_bbox_max": [
+     1.36,
+     0.1,
+     0.28
+    ]
+   }
+  ],
+  "materials": [
+   "mli",
+   "radiator",
+   "alu",
+   "cells_fine",
+   "dark",
+   "panel_back",
+   "band",
+   "black",
+   "gold",
+   "white"
+  ],
+  "images": [
+   [
+    "mli",
+    "image/png"
+   ],
+   [
+    "radiator",
+    "image/png"
+   ],
+   [
+    "cells",
+    "image/png"
+   ]
+  ],
+  "errors": [],
+  "ok": true
+ },
+ "iss": {
+  "file": "C:\\Users\\desti\\OneDrive\\Documents\\open-overwatch\\brand\\models\\iss.glb",
+  "bytes": 2181888,
+  "triangles_gltf": 54830,
+  "triangles_blender_import": 54830,
+  "dims_m_xyz_blender": [
+   82.95,
+   109.16,
+   29.29
+  ],
+  "bbox_min": [
+   -45.62,
+   -54.58,
+   -17.85
+  ],
+  "bbox_max": [
+   37.33,
+   54.58,
+   11.44
+  ],
+  "nodes": [
+   "iss_skin",
+   "solar_1",
+   "solar_2",
+   "solar_3",
+   "solar_4",
+   "solar_5",
+   "solar_6",
+   "iss"
+  ],
+  "solar_nodes": [
+   {
+    "name": "solar_1",
+    "what": "P6 wing pair (port, outboard)",
+    "location_blender_zup": [
+     0,
+     48.7,
+     4.7
+    ],
+    "translation_gltf_yup": [
+     0,
+     4.7,
+     -48.7
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -37.33,
+     -5.88,
+     -14.97
+    ],
+    "local_bbox_max": [
+     37.33,
+     5.88,
+     1.85
+    ]
+   },
+   {
+    "name": "solar_2",
+    "what": "P4 wing pair (port, inboard)",
+    "location_blender_zup": [
+     0,
+     33.6,
+     4.7
+    ],
+    "translation_gltf_yup": [
+     0,
+     4.7,
+     -33.6
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -37.33,
+     -6.87,
+     -14.97
+    ],
+    "local_bbox_max": [
+     37.33,
+     6.87,
+     1.85
+    ]
+   },
+   {
+    "name": "solar_3",
+    "what": "S4 wing pair (starboard, inboard)",
+    "location_blender_zup": [
+     0,
+     -33.6,
+     4.7
+    ],
+    "translation_gltf_yup": [
+     0,
+     4.7,
+     33.6
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -37.33,
+     -6.87,
+     -14.97
+    ],
+    "local_bbox_max": [
+     37.33,
+     6.87,
+     1.85
+    ]
+   },
+   {
+    "name": "solar_4",
+    "what": "S6 wing pair (starboard, outboard)",
+    "location_blender_zup": [
+     0,
+     -48.7,
+     4.7
+    ],
+    "translation_gltf_yup": [
+     0,
+     4.7,
+     48.7
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -37.33,
+     -5.88,
+     -14.97
+    ],
+    "local_bbox_max": [
+     37.33,
+     5.88,
+     1.85
+    ]
+   },
+   {
+    "name": "solar_5",
+    "what": "Zvezda port wing (+Y)",
+    "location_blender_zup": [
+     -31.5,
+     1.85,
+     0
+    ],
+    "translation_gltf_yup": [
+     -31.5,
+     0,
+     -1.85
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -1.71,
+     -0.2,
+     -0.22
+    ],
+    "local_bbox_max": [
+     1.71,
+     13.12,
+     0.22
+    ]
+   },
+   {
+    "name": "solar_6",
+    "what": "Zvezda starboard wing (-Y)",
+    "location_blender_zup": [
+     -31.5,
+     -1.85,
+     0
+    ],
+    "translation_gltf_yup": [
+     -31.5,
+     0,
+     1.85
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -1.71,
+     -13.12,
+     -0.22
+    ],
+    "local_bbox_max": [
+     1.71,
+     0.2,
+     0.22
+    ]
+   }
+  ],
+  "materials": [
+   "cells_fine",
+   "quilt",
+   "radiator",
+   "skin",
+   "skin_ru",
+   "alu",
+   "band",
+   "blanket_back",
+   "cells",
+   "truss",
+   "white",
+   "panel_back",
+   "black",
+   "dark",
+   "glass",
+   "gold",
+   "heat",
+   "lamp"
+  ],
+  "images": [
+   [
+    "cells",
+    "image/png"
+   ],
+   [
+    "quilt",
+    "image/png"
+   ],
+   [
+    "radiator",
+    "image/png"
+   ],
+   [
+    "skin",
+    "image/png"
+   ],
+   [
+    "skin_ru",
+    "image/png"
+   ]
+  ],
+  "errors": [],
+  "ok": true
+ },
+ "css": {
+  "file": "C:\\Users\\desti\\OneDrive\\Documents\\open-overwatch\\brand\\models\\css.glb",
+  "bytes": 909408,
+  "triangles_gltf": 20300,
+  "triangles_blender_import": 20300,
+  "dims_m_xyz_blender": [
+   55.25,
+   39.42,
+   5.19
+  ],
+  "bbox_min": [
+   -27.62,
+   -19.71,
+   -2.14
+  ],
+  "bbox_max": [
+   27.62,
+   19.71,
+   3.05
+  ],
+  "nodes": [
+   "css_skin",
+   "solar_1",
+   "solar_2",
+   "solar_3",
+   "solar_4",
+   "css"
+  ],
+  "solar_nodes": [
+   {
+    "name": "solar_1",
+    "what": "Mengtian lab array, both wings (+Y lab)",
+    "location_blender_zup": [
+     0,
+     17.4,
+     0
+    ],
+    "translation_gltf_yup": [
+     0,
+     0,
+     -17.4
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -27.62,
+     -2.31,
+     -0.45
+    ],
+    "local_bbox_max": [
+     27.62,
+     2.31,
+     0.45
+    ]
+   },
+   {
+    "name": "solar_2",
+    "what": "Wentian lab array, both wings (-Y lab)",
+    "location_blender_zup": [
+     0,
+     -17.4,
+     0
+    ],
+    "translation_gltf_yup": [
+     0,
+     0,
+     17.4
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -27.62,
+     -2.31,
+     -0.45
+    ],
+    "local_bbox_max": [
+     27.62,
+     2.31,
+     0.45
+    ]
+   },
+   {
+    "name": "solar_3",
+    "what": "Tianhe +Y wing",
+    "location_blender_zup": [
+     -8,
+     2.1,
+     0
+    ],
+    "translation_gltf_yup": [
+     -8,
+     0,
+     -2.1
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -1.64,
+     -0.1,
+     -0.45
+    ],
+    "local_bbox_max": [
+     1.64,
+     12.48,
+     0.45
+    ]
+   },
+   {
+    "name": "solar_4",
+    "what": "Tianhe -Y wing",
+    "location_blender_zup": [
+     -8,
+     -2.1,
+     0
+    ],
+    "translation_gltf_yup": [
+     -8,
+     0,
+     2.1
+    ],
+    "rotation_gltf_xyzw": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rotation_blender_after_import": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "local_bbox_min": [
+     -1.64,
+     -12.48,
+     -0.45
+    ],
+    "local_bbox_max": [
+     1.64,
+     0.1,
+     0.45
+    ]
+   }
+  ],
+  "materials": [
+   "cells_fine",
+   "radiator",
+   "skin_ru",
+   "alu",
+   "band",
+   "blanket_back",
+   "cells",
+   "white",
+   "black",
+   "dark",
+   "dm_grey",
+   "gold",
+   "heat",
+   "panel_back"
+  ],
+  "images": [
+   [
+    "cells",
+    "image/png"
+   ],
+   [
+    "radiator",
+    "image/png"
+   ],
+   [
+    "skin_ru",
+    "image/png"
+   ]
+  ],
+  "errors": [],
+  "ok": true
+ }
+}
