@@ -1,5 +1,5 @@
 // The globe's layer switches (remembered per browser) and the dock that shows them.
-import { $, esc, fmt, store } from './env.js';
+import { $, esc, fmt, store, PHONE } from './env.js';
 import { hooks } from './state.js';
 
 export const LAYERS = [
@@ -11,9 +11,9 @@ export const LAYERS = [
   { id: 'starlink', group: 'Space', name: 'Starlink', color: '#d9ccff', on: true, sat: ['starlink'], size: 1.6, alpha: 0.55 },
   // last, so the groups above keep their own objects: every other active satellite CelesTrak lists, then the debris
   // clouds of the 2007 Fengyun-1C test and the 2009 Iridium 33 / Cosmos 2251 collision. (The full catalogue, with every
-  // rocket body and fragment, is Space-Track's and may not be redistributed.)
-  { id: 'active', group: 'Space', name: 'All other active satellites', color: '#8fb8ff', on: true, sat: ['active'], size: 2, alpha: 0.75 },
-  { id: 'debris', group: 'Space', name: 'Debris (Fengyun-1C, Iridium 33, Cosmos 2251)', color: '#ff6b6b', on: true, sat: ['fengyun-1c-debris', 'iridium-33-debris', 'cosmos-2251-debris'], size: 1.8, alpha: 0.8 },
+  // rocket body and fragment, is Space-Track's and may not be redistributed.) Off by default on phones: ~5,000 more dots.
+  { id: 'active', group: 'Space', name: 'All other active satellites', color: '#8fb8ff', on: !PHONE, sat: ['active'], size: 2, alpha: 0.75 },
+  { id: 'debris', group: 'Space', name: 'Debris (Fengyun-1C, Iridium 33, Cosmos 2251)', color: '#ff6b6b', on: !PHONE, sat: ['fengyun-1c-debris', 'iridium-33-debris', 'cosmos-2251-debris'], size: 1.8, alpha: 0.8 },
   { id: 'air', group: 'Air', name: 'Civil aircraft (OpenSky, every 15 min)', color: '#5fd3ff', on: true },
   { id: 'mil', group: 'Air', name: 'Military aircraft (adsb.lol, every 60 s)', color: '#ffb44d', on: true },
   { id: 'quakes', group: 'Earth', name: 'Earthquakes M2.5+ · 24 h', color: '#ff7b4f', on: true },
