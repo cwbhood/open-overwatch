@@ -5,6 +5,8 @@ name: Website
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '23 */6 * * *'   # refresh the satellite data copy (data/tle/) every 6 h
   workflow_dispatch:
 permissions:
   contents: read

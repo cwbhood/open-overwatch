@@ -480,6 +480,23 @@ onmessage = e => {
     postMessage({ t: m.t, buf: out }, [out.buffer]);
   }
 };`;
+// The website keeps a copy of every satellite group, refreshed from CelesTrak every 6 h by its build (.github/build_site.py).
+// On the website it is read first (CelesTrak firewalls networks that download too often); elsewhere it is the fallback.
+const TLE_MIRROR = 'https://cwbhood.github.io/open-overwatch/data/tle/';
+let celestrakDown = false; // after one network failure, stop waiting on CelesTrak for the other groups
+async function fetchTle(g) {
+  const cel = async () => {
+    if (celestrakDown) throw new Error('CelesTrak unreachable');
+    try { return await getText(`https://celestrak.org/NORAD/elements/gp.php?GROUP=${encodeURIComponent(g)}&FORMAT=TLE`, 25000); }
+    catch (e) { if (!/^HTTP/.test(e.message)) celestrakDown = true; throw e; }
+  };
+  const mir = () => getText(TLE_MIRROR + encodeURIComponent(g) + '.txt', 30000);
+  let first = null;
+  for (const f of location.hostname === 'cwbhood.github.io' ? [mir, cel] : [cel, mir]) {
+    try { const t = await f(); if (/^1 \d/m.test(t)) return t; throw new Error('unexpected response'); } catch (e) { first = first || e; }
+  }
+  throw first;
+}
 const Sats = {
   list: [], byId: new Map(), state: null, worker: null,
   async load() {
@@ -490,7 +507,7 @@ const Sats = {
         let txt = null; const cached = await bigStore.get('tle.' + g);
         if (cached && Date.now() - cached.t < 2 * 3600e3) txt = cached.txt; // CelesTrak asks for at most one download per group per 2 h
         else {
-          try { txt = await getText(`https://celestrak.org/NORAD/elements/gp.php?GROUP=${encodeURIComponent(g)}&FORMAT=TLE`); if (!(await bigStore.set('tle.' + g, { t: Date.now(), txt }))) console.warn('TLE cache full for', g); }
+          try { txt = await fetchTle(g); if (!(await bigStore.set('tle.' + g, { t: Date.now(), txt }))) console.warn('TLE cache full for', g); }
           catch (e) { if (cached) txt = cached.txt; else { toast(/403/.test(e.message) ? `${g}: CelesTrak allows one download per group every 2 h; it will appear after their next update` : `Satellites (${g}) failed: ${e.message}`, 4200); continue; } }
           await new Promise(r => setTimeout(r, 1200));
         }

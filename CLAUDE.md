@@ -35,6 +35,10 @@ Leaflet 1.9.4 + satellite.js 5.0.0 from CDNs. No build step, no dependencies.
   decoded by headless Blender via exr_dump.py; source EXR is gitignored). Cesium.SkyBox reads each face vertically
   flipped vs the OpenGL convention (verified with direction-coded faces; star positions checked against Orion/Sgr).
   camera.setView({orientation:{direction, up}}) far out in space can come back upside down; check camera.upWC.
+  TLEs: the website build mirrors every CelesTrak group the apps use to /data/tle/<group>.txt (build_site.py; the Website
+  workflow also runs every 6 h). Both apps read that copy first on cwbhood.github.io and fall back to it elsewhere.
+  CelesTrak firewalled this PC's network on 2026-10-01 after many headless renders (fresh profile = no cache each run);
+  globe_shot.mjs now blocks the live feed hosts. Never point automated runs at CelesTrak.
 - `serve.js` / `serve.py` — twin local helpers: serve the folder on http://127.0.0.1:8787 and relay an https host
   allowlist at `/proxy?url=…` for sources that send no CORS header. Keep the two in sync.
 - `Start Open Overwatch.bat` / `.vbs` — Windows launchers.

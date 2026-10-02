@@ -11,6 +11,11 @@ const b = await launch({ windowSize: [W, H], args: ['--enable-gpu', '--ignore-gp
 try {
   const p = await b.newPage();
   await p.send('Page.enable'); await p.send('Runtime.enable');
+  // every run is a fresh profile with no cache, so the live feeds would be downloaded again each time: CelesTrak
+  // firewalled this network after a day of look-dev renders. Satellites come from the website's copy instead.
+  await p.send('Network.enable');
+  await p.send('Network.setBlockedURLs', { urls: ['*celestrak.org*', '*opensky-network.org*', '*adsb.lol*', '*adsb.fi*',
+    '*airplanes.live*', '*earthquake.usgs.gov*', '*wheretheiss.at*'] });
   await p.send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false });
   const loaded = p.waitFor('Page.loadEventFired', { timeoutMs: 60000 });
   await p.send('Page.navigate', { url: 'http://localhost:8787/globe.html' });
