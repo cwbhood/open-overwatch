@@ -10,12 +10,15 @@ programmer would enjoy reading, not three big HTML files.
 - [x] Plan + architecture docs (`docs/ARCHITECTURE.md`), lean `CLAUDE.md`
 - [x] `src/core/`: time, units & frames, Kepler, planets + Moon, IAU rotation, small-body format, assets, formatting
 - [x] Tests for the core (`node --test`), checked against JPL Horizons fixtures
-- [ ] Solar System view moved onto `src/core` + `src/solar/` modules (solar.html = markup + styles only)
+- [x] Solar System view moved onto `src/core` + `src/solar/` modules (solar.html = markup + styles only)
 - [ ] Satellite feed (TLE fetch, mirror, cache, parse) as `src/core/tle.js`, shared by the globe and the 2D map
 - [ ] 3D globe moved onto modules (`src/globe/`)
 - [ ] 2D map split into modules (`src/map/`), keeping its layer contract
 - [ ] CI: lint-free syntax check + tests on every push (runs only once we publish)
 - [ ] `docs/DATA_SOURCES.md` (every feed: what, licence, refresh, accuracy), honest README with a demo clip
+
+Housekeeping to do before publishing: `.gitattributes` (LF everywhere, CRLF for .bat/.vbs) + renormalize; add `src`
+to `APP_PATHS` in `.github/build_site.py` and to the release zip list (archived versions import modules from `src/`).
 
 ## Stage 2 — the signature: one zoom from street to galaxy
 - [ ] Seamless globe ↔ Solar System hand-off (matched camera, shared clock, no page jump feel)
