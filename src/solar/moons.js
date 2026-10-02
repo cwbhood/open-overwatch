@@ -6,7 +6,7 @@ import { orbitPath } from '../core/kepler.js';
 import { moonOffset, moonPeriod } from '../core/moons.js';
 import { fetchAsset } from '../core/assets.js';
 import { distance } from '../core/format.js';
-import { STAR_TEXTURE, PHONE, loadTexture } from './util.js';
+import { STAR_TEXTURE, loadTexture, swapTexture, Sharpen } from './util.js';
 import { globeMaterial } from './planets.js';
 import { addBody, byKey, layer, layerOn, onLayers } from './world.js';
 
@@ -64,6 +64,10 @@ function surfaceTexture(seed, hex, style) {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
 const NO_MAP = new Set(['Titan']);
+function flatTexture(hex) {
+  const n = parseInt(hex.slice(1), 16), t = new THREE.DataTexture(new Uint8Array([n >> 16, n >> 8 & 255, n & 255, 255]), 1, 1);   // sRGB bytes
+  t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; return t;
+}
 /** Iapetus' map has its brightness evened out; darken the leading hemisphere (Cassini Regio) as it really looks. */
 function darkenLeading(tex) {
   const img = tex.image, c = document.createElement('canvas'), g = c.getContext('2d'); c.width = img.width; c.height = img.height;
@@ -104,13 +108,14 @@ export function createMoons({ scene, sunView, renderer }) {
       for (const m of moons) {
         const [surface, fact] = LOOK[m.name] || ['#bbbbbb', ''], R = m.radius_km * KM_AU;
         const group = new THREE.Group(); scene.add(group);
-        const mat = globeMaterial(sunView, {}); mat.uniforms.map.value = surfaceTexture(m.id, surface, SURFACE[m.name]);
+        const map = maps[m.name], real = map && !NO_MAP.has(m.name);
+        // a real map is coming: a plain 1-pixel placeholder in the moon's colour (painting a procedural one cost start-up time)
+        const mat = globeMaterial(sunView, {}); mat.uniforms.map.value = real ? flatTexture(surface) : surfaceTexture(m.id, surface, SURFACE[m.name]);
         // texture longitude 0 (u = 0.5) faces the planet, 90°W (u = 0.25) leads: matches the lookAt below
         const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32).rotateY(-Math.PI / 2), mat); mesh.scale.setScalar(R); group.add(mesh);
-        const map = maps[m.name];
-        if (map && !NO_MAP.has(m.name)) loadTexture(PHONE ? map.file_1k : map.file).then(t => {
-          if (!t) return; const old = mat.uniforms.map.value; mat.uniforms.map.value = m.name === 'Iapetus' ? darkenLeading(t) : t; old.dispose();
-        });
+        let sharp = false;   // 1k first, 2k close up (a late 1k never replaces the 2k)
+        const useMap = (t, is2k) => { if (sharp && !is2k) { t.dispose(); return; } sharp ||= is2k; swapTexture(mat.uniforms.map, m.name === 'Iapetus' ? darkenLeading(t) : t); };
+        if (real) loadTexture(map.file_1k).then(t => { if (t) useMap(t, false); });
         const label = '#' + new THREE.Color(surface).lerp(white, 0.35).getHexString();
         const orbit = new THREE.LineLoop(undefined, new THREE.LineBasicMaterial({ color: label, transparent: true, opacity: 0.45, depthWrite: false })); orbits.add(orbit);
         const planetName = () => byKey[m.planet]?.name || m.planet;
@@ -118,6 +123,7 @@ export function createMoons({ scene, sunView, renderer }) {
           parent: m.planet, near: m.a_km * KM_AU * 40, normal: new THREE.Vector3(0, 0, 1),
           info: () => [['Orbits', planetName()], ['From ' + planetName(), Math.round(m.a_km).toLocaleString('en-US') + ' km'], ['Once around', span(moonPeriod(m)) + (m.i > 90 ? ' (backwards)' : '')],
             ['Radius', m.radius_km.toLocaleString('en-US') + ' km'], ['From Earth', distance(b.pos.distanceTo(byKey.earth.pos))]] });
+        if (real) Sharpen.add(() => Sharpen.px(b) > innerHeight * 0.18, map.file, t => useMap(t, true));
         list.push(b);
       }
       dots.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(list.length * 3), 3));

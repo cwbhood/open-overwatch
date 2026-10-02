@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { LY_AU } from '../core/units.js';
 import { SimClock, jdFromMs } from '../core/time.js';
-import { smoothLog } from './util.js';
+import { smoothLog, Sharpen } from './util.js';
 import { bodies, byKey, defineLayer, applyLayers } from './world.js';
 import { createSky } from './sky.js';
 import { createPlanets } from './planets.js';
@@ -27,6 +27,9 @@ addEventListener('unhandledrejection', e => showError(e.reason?.message || Strin
 // ---- renderer, camera, controls
 const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#c'), antialias: true, logarithmicDepthBuffer: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight); renderer.outputColorSpace = THREE.SRGBColorSpace;
+// error checks read every shader's info log as it's created, which forces the compile to finish right then (a stall,
+// worst in Firefox, where each such call is a round trip to the GPU process); ?debug turns them back on
+renderer.debug.checkShaderErrors = new URLSearchParams(location.search).has('debug');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 1e-9, 1e15);  // 150 m .. 16 billion light-years
 camera.up.set(0, 0, 1);
@@ -36,6 +39,7 @@ addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; cam
 
 // planet formulae: 1800-2200 (good to 2050, plausible beyond)
 const clock = new SimClock({ min: jdFromMs(Date.UTC(1800, 0, 1)), max: jdFromMs(Date.UTC(2200, 0, 1)) });
+Sharpen.camera = camera;
 const sunView = new THREE.Vector3();   // the Sun in view space: every lit shader reads this one uniform
 
 // ---- layers (order = the panel's order)
@@ -97,6 +101,7 @@ const loop = {
   pause() { this.running = false; },
 };
 const embed = createEmbed({ camera, controls, nav, clock, loop, update });
+if (EMBED) { small.defer(true); const enter = embed.api.enterFromGlobe; embed.api.enterFromGlobe = s => { small.defer(false); return enter(s); }; }
 function frame(t) {
   if (!loop.running) return;
   const dt = Math.min((t - lastT) / 1000, 0.1); lastT = t; quality.tick(t);
@@ -105,6 +110,7 @@ function frame(t) {
   controls.update(); camera.updateMatrixWorld();
   view.camSun = camera.position.length(); view.camFocus = camera.position.distanceTo(controls.target);
   sunView.set(0, 0, 0).applyMatrix4(camera.matrixWorldInverse);
+  Sharpen.tick();
   sky.frame(view); planets.frame(view); moons.frame(view); small.frame(view); craft.frame(view); deep.frame(view); web.frame(view);
   story.updatePulse(); ui.frame(view);
   renderer.render(scene, camera);
@@ -130,7 +136,28 @@ if (EMBED) {   // inside the globe: no splash, no opening flight; render one fra
   }, 700);
 }
 const settle = p => p.catch(e => console.warn(e)).finally(() => { applyLayers(); ui.renderLayers(); });
-settle(moons.load()); settle(small.load()); settle(craft.load()); settle(deep.loadStars()); settle(web.load());
+const loads = [moons.load(), small.load(), craft.load(), deep.loadStars(), web.load()];
+loads.forEach(settle);
+
+/* GPU warm-up while idle. three.js uploads a texture and compiles a shader the first time something is drawn, so the
+   hand-over from the globe froze for ~0.6 s on the planet maps, and every new object type hitched once. Here textures
+   go up one per idle slice as they arrive (the view may be paused inside the globe), and once the data is in, the
+   scene's shaders are compiled with compileAsync (parallel compile where the browser has it). */
+{
+  const done = new WeakSet(), idle = fn => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 200));
+  const pending = () => {
+    const out = [];
+    scene.traverse(o => { const m = o.material; if (!m) return;
+      for (const t of [m.map, ...Object.values(m.uniforms || {}).map(u => u.value)]) if (t && t.isTexture && t.image && !done.has(t)) out.push(t); });
+    return out;
+  };
+  const step = () => { const t = pending()[0]; if (t) { renderer.initTexture(t); done.add(t); idle(step); } else setTimeout(() => idle(step), 1500); };
+  idle(step);
+  const warm = () => new Promise(res => idle(() => renderer.compileAsync(scene, camera).catch(e => console.warn('shader warm-up', e)).finally(res)));
+  embed.api.warm = false;   // the globe waits for this before handing over
+  warm().then(() => { embed.api.warm = true; }); Promise.allSettled(loads).then(warm);   // what exists now, then the rest once the data is in
+  setTimeout(() => { embed.api.warm = true; }, 8000);   // never hold the hand-over longer than this
+}
 applyLayers();
 
 window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, moons, quality, web, nav, story, renderer, LY: LY_AU, embed: embed.api, loop };

@@ -1,6 +1,6 @@
 // Aircraft: the OpenSky global snapshot (every 15 min) and adsb.lol military (every 60 s), dead-reckoned between fixes,
 // drawn as Blender-rendered sprites far out and as glTF models (pitch from climb rate, bank from turn rate) up close.
-import { C, bigStore, getJSON } from './env.js';
+import { C, bigStore, getJSON, NO_ENV_MAP } from './env.js';
 import { viewer, camera, airPts, airIcons, camHeight } from './viewer.js';
 import { L, setCount } from './layers.js';
 import { state, hooks } from './state.js';
@@ -137,7 +137,7 @@ export const AirModels = {
     r.ent = viewer.entities.add({
       position: new C.CallbackProperty(t => this.state(r, t).pos, false),
       orientation: new C.CallbackProperty(t => this.state(r, t).quat, false),
-      model: { uri: this.uri(r), minimumPixelSize: 26, maximumScale: 2.0e4, nodeTransformations: { rotor }, silhouetteColor: C.Color.fromCssColorString('#ff4d5e'), silhouetteSize: r.emerg ? 2.0 : 0.0 },
+      model: { uri: this.uri(r), environmentMapOptions: NO_ENV_MAP, minimumPixelSize: 26, maximumScale: 2.0e4, nodeTransformations: { rotor }, silhouetteColor: C.Color.fromCssColorString('#ff4d5e'), silhouetteSize: r.emerg ? 2.0 : 0.0 },
     });
     r.ent.air = r; r.pt.show = false; r.icon.show = false; this.pool.set(r.hex, r);
     return r.ent;

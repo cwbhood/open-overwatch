@@ -5,7 +5,12 @@ import { PLANET_KEYS, PHYSICAL, planetElements, planetPosition, earthPosition, m
 import { bodyAxes } from '../core/rotation.js';
 import { orbitPath, periodDays } from '../core/kepler.js';
 import { distance, lightTime, period } from '../core/format.js';
-import { surfaceMaterial, loadTexture, planetTexture, glowTexture, STAR_TEXTURE, toVector3 } from './util.js';
+import { surfaceMaterial, loadTexture, planetTexture, sharpTexture, swapTexture, Sharpen, glowTexture, STAR_TEXTURE, toVector3 } from './util.js';
+
+const HAS_4K = new Set(['earth', 'venus', 'mars', 'jupiter', 'saturn', 'moon']);
+const SHARP = 0.22;   // a body gets its 4k map once its radius covers this share of the window height
+/** The first (2k) texture, unless a sharper one already arrived. */
+const firstTexture = (u, t) => { if (!t) return; if (u.value) t.dispose(); else u.value = t; };
 import { addBody, byKey, ORIGIN, layerOn, onLayers } from './world.js';
 
 const STYLE = { // label/orbit colour, atmosphere [rgb, strength], gas giant (soft terminator)
@@ -82,7 +87,7 @@ export function createPlanets({ scene, sunView, renderer }) {
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, key === 'earth' ? 128 : 96, key === 'earth' ? 64 : 48), globeMaterial(sunView, { atm: atm || [0, 0, 0], atmK, wrap: gas ? 0.05 : 0 }));
     const flat = key === 'earth' ? 0 : flattening; // Earth's 0.3% would only matter to its clouds; skip it
     mesh.scale.set(R, R * (1 - flat), R); mesh.visible = false; spin.add(mesh);
-    loadTexture(planetTexture(key)).then(t => { mesh.material.uniforms.map.value = t; mesh.visible = !!t; });
+    loadTexture(planetTexture(key)).then(t => { firstTexture(mesh.material.uniforms.map, t); mesh.visible = !!mesh.material.uniforms.map.value; });
     if (atm) { const h = halo(sunView, atm, key === 'earth' ? 1.1 : 0.6); h.scale.set(R, R * (1 - flat), R); spin.add(h); }
     const b = addBody({ key, name, kind: 'planet', color, radius: R, pos: new THREE.Vector3(), group, spin, mesh, big: true, fact: FACTS[key],
       update(jd) { (key === 'earth' ? earthPosition : (j, o) => planetPosition(key, j, o))(jd, b.pos); group.position.copy(b.pos); orient(key, jd, spin.quaternion); },
@@ -91,6 +96,7 @@ export function createPlanets({ scene, sunView, renderer }) {
         return [['Distance from Sun', distance(b.pos.length())], ['From Earth', key === 'earth' ? '—' : distance(dE) + ' · light ' + lightTime(dE)],
           ['Year', period(periodDays(el.a))], ['Radius', Math.round(radiusKm).toLocaleString('en-US') + ' km'], ['Orbit tilt', (el.i / DEG).toFixed(2) + '°']];
       } });
+    if (HAS_4K.has(key)) Sharpen.add(() => Sharpen.px(b) > innerHeight * SHARP, sharpTexture(key), t => swapTexture(mesh.material.uniforms.map, t));
     if (key === 'earth') addEarthExtras(b, sunView, R);
     if (key === 'saturn') addRings(b, sunView, R, ringTex);
   }
@@ -99,11 +105,12 @@ export function createPlanets({ scene, sunView, renderer }) {
   {
     const R = PHYSICAL.moon.radiusKm * KM_AU, group = new THREE.Group(), spin = new THREE.Group(); scene.add(group); group.add(spin);
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 48), globeMaterial(sunView, {})); mesh.scale.setScalar(R); mesh.visible = false; spin.add(mesh);
-    loadTexture(planetTexture('moon')).then(t => { mesh.material.uniforms.map.value = t; mesh.visible = !!t; });
+    loadTexture(planetTexture('moon')).then(t => { firstTexture(mesh.material.uniforms.map, t); mesh.visible = !!mesh.material.uniforms.map.value; });
     const geo = new THREE.Vector3();
     const b = addBody({ key: 'moon', name: 'Moon', kind: 'moon', color: '#cfd3da', radius: R, pos: new THREE.Vector3(), geo, group, spin, mesh, fact: FACTS.moon,
       update(jd) { moonGeocentric(jd, geo); b.pos.copy(byKey.earth.pos).add(geo); group.position.copy(b.pos); orient('moon', jd, spin.quaternion); },
       info: () => [['From Earth', Math.round(geo.length() / KM_AU).toLocaleString('en-US') + ' km'], ['Light from Earth', lightTime(geo.length())], ['Radius', '1,737 km']] });
+    Sharpen.add(() => Sharpen.px(b) > innerHeight * SHARP, sharpTexture('moon'), t => swapTexture(mesh.material.uniforms.map, t));
   }
 
   // ---- orbits (rebuilt every ten simulated years: the elements drift slowly)
@@ -160,14 +167,16 @@ export function createPlanets({ scene, sunView, renderer }) {
 
 function addEarthExtras(b, sunView, R) {
   const m = b.mesh.material.uniforms;
-  loadTexture(planetTexture('earth_night')).then(t => { m.night.value = t; m.hasNight.value = t ? 1 : 0; });
+  loadTexture(planetTexture('earth_night')).then(t => { firstTexture(m.night, t); m.hasNight.value = m.night.value ? 1 : 0; });
   const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.006, 128, 64), surfaceMaterial({
     uniforms: { map: { value: null }, uSun: { value: sunView } }, transparent: true, depthWrite: false,
     frag: { decl: 'uniform sampler2D map; uniform vec3 uSun;',
       body: 'col = vec3(clamp(dot(normalize(vN), normalize(uSun - vP)) * 1.2 + 0.05, 0.0, 1.0)); alpha = texture2D(map, vUv).r * 0.92;' },
   }));
   clouds.scale.setScalar(R); clouds.visible = false; b.spin.add(clouds); b.clouds = clouds;
-  loadTexture(planetTexture('earth_clouds'), { srgb: false }).then(t => { clouds.material.uniforms.map.value = t; clouds.visible = !!t; });
+  loadTexture(planetTexture('earth_clouds'), { srgb: false }).then(t => { firstTexture(clouds.material.uniforms.map, t); clouds.visible = !!clouds.material.uniforms.map.value; });
+  Sharpen.add(() => Sharpen.px(b) > innerHeight * SHARP, sharpTexture('earth_night'), t => { swapTexture(m.night, t); m.hasNight.value = 1; });
+  Sharpen.add(() => Sharpen.px(b) > innerHeight * SHARP, sharpTexture('earth_clouds'), t => { swapTexture(clouds.material.uniforms.map, t); clouds.visible = true; }, { srgb: false });
 }
 
 function addRings(b, sunView, R, ringTex) {

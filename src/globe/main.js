@@ -6,7 +6,7 @@ import { hooks } from './state.js';
 import { Earth, BASES, setBase, currentBase, sunlitView, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, moonPosition } from './earth.js';
 import { Follow, MODEL_FIX, SOLAR_AXIS } from './follow.js';
 import { Sats, SatModels, SHADOW_FILL } from './satellites.js';
-import { warmModels } from './warm.js';
+import { warmModels, warmAgain } from './warm.js';
 import { Air, AirModels, airShown } from './aircraft.js';
 import { Time } from './time.js';
 import { Quakes } from './quakes.js';
@@ -40,21 +40,29 @@ setInterval(() => Air.prune(), 30e3);
 /** Run a feed now and every `ms`; failures become a toast, not an exception. */
 function every(ms, fn, label) { const run = () => fn().catch(e => { console.warn(label, e); toast(`${label}: ${e.message}`); }); run(); return setInterval(run, ms); }
 
-// boot: a mostly sunlit Earth, held behind the boot screen until the globe has something to show
-{ const [lon, lat] = sunlitView(); camera.setView({ destination: C.Cartesian3.fromDegrees(lon, lat, 2.0e7) }); }
+// boot: a mostly sunlit Earth, held behind the boot screen until the globe has something to show. Behind that screen the
+// camera first dips to 600 km for a moment: below ~800 km Cesium switches on fog and atmosphere in the globe's and the
+// models' shaders, so those versions compile now instead of freezing the first zoom down (2.3 s of compiles measured).
+// Every model type is drawn once at both heights (warm.js); model options must match aircraft.js / satellites.js where
+// they change the shader (the satellites' shadow CustomShader does, sizes don't).
+const AIR_WARM = ['airliner', 'prop', 'heli', 'fighter', 'heavy', 'tprop'].flatMap(t => ['civ', 'mil'].map(k => ({ uri: `brand/models/aircraft/${t}_${k}.glb` })));
+const SAT_WARM = (PHONE ? ['starlink', 'smallsat'] : ['starlink', 'smallsat', 'rocketbody', 'gnss', 'geo', 'weather', 'soyuz', 'hubble', 'iss', 'css'])
+  .flatMap(t => [{ uri: `brand/models/${t}.glb`, runAnimations: false }, { uri: `brand/models/${t}.glb`, runAnimations: false, customShader: SHADOW_FILL }]);
 updateBand(); applyVisibility();
-{
-  const t0 = Date.now(), wait = setInterval(() => {
-    if (globe.tilesLoaded || Date.now() - t0 > 8000) { clearInterval(wait); $('#boot').classList.add('out'); setTimeout(() => $('#boot').remove(), 900); }
-  }, 200);
-}
-// compile every model type's shaders now, not mid-flight: aircraft (0.8 MB) behind the boot screen, satellites (6.7 MB;
-// phones only the two common types) once the page is idle. Model options must match the real ones (aircraft.js,
-// satellites.js) where they change the shader: the satellites' shadow CustomShader does, sizes don't.
-warmModels(['airliner', 'prop', 'heli', 'fighter', 'heavy', 'tprop'].flatMap(t => ['civ', 'mil'].map(k => ({ uri: `brand/models/aircraft/${t}_${k}.glb` }))));
-setTimeout(() => warmModels((PHONE ? ['starlink', 'smallsat'] : ['starlink', 'smallsat', 'rocketbody', 'gnss', 'geo', 'weather', 'soyuz', 'hubble', 'iss', 'css'])
-  .flatMap(t => [{ uri: `brand/models/${t}.glb`, runAnimations: false }, { uri: `brand/models/${t}.glb`, runAnimations: false, customShader: SHADOW_FILL }])), 6000);
+(async () => {
+  const [lon, lat] = sunlitView(), t0 = Date.now();
+  const until = (ms, cond = () => false) => new Promise(res => { const id = setInterval(() => { if (cond() || Date.now() - t0 > ms) { clearInterval(id); res(); } }, 100); });
+  camera.setView({ destination: C.Cartesian3.fromDegrees(lon, lat, 6.0e5) });
+  await Promise.race([Promise.all([warmModels([...AIR_WARM, ...SAT_WARM]), until(4000, () => globe.tilesLoaded)]), until(5000)]);
+  camera.setView({ destination: C.Cartesian3.fromDegrees(lon, lat, 2.0e7) });
+  const high = warmAgain();
+  await until(10000, () => globe.tilesLoaded);
+  $('#boot').classList.add('out'); setTimeout(() => $('#boot').remove(), 900);
+  updateBand(); return high;
+})();
 Sats.load().catch(e => toast('Satellites failed: ' + e.message));
+// desktops: load the Solar System view in the background once the globe has settled, so zooming out never waits on it
+if (!PHONE) setTimeout(() => (window.requestIdleCallback || setTimeout)(() => Space.preload()), 10e3);
 every(15 * 60e3, () => Air.opensky(), 'Civil aircraft');
 every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');

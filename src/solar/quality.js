@@ -1,13 +1,14 @@
 // Graphics quality for the Solar System view, same scheme as the globe (src/globe/quality.js): phones start on "low",
-// other devices on "high"; in "auto", two slow 3 s windows in a row (median frame over 40 ms) step down one level.
+// other devices on "high"; in "auto", a slow 3 s window (median frame over 50 ms) or two in a row over 28 ms (under
+// ~36 fps: what a Mac laptop in Firefox showed) step down one level.
 // The costs here are on the GPU: pixels (the log depth buffer writes gl_FragDepth, which turns off early depth tests)
 // and the 1.57M asteroids whose orbits are solved per point per frame in the vertex shader.
 import { PHONE } from './util.js';
 import { rendererName, isSoftwareRenderer } from '../core/gpu.js';
 
 export const LEVELS = {
-  high: { name: 'High', pixelRatio: 2, allAsteroids: true },
-  balanced: { name: 'Balanced', pixelRatio: 1.25, allAsteroids: true },
+  high: { name: 'High', pixelRatio: 1.5, allAsteroids: true },     // 2x on a Retina laptop was 4x the pixels for little gain
+  balanced: { name: 'Balanced', pixelRatio: 1, allAsteroids: true },
   low: { name: 'Low', pixelRatio: 1, allAsteroids: false },     // the brightest 300k asteroids only
 };
 const ORDER = ['high', 'balanced', 'low'];
@@ -33,7 +34,7 @@ export function createQuality({ renderer, small, onAutoChange = () => {} }) {
       if (t - windowStart < 3000) return;
       times.sort((a, b) => a - b);
       const median = times[times.length >> 1] || 0; times = []; windowStart = t;
-      slow = median > 40 ? slow + 1 : 0;
+      slow = median > 50 ? 2 : median > 28 ? slow + 1 : 0;
       const i = ORDER.indexOf(Q.level);
       if (slow >= 2 && i < ORDER.length - 1) { slow = 0; Q.apply(ORDER[i + 1]); onAutoChange(LEVELS[Q.level]); }
     },

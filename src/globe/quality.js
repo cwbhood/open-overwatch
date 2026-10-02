@@ -1,7 +1,7 @@
 // Graphics quality: three levels, chosen per device and stepped down automatically when frames run slow.
 // Phones start on "low" (the GPU is the limit there and emulation can't measure it); everything else starts on "high".
-// While the page is visible, the median frame time of each 3 s window is watched: two slow windows in a row (median
-// over 40 ms, i.e. under 25 fps) step the level down once. The median ignores one-off shader-compile stalls. A level the
+// While the page is visible, the median frame time of each 3 s window is watched: one very slow window (median over
+// 50 ms) or two in a row over 28 ms (under ~36 fps) step the level down once. The median ignores one-off shader-compile stalls. A level the
 // user picks in the dock is kept (localStorage) and never changed automatically.
 import { PHONE, store, toast } from './env.js';
 import { viewer, scene, globe } from './viewer.js';
@@ -45,8 +45,8 @@ if (isSoftwareRenderer(Quality.gpu)) setTimeout(() => toast(SOFTWARE_HINT, 15000
     if (t - windowStart < 3000) return;
     times.sort((a, b) => a - b);
     const median = times[times.length >> 1] || 0; times = []; windowStart = t;
-    const budget = LEVELS[Quality.level].fps ? 1000 / LEVELS[Quality.level].fps + 8 : 40;
-    slow = median > Math.max(40, budget) ? slow + 1 : 0;
+    const budget = LEVELS[Quality.level].fps ? 1000 / LEVELS[Quality.level].fps + 8 : 28;   // under ~36 fps
+    slow = median > 50 ? 2 : median > budget ? slow + 1 : 0;
     const i = ORDER.indexOf(Quality.level);
     if (slow >= 2 && i < ORDER.length - 1) {
       slow = 0; Quality.apply(ORDER[i + 1]);

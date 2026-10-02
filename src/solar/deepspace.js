@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { LY_AU, PC_AU, radecToEcl, GALACTIC, SUN_TO_GALACTIC_CENTRE_LY } from '../core/units.js';
 import { fetchAsset } from '../core/assets.js';
 import { bigNumber } from '../core/format.js';
-import { LOGDEPTH_V, LOGDEPTH_F, PHONE, STAR_TEXTURE, surfaceMaterial, loadTexture, planetTexture, toVector3 } from './util.js';
+import { LOGDEPTH_V, LOGDEPTH_F, PHONE, STAR_TEXTURE, surfaceMaterial, loadTexture, planetTexture, sharpTexture, Sharpen, toVector3 } from './util.js';
 import { addBody, bodies, ORIGIN, layer, layerOn, onLayers } from './world.js';
 
 export function createDeepSpace({ scene, camera, renderer }) {
@@ -95,6 +95,11 @@ export function createDeepSpace({ scene, camera, renderer }) {
         ['Light left it', dMly < 1 ? Math.round(dMly * 1e3) + ',000 years ago' : dMly.toFixed(1) + ' million years ago']] });
   }
   milkyTex.then(t => { if (t) { milky.material.map = t; milky.material.needsUpdate = true; } });
+  Sharpen.add(() => camera.position.length() > 5000 * LY_AU, sharpTexture('milkyway'), t => {   // the 4k artwork once out among it
+    const old = milky.material.map;
+    for (const m of [milky.material, ...galaxies.filter(g => g.material.map === old).map(g => g.material)]) { m.map = t; m.needsUpdate = true; }
+    old?.dispose();
+  });
   addGalaxy('m31', 'Andromeda Galaxy', 10.6847, 41.2690, 2.537, 152, 77, 38, true, 'Our big neighbour, about a trillion stars. It is heading our way and will merge with the Milky Way in roughly 4.5 billion years.', 0xd9e2ff);
   addGalaxy('m33', 'Triangulum Galaxy', 23.4621, 30.6599, 2.73, 61, 54, 23, true, 'Third-largest member of the Local Group, around 40 billion stars.', 0xc9e6ff);
   addGalaxy('lmc', 'Large Magellanic Cloud', 80.894, -69.756, 0.163, 32, 35, 170, false, 'A satellite galaxy of the Milky Way, visible to the naked eye from the southern hemisphere.', 0xbfd3ff);

@@ -81,7 +81,9 @@ export function createSmallBodies({ scene, renderer }) {
     addNamedWorlds(); addComets();
     if (S.full) loadAll();
   }
-  async function loadAll() { // the other 1.27M (19 MB): only on the higher quality levels (quality.js)
+  async function loadAll() { // the other 1.27M (19 MB): only on the higher quality levels (quality.js), and not while
+    // preloaded inside the globe (S.defer) where most visitors never come out this far
+    if (S.defer) return;
     if (S.loadingAll || S.files[1]) return; S.loadingAll = true;
     try { S.files[1] = pointsFor(await fetchAsset('data/solar/asteroids_b.bin')); S.files[1].points.visible = layerOn('asteroids') && S.full; layer('asteroids').n = count(); onChange(); }
     catch (e) { console.warn('asteroids_b', e); } finally { S.loadingAll = false; }
@@ -168,14 +170,17 @@ export function createSmallBodies({ scene, renderer }) {
       S.full = on; if (S.files[1]) S.files[1].points.visible = on && layerOn('asteroids'); else if (on && S.files[0] && layerOn('asteroids')) loadAll();
       layer('asteroids').n = S.files[0] ? S.files[0].view.N + (on && S.files[1] ? S.files[1].view.N : 0) : 0; onChange();
     },
+    /** Inside the globe: hold the big file back until the view is actually entered. */
+    defer(on) { S.defer = on; if (!on && S.full && S.files[0] && layerOn('asteroids')) loadAll(); },
     S, load, asteroidBody, pickAsteroid, search, set onChange(fn) { onChange = fn; },
     update(jd) { uniforms.uDays.value = jd - S.epoch; },
     frame({ camera, camSun, fade }) {
       uniforms.uPR.value = renderer.getPixelRatio();
-      uniforms.uFade.value = (1 - fade(600, 6000, camSun)) * (1 - 0.88 * fade(12, 120, camSun)); // the belt piles into a blob from far out
-      // faded out = not drawn: from light-years away 1.57M additive points land on the same few pixels (42 ms a frame)
+      uniforms.uFade.value = (1 - fade(500, 3000, camSun)) * (1 - 0.88 * fade(12, 120, camSun)); // the belt piles into a blob from far out
+      // faded out = not drawn: from far out the asteroids land on a few pixels and additive blending serialises them
+      // (42 ms a frame from light-years away, 24 ms at 2,000 AU). The faint 1.27M go first: beyond 250 AU they add nothing.
       const drawn = uniforms.uFade.value > 0.002 && layerOn('asteroids');
-      S.files.forEach((f, i) => { if (f) f.points.visible = drawn && (i === 0 || S.full); });
+      S.files.forEach((f, i) => { if (f) f.points.visible = drawn && (i === 0 || (S.full && camSun < 250)); });
       for (const b of bodies) {
         if (b.orbit) b.orbit.material.opacity = b.orbit.userData.opacity * (1 - fade(2000, 3e4, camSun));
         if (b.kind !== 'comet') continue;

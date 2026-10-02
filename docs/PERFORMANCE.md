@@ -25,6 +25,34 @@ step-down is for. *Still* samples 8 s with the camera at rest; *moving* samples 
 
 Every page runs at the display's refresh rate with the camera at rest.
 
+## The scroll-wheel zoom (`brand/tools/zoomtest.mjs`)
+
+Real wheel events from a 20,000 km view of Earth, out through the hand-off into the Solar System and beyond, then
+back in to the ground (`OO_BACK=10 node brand/tools/zoomtest.mjs desktop 8`). Reported on 2026-10-02 from a Mac laptop in
+Firefox on the live v0.9 site, which has none of these fixes.
+
+| Stretch (desktop) | Before | After |
+|---|---|---|
+| Hand-off to the Solar System | 1.0 s freeze, then a second at ~4 fps | worst frame ~100 ms |
+| 1,600–4,400 AU (asteroids piling onto a few pixels) | 24 ms frames | 6 ms |
+| Back down to Earth (2,300 km → street) | 0.5–0.9 s freezes, 5–18 fps | worst ~240 ms, median 6 ms |
+| Whole round trip, 18 s | dozens of frames over 50 ms | 5 |
+
+Fixes for this path:
+- **Solar System textures:**
+  - Every planet starts on its 2k map; the 4k map loads only for the body you fly close to (`Sharpen` in `src/solar/util.js`).
+  - Loading all the 4k maps up front used ~600 MB of GPU memory and caused a 1.1 s upload at the hand-off.
+- **Solar System shaders:**
+  - three.js's shader error checks are off (`?debug` turns them back on). They forced each compile to finish on the spot.
+  - Shaders are compiled with `compileAsync` while idle, and textures are uploaded one per idle slice.
+  - The globe waits for that warm-up before handing over.
+- **Background preload (desktop):** 10 s after start, the globe loads the Solar System view in the background. The
+  1.27M-asteroid file waits until the view is actually entered.
+- **Globe warm-up:** behind the boot screen, the globe dips to 600 km for a moment. Below ~800 km Cesium adds fog and
+  atmosphere to its shaders, so both versions of every model and tile shader compile before the globe is shown.
+- **3D models:** per-model dynamic environment maps are off (`NO_ENV_MAP`). They rendered an atmosphere cube map for
+  every model and added a shader version per height band.
+
 ## What was slow, and the fixes
 
 - **Shader compiles mid-flight (globe).** Cesium compiles a program the first time each globe-tile imagery
@@ -37,7 +65,9 @@ Every page runs at the display's refresh rate with the camera at rest.
   renderers start on Low. In Auto, two 3-second windows with a median frame over 40 ms step down one level.
   - Globe levers: tile detail (screen-space error 2/3/4), model counts (aircraft 200/80/30, satellites 40/25/12),
     cloud noise octaves (4/2/1), 30 fps cap on Low.
-  - Solar levers: pixel ratio (2/1.25/1), and all 1.57M asteroids or only the brightest 300k.
+  - Solar levers: pixel ratio (1.5/1/1; 2× on a Retina laptop was four times the pixels), and all 1.57M asteroids or only
+    the brightest 300k.
+  - The step-down now triggers on a 3-second window with a median frame over 50 ms, or two in a row over 28 ms.
 - **Faded point clouds still drawn (Solar System).** From light-years out the 1.57M asteroids land on a few pixels
   and additive blending serialises them: 60 ms frames at any zoom past the Oort cloud. Faded clouds are now hidden.
 - **Software WebGL** (hardware acceleration off): detected from the renderer string (`src/core/gpu.js`). The page

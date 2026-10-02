@@ -1,6 +1,6 @@
 // Satellites: TLEs from the shared source (src/core/tle.js), SGP4 for every dot in a worker, and Blender-built glTF
 // models with exact per-frame SGP4 for the nearest ones.
-import { C, toast, bigStore, getText, ON_SITE } from './env.js';
+import { C, toast, bigStore, getText, ON_SITE, NO_ENV_MAP } from './env.js';
 import { viewer, camera, satPts, orbitLines } from './viewer.js';
 import { L, LAYERS, setCount } from './layers.js';
 import { state, hooks } from './state.js';
@@ -173,7 +173,7 @@ export const SatModels = {
     s.ent = viewer.entities.add({
       position: new C.CallbackProperty(t => { const st = this.state(s, t); return st.ok ? st.pos : undefined; }, false),
       orientation: new C.CallbackProperty(t => this.state(s, t).quat, false),
-      model: { uri: this.dir + type + '.glb', minimumPixelSize: 34, maximumScale: 4.0e4, nodeTransformations, runAnimations: false,
+      model: { uri: this.dir + type + '.glb', environmentMapOptions: NO_ENV_MAP, minimumPixelSize: 34, maximumScale: 4.0e4, nodeTransformations, runAnimations: false,
         customShader: new C.CallbackProperty(t => this.state(s, t).shadow ? SHADOW_FILL : undefined, false) },
     });
     s.ent.sat = s; s.pt.show = false; this.pool.set(s.id, s);

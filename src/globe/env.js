@@ -5,6 +5,9 @@ export { esc } from '../core/format.js';
 export const fmt = n => n == null || Number.isNaN(n) ? '—' : Math.round(n).toLocaleString('en-US');
 export const PHONE = matchMedia('(max-width: 820px)').matches;
 export const ON_SITE = location.hostname === 'cwbhood.github.io';
+/** Model option: no per-model dynamic environment map. Cesium renders an atmosphere cube map for every model as it
+ *  moves, and the specular term adds a shader variant per height band; on small models the reflections don't show. */
+export const NO_ENV_MAP = Object.freeze({ enabled: false });
 
 let toastTimer = 0;
 export function toast(msg, ms = 2600) {

@@ -37,7 +37,24 @@ export function loadTexture(path, { srgb = true } = {}) {
     loader.load(path, done, undefined, () => loader.load(SITE + path, done, undefined, () => resolve(null)));
   });
 }
-export const planetTexture = name => `brand/textures/planets/${name}${PHONE ? '_2k' : ''}.jpg`;
+// Everything starts on the 2k maps; the 4k ones (45 MB of GPU memory each with mipmaps) load only for what you fly
+// close to, on desktops (Sharpen). Loading every 4k map up front cost ~600 MB of GPU memory and a 1.1 s upload freeze
+// when the globe handed over to this view.
+export const planetTexture = name => `brand/textures/planets/${name}_2k.jpg`;
+export const sharpTexture = name => `brand/textures/planets/${name}.jpg`;
+/** Swap a texture uniform's value, freeing the old texture. */
+export function swapTexture(u, t) { const old = u.value; u.value = t; if (old && old !== t && old.dispose) old.dispose(); }
+/** Sharper textures on demand: add(when, path, apply) loads `path` the first frame `when()` is true (desktop only). */
+export const Sharpen = {
+  camera: null, items: [],
+  add(when, path, apply, opts) { if (!PHONE) this.items.push({ when, path, apply, opts }); },
+  /** On-screen radius of a body in CSS pixels. */
+  px(b) { const c = this.camera; return b.radius / Math.max(c.position.distanceTo(b.pos), 1e-12) * innerHeight / (2 * Math.tan(c.fov * Math.PI / 360)); },
+  tick() {
+    if (!this.camera || !this.items.length) return;
+    this.items = this.items.filter(it => { if (!it.when()) return true; loadTexture(it.path, it.opts).then(t => t && it.apply(t)); return false; });
+  },
+};
 
 /** Radial-gradient sprite texture. stops: [[offset, css colour], ...] */
 export function glowTexture(stops) {

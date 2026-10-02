@@ -1,14 +1,14 @@
 // One continuous zoom: past the Moon the globe hands its camera to the Solar System view (solar.html?embed=1, in an
 // iframe loaded in the background as you climb), and takes it back when you zoom into Earth there. Cameras cross as
 // Earth-centred vectors in the ecliptic J2000 frame: Cesium ECEF -> ICRF (Cesium's IAU 2006 matrices) -> ecliptic.
-import { C, toast } from './env.js';
+import { C, toast, PHONE } from './env.js';
 import { viewer, scene, camera, camHeight } from './viewer.js';
 import { state } from './state.js';
 import { Follow } from './follow.js';
 import { eqToEcl, eclToEq } from '../core/units.js';
 import { Time } from './time.js';
 
-const PRELOAD_M = 8.0e7;   // start loading the Solar System view (its first load is the asteroid data)
+const PRELOAD_M = PHONE ? 8.0e7 : 4.0e7;   // start loading the Solar System view in the background (earlier on desktops)
 const ENTER_M = 3.0e8;     // hand over beyond this (the Moon is at ~3.8e8 m); solar hands back below 2.2e8
 const FADE_MS = 700;
 
@@ -30,7 +30,8 @@ function toEcliptic(v, M) { const q = C.Matrix3.multiplyByVector(C.Matrix3.trans
 function toFixed(v, M) { const q = eclToEq(v.x, v.y, v.z); return C.Matrix3.multiplyByVector(M, new C.Cartesian3(q.x, q.y, q.z), new C.Cartesian3()); }
 
 function enter() {
-  const S = solar(); if (!S || !S.embed || !S.embed.ready || busy) return false;
+  // wait until the view has drawn once and compiled its shaders (S.embed.warm): a moment's delay instead of a freeze
+  const S = solar(); if (!S || !S.embed || !S.embed.ready || S.embed.warm === false || busy) return false;
   busy = true; active = true; wantEnter = false;
   const M = fixedMatrix(viewer.clock.currentTime);
   S.embed.enterFromGlobe({ offset: toEcliptic(camera.positionWC, M), dir: toEcliptic(camera.directionWC, M), up: toEcliptic(camera.upWC, M), fovy: camera.frustum.fovy,
@@ -74,4 +75,7 @@ function go() {
     complete: () => { if (!active && !enter()) { wantEnter = true; toast('Loading the Solar System…', 2500); } } });
 }
 
-export const Space = { update, leave, go, get active() { return active; } };
+/** Load the Solar System view in the background ahead of time (desktops, once the globe has settled). */
+function preload() { ensureFrame(); }
+
+export const Space = { update, leave, go, preload, get active() { return active; } };
