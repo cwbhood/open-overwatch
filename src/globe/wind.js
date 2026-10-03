@@ -8,7 +8,7 @@ import { viewer, scene, camera, camHeight } from './viewer.js';
 const LATS = [], LONS = [];
 for (let la = -80; la <= 80; la += 10) LATS.push(la);
 for (let lo = -180; lo < 180; lo += 10) LONS.push(lo);
-const NX = LONS.length, NY = LATS.length, COUNT = PHONE ? 1400 : 3800;
+const NX = LONS.length, NY = LATS.length, COUNT = PHONE ? 900 : 3800;
 const CHUNK = 306, TTL = 30 * 60e3, KEY = 'wx.grid.v1';
 const R = 6378137;
 const COLORS = ['#7fe8ff', '#b6f5ff', '#ffffff', '#fff3a8', '#ffc46b', '#ff7a5c'];   // calm to gale
@@ -78,7 +78,10 @@ export const Wind = {
     const cv = document.createElement('canvas'); cv.id = 'windcv'; cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:3';
     document.body.append(cv); this.canvas = cv; this.ctx = cv.getContext('2d'); addEventListener('resize', () => this.windOn && this.resize());
   },
-  resize() { const dpr = Math.min(devicePixelRatio || 1, PHONE ? 1.5 : 2); this.canvas.width = Math.round(innerWidth * dpr); this.canvas.height = Math.round(innerHeight * dpr); this.dpr = dpr; },
+  resize() {   // phones: a canvas a third the pixels; thin streaks hardly notice, and the per-frame fade and composite cost far less
+    const dpr = PHONE ? 0.6 : Math.min(devicePixelRatio || 1, 2);
+    this.canvas.width = Math.round(innerWidth * dpr); this.canvas.height = Math.round(innerHeight * dpr); this.dpr = dpr;
+  },
   spawn(p) {   // a random point, preferably on the side of the Earth that faces the camera
     this.camDist = this.camDist || C.Cartesian3.magnitude(camera.positionWC);
     for (let tries = 0; tries < 6; tries++) {
@@ -116,7 +119,7 @@ export const Wind = {
       if (!Number.isNaN(p.px) && Math.abs(x - p.px) < 80 && Math.abs(y - p.py) < 80) { let b = 0; while (b < EDGES.length && speed > EDGES[b]) b++; buckets[b].push(p.px, p.py, x, y); }
       p.px = x; p.py = y;
     }
-    ctx.lineWidth = 1.3 * dpr; ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(1.3 * dpr, 1.1); ctx.lineCap = 'round';
     buckets.forEach((seg, b) => { if (!seg.length) return; ctx.strokeStyle = COLORS[b]; ctx.globalAlpha = 0.85; ctx.beginPath(); for (let i = 0; i < seg.length; i += 4) { ctx.moveTo(seg[i], seg[i + 1]); ctx.lineTo(seg[i + 2], seg[i + 3]); } ctx.stroke(); });
     ctx.globalAlpha = 1;
   },

@@ -157,6 +157,13 @@ try {
     if (!xy) return 'no satellite on screen'; await tap(xy[0], xy[1]); await sleep(1200);
     return (await p.eval(`document.querySelector('#card').classList.contains('show')`)) ? 'card opened for ' + xy[2] : 'tap missed ' + xy[2];
   });
+  await step('globe: Weather with wind', async () => {
+    await tapSel('#card .x'); if (!(await tapSel('[data-tab=explore]'))) return 'no Explore tab'; await sleep(500);
+    if (!(await tapSel('#msheet [data-go=weather]'))) return 'no Weather entry';
+    await p.poll(`window.OO3D && OO3D.Weather.end`, { timeoutMs: 40000 }); await sleep(5000); await tapSel('[data-set=wind]'); await sleep(6000);
+    return await p.eval(`document.querySelector('#wxTime').textContent`);
+  }, { gesture: true });
+  await step('globe: close Weather', async () => (await tapSel('#wx .x')) ? '' : 'no close button');
   await step('globe: pinch out to the Solar System', async () => {
     await tapSel('#card .x');
     let n = 0; for (; n < 24; n++) { await pinch(195, 420, 300, 50, 600); await sleep(250); if (await p.eval(`document.querySelector('iframe')?.style.opacity === '1'`)) break; }

@@ -11,7 +11,7 @@
 | `brand/tools/zoomtest.mjs` | real wheel events from Earth through the hand-off to the stars and back, frame by frame |
 | `brand/tools/mobile_journey.mjs` | a first visit A to Z on a phone: landing, globe, Solar System, 2D map, with touch, screenshots and a layout audit |
 | `brand/tools/webkit_journey.mjs` | the same journey in Safari's engine (Playwright WebKit) with an iPhone 15 profile |
-| `brand/tools/android_profile.mjs` | one gesture on the Android emulator with the JavaScript profiler on: `map`, `mapspace`, `mappinch`, `mapspacepinch`, `handoff`; `OO_CSS='…'` A/B tests a style, `OO_CALLERS='regex'` prints who calls a slow native function |
+| `brand/tools/android_profile.mjs` | one gesture on the Android emulator with the JavaScript profiler on: `map`, `mapspace`, `mappinch`, `mapspacepinch`, `handoff`, `weather`; `OO_CSS='…'` A/B tests a style, `OO_CALLERS='regex'` prints who calls a slow native function |
 
 All of them block the live feeds that must never see automated traffic (CelesTrak above all).
 
@@ -71,3 +71,17 @@ second when far out (1.1 s → 0.1 s of work); the docked-satellite check every 
 no depth readback from the GPU on every pinch step (`pickPositionSupported` off, 1.25 s); the Solar System's
 background texture uploads wait while a finger is down. Left: shader programs linking on first use at the hand-off
 (~0.3 s in three.js and Cesium each).
+
+### Weather mode on the Android emulator (2026-10-03)
+Measured with `android_profile.mjs weather` and the journey's "Weather with wind" step.
+
+| | before | after |
+|---|---|---|
+| Wind streaks, still | 35 fps | 54 fps |
+| Wind, dragging the globe | 32 fps | 56 fps |
+| Wind + temperature wash | 28 fps | 56 fps |
+
+What did it: on phones the wind canvas is 0.6 of the CSS pixels (the fade and composite of a full-screen canvas were the cost,
+not the particles) with 900 particles instead of 1,400; and weather mode skips the satellite and aircraft position updates
+while it has them hidden (580 ms of work per profile). Left: opening the mode makes Cesium link a new globe shader for the extra
+imagery layers (about 0.5 s, once), which a pre-warm at boot could hide.

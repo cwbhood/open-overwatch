@@ -1,7 +1,8 @@
 // android_profile.mjs — profile one interaction in Chrome on the Android emulator (see docs/TESTING.md):
-//   node android_profile.mjs map|mapspace|mappinch|mapspacepinch|handoff
+//   node android_profile.mjs map|mapspace|mappinch|mapspacepinch|handoff|weather
 // map: the 2D map, a 4-second finger drag after "Enter silent" and "Just show the map"; mapspace: the same after the Space
 // preset (ISS selected, its details sheet open, ground track drawn); mappinch / mapspacepinch: two pinches in and out instead.
+// weather: the globe, opening Weather mode and switching wind on (the stall while the layers appear).
 // handoff: the globe, pinching straight out to the Solar System right after it appears.
 // Prints frame timing, long tasks and where the main thread spent its time (self time by function).
 import { connect, sleep } from './cdp.mjs';
@@ -39,6 +40,9 @@ try {
       const cx = W / 2, cy = H * 0.35, n = 20, at = d => [[cx - d / 2, cy], [cx + d / 2, cy]];
       await touch('touchStart', at(d0)); for (let i = 1; i <= n; i++) { await touch('touchMove', at(d0 + (d1 - d0) * i / n)); await sleep(33); } await touch('touchEnd', []); await sleep(700);
     }
+  } else if (what === 'weather') {
+    await p.eval(`OO3D.Weather.open()`); await p.poll(`OO3D.Weather.end`, { timeoutMs: 40000 }); await sleep(7000);
+    await p.eval(`document.querySelector('[data-set=wind]').click()`); await sleep(6000);
   } else if (what.startsWith('map')) {
     for (let k = 0; k < 4; k++) {   // back and forth, 1 s each
       const x0 = W * 0.2, x1 = W * 0.8, y = H * 0.55; await touch('touchStart', [[k % 2 ? x1 : x0, y]]);

@@ -83,6 +83,7 @@ export const Sats = {
   },
   scratch: new C.Cartesian3(),
   update(now) { // extrapolate from the last worker tick (ECF, km): straight along v for a few seconds, else round the orbit
+    if (state.weather) return;   // weather mode hides every dot: no position work for ~19,000 of them
     const st = this.state; if (!st) return; const dt = (now - st.t) / 1000, b = st.buf, P = this.scratch, curve = Math.abs(dt) > 3;
     for (const s of this.list) {
       const i = s.idx * 6, x = b[i]; if (Number.isNaN(x)) { s.pt.show = false; continue; }

@@ -53,7 +53,7 @@ setInterval(() => SatModels.refresh(), 400);
 setInterval(() => AirModels.refresh(), 500);
 // aircraft dead reckoning: 4 times a second close in, once a second from high up (a quarter-second of flight is invisible
 // from 1,000 km, and each pass moves ~8,000 dots: the globe's biggest main-thread cost on a phone)
-{ let lastAir = 0; setInterval(() => { const now = Date.now(); if (now - lastAir < (camHeight() > 1.0e6 ? 1000 : 250)) return; lastAir = now; Air.update(now); }, 250); }
+{ let lastAir = 0; setInterval(() => { const now = Date.now(); if (state.weather) return; if (now - lastAir < (camHeight() > 1.0e6 ? 1000 : 250)) return; lastAir = now; Air.update(now); }, 250); }
 setInterval(() => Air.prune(), 30e3);
 
 /** Run a feed now and every `ms`. A failure is logged and retried on the next run; only one that keeps failing
