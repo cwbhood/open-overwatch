@@ -60,6 +60,7 @@ export function createUI({ camera, controls, clock, nav, story, small, deep, qua
     $('#card').style.display = 'block'; $('#card').dataset.key = b.key;
   }
   $('#cardX').onclick = () => showCard(null);
+  $('#follow').onclick = () => nav.release();
   $('#cardB').addEventListener('click', e => { const a = e.target.closest('a[href="globe.html"]'); if (a && window.OOSS?.embed?.active !== undefined && document.body.classList.contains('embedded')) { e.preventDefault(); window.OOSS.embed.goToEarth(); } });
   setInterval(() => { // live numbers, unless the reader is selecting text
     const k = $('#card').dataset.key, sel = getSelection();
@@ -158,6 +159,9 @@ export function createUI({ camera, controls, clock, nav, story, small, deep, qua
       } else { const B = BANDS[bi]; $('#sName').textContent = B[1]; if (started && !story.tour.on && !story.pulse.on) caption(B[2], B[3], B[4]); }
     }
     document.querySelectorAll('.rung').forEach((r, i) => r.classList.toggle('on', bi === -3 ? RUNGS[i][0] === 'Other worlds' : bi >= 0 && RUNGS[i][0] === BANDS[bi][1]));
+    const fc = $('#follow'), name = (nav.focus || byKey.sun).name, show = !nav.free && !!nav.focus && !(document.body.classList.contains('embedded') && nav.focus.key === 'earth');
+    fc.style.display = show ? '' : 'none'; if (show) fc.style.top = Math.round($('#top').getBoundingClientRect().bottom + 8) + 'px';   // under the header, which wraps to rows on a phone
+    if (show && fc.dataset.n !== name) { fc.dataset.n = name; $('#followN').textContent = name; }
     updateLabels(camSun, camFocus);
   }
 

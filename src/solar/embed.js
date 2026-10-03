@@ -27,7 +27,7 @@ export function createEmbed({ camera, controls, nav, clock, loop, update }) {
       if (s.live) clock.goLive(); else { clock.setJd(s.jd); clock.setRate(s.rate); }
       update(clock.jd);
       const earth = byKey.earth, off = new THREE.Vector3(s.offset.x, s.offset.y, s.offset.z).divideScalar(AU_M);
-      nav.focus = earth; nav.fly = null;
+      nav.focus = earth; nav.fly = null; nav.free = false;
       camera.fov = THREE.MathUtils.radToDeg(s.fovy); camera.updateProjectionMatrix();
       camera.position.copy(earth.pos).add(off);
       camera.up.set(s.up.x, s.up.y, s.up.z).normalize();

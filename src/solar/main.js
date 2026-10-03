@@ -37,7 +37,8 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 1e-9, 1e15);  // 150 m .. 16 billion light-years
 camera.up.set(0, 0, 1);
 const controls = new OrbitControls(camera, renderer.domElement);
-Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, zoomSpeed: 2.2, rotateSpeed: 0.6, enablePan: false, minDistance: 1e-6, maxDistance: 2.5e14 });   // out to ~4 billion light-years
+Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, zoomSpeed: 2.2, rotateSpeed: 0.6, enablePan: true, screenSpacePanning: true, minDistance: 1e-6, maxDistance: 2.5e14 });   // out to ~4 billion light-years
+controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;   // a two-finger pinch zooms and twists; it must not slide the view (pan: right-drag or ctrl/shift-drag on a computer)
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
 // planet formulae: 1800-2200 (good to 2050, plausible beyond)
@@ -66,9 +67,11 @@ const exo = createExoplanets({ scene, camera, renderer });
 
 // ---- navigation: focus a body and fly there (log-interpolated distance), then keep riding along with it
 const nav = {
-  focus: byKey.earth, fly: null,
+  focus: byKey.earth, fly: null, free: false,   // free: the camera stays put and orbits the point it looks at, instead of riding along with the focused body
+  release() { if (this.free) return; this.free = true; this.fly = null; controls.minDistance = 1e-6; ui.showCard(null); },
   focusOn(b, dist = null, dur = 2.2, card = true) {
     if (!b) return;
+    this.free = false;
     const sys = b.exo && exo.X.systems.find(s => s.host === b.host);
     const d1 = dist ?? (b.exo ? (sys ? exo.viewDistance(sys) : 0.25) : Math.max(b.radius * 4, b.kind === 'planet' ? b.radius * 3.2 : b.parent ? b.radius * 5 : 0.002));
     if (b.exo) exo.load().catch(() => {});
@@ -79,14 +82,17 @@ const nav = {
   flyDist(d, dur = 2) { this.fly = { from: controls.target.clone(), d0: camera.position.distanceTo(controls.target), d1: d, t0: performance.now(), dur: dur * 1000 }; },
   frame() {
     const p = this.focus.pos;
+    if (this.free && !this.fly) return;
     if (this.fly) {
       const s = Math.min(1, (performance.now() - this.fly.t0) / this.fly.dur), e = s < 0.5 ? 4 * s * s * s : 1 - Math.pow(-2 * s + 2, 3) / 2;
       const dir = camera.position.clone().sub(controls.target).normalize(), target = this.fly.from.clone().lerp(p, e);
       controls.target.copy(target); camera.position.copy(target).addScaledVector(dir, Math.exp(Math.log(this.fly.d0) + (Math.log(this.fly.d1) - Math.log(this.fly.d0)) * e));
       if (s >= 1) this.fly = null;
-    } else { camera.position.add(p.clone().sub(controls.target)); controls.target.copy(p); }
+    } else if (!this.free) { camera.position.add(p.clone().sub(controls.target)); controls.target.copy(p); }
   },
 };
+renderer.domElement.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && (e.button === 2 || e.ctrlKey || e.shiftKey || e.metaKey)) nav.release(); }, true);   // panning leaves the body behind
+addEventListener('keydown', e => { if (e.key === 'Escape' && !/input|textarea/i.test(e.target.tagName)) nav.release(); });
 const lightDelay = createLightDelay({ scene, nav });
 const story = createStory({ scene, clock, nav, caption: (...a) => ui.caption(...a), onTourChange: on => ui.tourLabel(on) });
 const quality = createQuality({ renderer, small, onAutoChange: q => { ui.renderLayers(); ui.caption(`Graphics set to ${q.name}`, 'Lowered automatically for smoother motion. You can change it in the layer panel.', '', 5000); } });

@@ -81,6 +81,8 @@ a{color:var(--accent)}
 #cap small{display:block;margin-top:5px;color:var(--dim);font:500 11px/1.4 var(--mono)}
 #cap.hide{opacity:0;pointer-events:none}
 
+#follow{position:fixed;left:50%;top:78px;transform:translateX(-50%);z-index:6;display:flex;gap:10px;align-items:center;padding:7px 12px;border-radius:999px;color:var(--ink);font:500 12px/1 var(--mono);cursor:pointer;white-space:nowrap;max-width:calc(100vw - 24px)}
+#follow b{color:var(--accent);font-weight:600} #follow i{font-style:normal;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;font-size:10.5px} #follow:hover i{color:var(--ink)}
 #card{position:fixed;right:14px;top:90px;width:300px;padding:14px 16px;z-index:5;display:none;max-height:calc(100% - 210px);overflow:auto}
 #card h2{margin:0 0 2px;font:900 24px/1.05 var(--display);letter-spacing:.05em;text-transform:uppercase}
 #card .k{font:500 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
@@ -176,6 +178,7 @@ a{color:var(--accent)}
   <div class="scale"><b id="sName">Solar System</b><span id="sDist">—</span></div>
   <div id="rungs" style="display:flex;gap:2px"></div>
 </div>
+<button id="follow" class="glass" style="display:none" title="Stop riding along with it: the camera stays where it is (Esc). Right-drag, or ctrl-drag, moves the view."><span>Riding with <b id="followN"></b></span><i>✕ let go</i></button>
 <div id="cap" class="glass hide"><b id="capT"></b><p id="capP"></p><small id="capS"></small></div>
 <div id="card" class="glass"><button class="x" id="cardX" aria-label="Close">✕</button><div id="cardB"></div></div>
 <div id="credits">Planet maps: <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope</a> (CC BY 4.0) ·
