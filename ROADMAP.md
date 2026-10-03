@@ -46,7 +46,7 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] Performance numbers + fixes (docs/PERFORMANCE.md, brand/tools/perf.mjs): shader pre-warm, graphics levels with auto step-down, software-GPU hint, phone header fix
 - [x] First-visit phone journey, emulated (brand/tools/mobile_journey.mjs): load times halved, touch picking, layout fixes on all three views
 - [ ] Real-phone pass on the published beta (iPhone Safari + Android Chrome: a real GPU, memory limits) and README numbers
-- [ ] 30-second capture of the full zoom
+- [x] 30-second capture of the full zoom (brand/tools/zoom_capture.mjs → brand/clip/, full 1080×1920 in brand/video/)
 - [ ] Decide how the public history looks (squash / fresh repo) — the user's call
 - [ ] Publish as v0.9.1
 
