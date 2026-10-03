@@ -17,6 +17,7 @@ import { Conj } from './conjunctions.js';
 import { LookUp } from './lookup.js';
 import { Eclipses } from './eclipses.js';
 import { initMobile } from './mobile.js';
+import { initNavpad } from './navpad.js';
 import { toggle as toggleNerd } from './nerd.js';
 
 function applyVisibility() {
@@ -40,6 +41,7 @@ PRESETS.lookup = () => { hooks.clearPresets(); LookUp.enter(); };
 PRESETS.eclipses = () => Eclipses.openList();
 hooks.toggleNerd = toggleNerd;
 initMobile();   // phones only: the bottom dock
+initNavpad();   // everything else: zoom, north and reset buttons
 $('#luExit').onclick = () => LookUp.leave();
 addEventListener('keydown', e => { if (e.key === 'Escape' && LookUp.active) LookUp.leave(); });
 setInterval(() => SatModels.refresh(), 400);

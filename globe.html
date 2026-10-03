@@ -144,6 +144,12 @@ body.m .m-sheet.show{transform:none;opacity:1;pointer-events:auto}
 .m-rate{min-height:48px;border-radius:10px;border:1px solid var(--edge-dim);background:rgba(230,237,243,.03);color:var(--ink);font:600 12px/1 var(--mono)} .m-rate.on{color:#04060a;background:var(--accent);border-color:var(--accent)}
 body.m #dock{bottom:calc(86px + env(safe-area-inset-bottom,0px))} body.m #card{bottom:calc(100px + env(safe-area-inset-bottom,0px))} body.m #credits{bottom:calc(86px + env(safe-area-inset-bottom,0px))} body.m #toast{bottom:calc(104px + env(safe-area-inset-bottom,0px))}
 body.lookup .m-dock,body.lookup .m-sheet,body.lookup .m-scrim{display:none!important}
+/* desktop navigation pad (src/globe/navpad.js; not built on phones, which have the dock) */
+#navpad{position:fixed;right:14px;bottom:48px;z-index:5;display:flex;flex-direction:column;gap:2px;padding:4px}
+#navpad button{width:40px;height:40px;border-radius:9px;border:1px solid transparent;background:none;color:var(--ink);font:500 20px/1 var(--body);display:flex;align-items:center;justify-content:center;cursor:pointer}
+#navpad button:hover{border-color:var(--edge-dim);background:rgba(230,237,243,.05)} #navpad button:active{background:rgba(125,255,166,.1)}
+#navpad svg{width:22px;height:22px;transition:transform .15s} #navpad #npNorth.askew{border-color:var(--edge);box-shadow:0 0 12px rgba(125,255,166,.18)}
+body.lookup #navpad{display:none}
 </style>
 </head>
 <body>
