@@ -12,7 +12,7 @@ const $ = s => document.querySelector(s);
 const RATES = { '-6': -365.25, '-4': -1, '0': 0, '1': REAL_TIME, '4': 1, '5': 30.44, '6': 365.25 };
 const RATE_TEXT = { '-6': '1 year per second, backwards', '-4': '1 day per second, backwards', '0': 'paused', '1': 'real time', '4': '1 day per second', '5': '1 month per second', '6': '1 year per second' };
 
-export function createUI({ camera, controls, clock, nav, story, small, deep, quality }) {
+export function createUI({ camera, controls, clock, nav, story, small, deep, quality, exo }) {
   // ---- captions (a "locked" caption, from the tour or a button, isn't overwritten by scale-band captions)
   let capTimer = 0, capLock = 0;
   function caption(t, p, s, ms = 9000, lock = false) {
@@ -80,6 +80,8 @@ export function createUI({ camera, controls, clock, nav, story, small, deep, qua
     if (b.star) return camSun > 0.3 * LY_AU && b.vis;                              // the brightest few, once out among them
     if (b.here) return camSun > 30 * LY_AU;
     if (b.bubble) return camSun > 12 * LY_AU && camSun < 3000 * LY_AU;               // the radio bubble
+    if (b.exoPlanet) return camera.position.distanceTo(b.pos) < 3;                   // planets of the system you are in
+    if (b.exo) return b === nav.focus || (camSun > 2 * LY_AU && camSun < 2e4 * LY_AU);  // labelled planetary systems
     if (b.web) return camSun > 2.5e7 * LY_AU;                                    // galaxy clusters
     if (b.far) return (camSun > 3000 * LY_AU || (b.key === 'gc' && camSun > 800 * LY_AU)) && camSun < 4e7 * LY_AU;
     if (b.key === 'sun') return camSun < 30 * LY_AU;
@@ -123,6 +125,8 @@ export function createUI({ camera, controls, clock, nav, story, small, deep, qua
     const out = bodies.filter(b => !b.transient && b.name.toLowerCase().includes(q)).map(b => ({ name: b.name, kind: b.kind, go: () => nav.focusOn(b) }));
     for (const n of small.search(q, 14)) if (out.length < 14 && !out.some(o => o.name === n[2]))
       out.push({ name: n[2], kind: 'asteroid', go: () => { const b = small.asteroidBody(n); if (b) nav.focusOn(b, Math.max(b.pos.length() * 0.15, 0.05)); } });
+    if (exo) for (const s of exo.search(q, 6)) if (!out.some(o => o.name === s.host))
+      out.push({ name: s.host, kind: `${s.pl.length} planet${s.pl.length > 1 ? 's' : ''} · ${Math.round(s.ly)} ly`, go: () => nav.focusOn(exo.hostBody(s), exo.viewDistance(s)) });
     hits = out.sort((a, b) => (b.name.toLowerCase().startsWith(q) ? 1 : 0) - (a.name.toLowerCase().startsWith(q) ? 1 : 0)).slice(0, 14); sel = 0;
     $('#hits').innerHTML = hits.map((h, i) => `<button data-i="${i}" class="${i ? '' : 'sel'}">${esc(h.name)}<small>${esc(h.kind)}</small></button>`).join('') || '<div class="note">Nothing found</div>';
     $('#hits').style.display = 'block';
@@ -142,13 +146,18 @@ export function createUI({ camera, controls, clock, nav, story, small, deep, qua
     if (performance.now() - lastDate > 200) { lastDate = performance.now(); $('#tDate').textContent = formatUtc(clock.jd, { suffix: PHONE ? '' : ' UTC' }); syncRate(); }
     $('#sDist').textContent = 'View ' + viewWidth(2 * camFocus * Math.tan(camera.fov * Math.PI / 360) * camera.aspect) + ' wide';
     const f = nav.focus || byKey.sun, close = camFocus < 0.05 && f.key !== 'earth' && f.key !== 'moon';   // close in, name the body instead
-    const bi = close ? -2 : BANDS.findIndex(b => camSun < b[0]);
+    const inSystem = exo && exo.X.built && camera.position.distanceTo(exo.X.built.hostPos) < 30;   // inside another star's system
+    const bi = close ? -2 : inSystem ? -3 : BANDS.findIndex(b => camSun < b[0]);
     if (bi !== band || (close && $('#sName').textContent !== f.name)) {
       band = bi;
       if (close) $('#sName').textContent = f.name;
-      else { const B = BANDS[bi]; $('#sName').textContent = B[1]; if (started && !story.tour.on && !story.pulse.on) caption(B[2], B[3], B[4]); }
+      else if (inSystem) {
+        const s = exo.X.built.s, hz = s.pl.filter(p => p[11]).length;
+        $('#sName').textContent = 'Other worlds';
+        if (started && !story.tour.on && !story.pulse.on) caption(s.host + ': another solar system', `${s.pl.length} known planet${s.pl.length > 1 ? 's' : ''}${hz ? `, ${hz} in the habitable zone (green band)` : ''}, ${Math.round(s.ly)} light-years from us. They move with the clock; speed it up to watch them orbit.`, 'From the NASA Exoplanet Archive.');
+      } else { const B = BANDS[bi]; $('#sName').textContent = B[1]; if (started && !story.tour.on && !story.pulse.on) caption(B[2], B[3], B[4]); }
     }
-    document.querySelectorAll('.rung').forEach((r, i) => r.classList.toggle('on', bi >= 0 && RUNGS[i][0] === BANDS[bi][1]));
+    document.querySelectorAll('.rung').forEach((r, i) => r.classList.toggle('on', bi === -3 ? RUNGS[i][0] === 'Other worlds' : bi >= 0 && RUNGS[i][0] === BANDS[bi][1]));
     updateLabels(camSun, camFocus);
   }
 

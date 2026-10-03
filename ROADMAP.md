@@ -30,6 +30,13 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] Major moons (Mars to Pluto, 20): Horizons-fitted orbits, tidally locked, orbit lines and labels near their planet
 - [x] Cosmic-web finale: 43,480 2MRS galaxies, cluster labels on the real overdensities, a ladder rung and the tour's last stop
 
+## Stage 2b — the overkill wow (2026-10-02)
+- [x] Light delay (ghost where Earth sees the focused body) and our radio bubble (since 1920, stars inside tinted)
+- [x] Other solar systems: 6,339 NASA exoplanets at their stars; fly into any system (real sizes, habitable zone, transit-timed positions)
+- [ ] Look-up mode on phones (sensors: what is above you right now)
+- [ ] Total solar eclipse of 2 August 2027: the Moon's shadow on the globe, next eclipse from your place
+- [ ] Accuracy + nerd panel (error vs JPL, fps, data age)
+
 ## Stage 3 — launch like engineers
 - [x] Performance numbers + fixes (docs/PERFORMANCE.md, brand/tools/perf.mjs): shader pre-warm, graphics levels with auto step-down, software-GPU hint, phone header fix
 - [x] First-visit phone journey, emulated (brand/tools/mobile_journey.mjs): load times halved, touch picking, layout fixes on all three views

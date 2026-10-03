@@ -15,6 +15,7 @@ import { createSpacecraft } from './spacecraft.js';
 import { createDeepSpace } from './deepspace.js';
 import { createCosmicWeb } from './cosmic.js';
 import { createLightDelay } from './lightdelay.js';
+import { createExoplanets } from './exoplanets.js';
 import { createStory } from './story.js';
 import { createUI } from './ui.js';
 import { createEmbed, EMBED } from './embed.js';
@@ -48,6 +49,7 @@ const sunView = new THREE.Vector3();   // the Sun in view space: every lit shade
   { id: 'moons', name: 'Moons', c: '#cfd3da', on: true, n: 0 }, { id: 'dwarfs', name: 'Dwarf planets', c: '#e8cfb0', on: true }, { id: 'asteroids', name: 'Asteroids', c: '#c8b89e', on: true, n: 0 },
   ...CLASS_LAYERS, { id: 'comets', name: 'Comets', c: '#bfe3ff', on: true }, { id: 'craft', name: 'Spacecraft', c: '#ffb44d', on: true, n: 0 },
   { id: 'stars', name: 'Stars near the Sun (HYG)', c: '#fff3d6', on: true, n: 0 }, { id: 'radio', name: 'Our radio bubble', c: '#7dffa6', on: true },
+  { id: 'exo', name: 'Planets of other stars (NASA)', c: '#6fe0ff', on: true },
   { id: 'lightdelay', name: 'Light delay (as seen from Earth)', c: '#7dffa6', on: true }, { id: 'galaxy', name: 'Milky Way & galaxies', c: '#b6c6ff', on: true },
 ].forEach(defineLayer);
 
@@ -59,13 +61,16 @@ const small = createSmallBodies({ scene, renderer });
 const craft = createSpacecraft({ scene });
 const deep = createDeepSpace({ scene, camera, renderer });
 const web = createCosmicWeb({ scene, renderer });
+const exo = createExoplanets({ scene, camera, renderer });
 
 // ---- navigation: focus a body and fly there (log-interpolated distance), then keep riding along with it
 const nav = {
   focus: byKey.earth, fly: null,
   focusOn(b, dist = null, dur = 2.2, card = true) {
     if (!b) return;
-    const d1 = dist ?? Math.max(b.radius * 4, b.kind === 'planet' ? b.radius * 3.2 : b.parent ? b.radius * 5 : 0.002);
+    const sys = b.exo && exo.X.systems.find(s => s.host === b.host);
+    const d1 = dist ?? (b.exo ? (sys ? exo.viewDistance(sys) : 0.25) : Math.max(b.radius * 4, b.kind === 'planet' ? b.radius * 3.2 : b.parent ? b.radius * 5 : 0.002));
+    if (b.exo) exo.load().catch(() => {});
     this.fly = { from: controls.target.clone(), d0: camera.position.distanceTo(controls.target), d1, t0: performance.now(), dur: dur * 1000 };
     this.focus = b; controls.minDistance = Math.max(b.radius * 1.15, 1e-7);
     ui.showCard(card ? b : null);
@@ -84,7 +89,8 @@ const nav = {
 const lightDelay = createLightDelay({ scene, nav });
 const story = createStory({ scene, clock, nav, caption: (...a) => ui.caption(...a), onTourChange: on => ui.tourLabel(on) });
 const quality = createQuality({ renderer, small, onAutoChange: q => { ui.renderLayers(); ui.caption(`Graphics set to ${q.name}`, 'Lowered automatically for smoother motion. You can change it in the layer panel.', '', 5000); } });
-const ui = createUI({ camera, controls, clock, nav, story, small, deep, quality });
+const ui = createUI({ camera, controls, clock, nav, story, small, deep, quality, exo });
+exo.onChange = () => { applyLayers(); ui.renderLayers(); };
 small.onChange = () => ui.renderLayers();
 if (quality.software) setTimeout(() => ui.caption('Slow graphics', SOFTWARE_HINT, '', 15000), 10e3);
 
@@ -114,7 +120,7 @@ function frame(t) {
   view.camSun = camera.position.length(); view.camFocus = camera.position.distanceTo(controls.target); view.jd = clock.jd;
   sunView.set(0, 0, 0).applyMatrix4(camera.matrixWorldInverse);
   Sharpen.tick();
-  sky.frame(view); planets.frame(view); moons.frame(view); small.frame(view); craft.frame(view); deep.frame(view); web.frame(view); lightDelay.frame(view);
+  sky.frame(view); planets.frame(view); moons.frame(view); small.frame(view); craft.frame(view); deep.frame(view); web.frame(view); exo.frame(view); lightDelay.frame(view);
   story.updatePulse(); ui.frame(view);
   renderer.render(scene, camera);
   embed.api.ready = true;
@@ -166,4 +172,4 @@ loads.forEach(settle);
 }
 applyLayers();
 
-window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, moons, quality, web, nav, story, renderer, LY: LY_AU, embed: embed.api, loop };
+window.OOSS = { THREE, scene, camera, controls, clock, bodies, byKey, small, moons, quality, web, exo, nav, story, renderer, LY: LY_AU, embed: embed.api, loop };

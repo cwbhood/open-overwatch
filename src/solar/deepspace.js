@@ -142,7 +142,8 @@ export function createDeepSpace({ scene, camera, renderer }) {
       const rLy = Math.max(0, simYear - RADIO_YEAR), rAU = rLy * LY_AU, radioOn = layerOn('radio');
       starUniforms.uBubble.value = rAU; starUniforms.uBubbleOn.value = radioOn ? fade(8, 40, camSun, 'ly') : 0;
       bubble.scale.setScalar(Math.max(rAU, 1)); bubbleBody.pos.set(0, 0, rAU);
-      bubble.material.uniforms.k.value = radioOn ? 0.45 * fade(8, 60, camSun, 'ly') * (1 - fade(3000, 2e4, camSun, 'ly')) : 0;
+      const outside = THREE.MathUtils.smoothstep(camera.position.length(), rAU * 1.05, rAU * 1.6);   // only seen from outside it
+      bubble.material.uniforms.k.value = radioOn ? 0.38 * outside * (1 - fade(3000, 2e4, camSun, 'ly')) : 0;
       bubble.visible = bubble.material.uniforms.k.value > 0.002;
       starUniforms.uFade.value = fade(0.02, 0.4, camSun, 'ly') * (1 - fade(2e4, 8e4, camSun, 'ly'));
       if (starPoints) starPoints.visible = layerOn('stars') && starUniforms.uFade.value > 0.002;

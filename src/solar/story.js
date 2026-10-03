@@ -26,7 +26,7 @@ export const BANDS = [
 // [ladder label, focus key, distance (AU)]; the label matches a band name so the ladder can light up
 export const RUNGS = [
   ['Earth & Moon', 'earth', 0.008], ['Inner Solar System', 'sun', 4.2], ['Asteroid belt', 'sun', 10], ['Outer planets', 'sun', 85],
-  ['Kuiper belt & heliopause', 'sun', 190], ['Voyager', 'craft:Voyager 1', 60], ['Oort cloud', 'sun', 2.6e5], ['Nearest stars', 'sun', 22 * LY_AU],
+  ['Kuiper belt & heliopause', 'sun', 190], ['Voyager', 'craft:Voyager 1', 60], ['Oort cloud', 'sun', 2.6e5], ['Nearest stars', 'sun', 22 * LY_AU], ['Other worlds', 'exo:TRAPPIST-1', 0.17],
   ['Stellar neighbourhood', 'sun', 400 * LY_AU], ['Milky Way', 'gc', 1.7e5 * LY_AU], ['Local Group', 'gc', 4.2e6 * LY_AU], ['Cosmic web', 'sun', 7e8 * LY_AU],
 ];
 export const RUNG_SHORT = { 'Inner Solar System': 'Inner planets', 'Kuiper belt & heliopause': 'Kuiper belt', 'Stellar neighbourhood': 'Neighbourhood' };
@@ -42,6 +42,7 @@ const TOUR = [ // focus key, distance (AU), title, text, hold (ms)
   ['craft:Voyager 1', 60, 'Voyager 1', 'Launched in 1977, now the most distant human-made object. Its signals take almost a day to reach us.', 7000],
   ['sun', 2.6e5, 'The Oort cloud', 'A shell of comets out to perhaps 100,000 AU. The Sun is now just a bright star.', 7000],
   ['sun', 22 * LY_AU, 'The nearest stars', 'Proxima Centauri, 4.24 light-years away. Light from it left more than four years ago.', 7000],
+  ['exo:TRAPPIST-1', 0.17, 'Another solar system', 'TRAPPIST-1, 40 light-years away: seven Earth-sized planets, three in the habitable zone, all closer to their star than Mercury is to ours. They move at their real speed.', 10000],
   ['gc', 1.7e5 * LY_AU, 'The Milky Way', 'Our galaxy: we orbit 26,000 light-years from its centre.', 8000],
   ['gc', 4.2e6 * LY_AU, 'The Local Group', 'Andromeda, 2.5 million light-years away, and our other neighbours.', 8000],
   ['sun', 7e8 * LY_AU, 'The cosmic web', '43,480 real galaxies placed by their redshift: clusters, walls and voids, out to about 2 billion light-years. Every dot is a galaxy like ours.', 10000],
