@@ -106,6 +106,7 @@ Sats.load().catch(e => toast('Satellites failed: ' + e.message));
     const now = performance.now();
     if (now - t0 < (PHONE ? 15e3 : 10e3) || (PHONE && now - lastInput < 3000)) return;
     clearInterval(wait); (window.requestIdleCallback || setTimeout)(() => Space.preload());
+    setTimeout(function warm() { if (PHONE && performance.now() - lastInput < 3000) return setTimeout(warm, 2000); Weather.prewarm(); }, 6000);   // weather's first open would otherwise freeze the globe ~0.6 s
   }, 1000);
 }
 every(15 * 60e3, () => Air.opensky(), 'Civil aircraft');

@@ -132,6 +132,21 @@ export const Weather = {
     this.layers.clear(); Earth.apply(); hooks.applyVisibility(); viewer.scene.requestRender();
     document.querySelector('[data-go="weather"]')?.classList.remove('on');
   },
+  /** Opening weather the first time froze the globe for ~0.6 s (Cesium links a new globe shader for every count of imagery layers
+   *  on a tile; later opens are smooth because the programs stay cached). Here a few blank layers (a 1 px data: image, no
+   *  network) are shown for a moment while the page is idle, one more every few frames, so those programs are built before
+   *  anyone asks. Layer properties matter (alpha below 1 is a shader flag), so they match the real ones. */
+  prewarm() {
+    if (this.warmed || this.on || state.weather || Earth.hidden) return; this.warmed = true;
+    const px = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    const layers = []; let frames = 0;
+    const off = viewer.scene.postRender.addEventListener(() => {
+      frames++;
+      if (frames % 4 === 1 && layers.length < 5) { const l = viewer.imageryLayers.addImageryProvider(new C.UrlTemplateImageryProvider({ url: px, maximumLevel: 3 })); l.alpha = 0.9; layers.push(l); }
+      if (frames >= 40 || this.on) { off(); for (const l of layers) viewer.imageryLayers.remove(l, true); viewer.scene.requestRender(); }
+    });
+    viewer.scene.requestRender();
+  },
   toggle() { this.on ? this.close() : this.open(); },
   build() {
     $('#wxSets').innerHTML = Object.entries(this.sets).map(([id, s]) => `<button class="chipbtn${s.on ? ' on' : ''}" data-set="${id}">${s.name}</button>`).join('');

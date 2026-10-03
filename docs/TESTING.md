@@ -62,7 +62,7 @@ Simulator, install Xcode (free) on a Mac and open the site in the Simulator's Sa
 | Zoom out to the Solar System | 8 long tasks, 2.4 s | 0 long tasks, 54 fps |
 | Solar System drag + pinch | 53 fps | 60 fps |
 | 2D map drag + pinch | 27-49 fps (noisy) | 60 fps |
-| Opening Weather (once) | 12 long tasks, 2.2 s | 8 long tasks, 2.4 s |
+| Opening Weather, first time | 12 long tasks, 2.2 s (a layer-count shader build, 0.6 s, plus tile uploads) | the 0.6 s moves to an idle moment ~16 s after load (`Weather.prewarm`); the open itself: 0 long tasks when run after idle. Opened straight after a busy gesture sequence (the journey) it can still land inside the step |
 | iPhone profile (WebKit) | all steps pass | all steps pass, no errors |
 | Desktop zoom, Earth to the stars | p95 6.2 ms | p95 6.2 ms, no frame over 50 ms |
 
