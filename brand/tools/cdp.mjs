@@ -28,7 +28,8 @@ class Connection {
   constructor(ws) {
     this.ws = ws; this.nextId = 1; this.pending = new Map(); this.handlers = new Map(); this.closed = false;
     ws.addEventListener('message', e => this._onMessage(e.data));
-    ws.addEventListener('close', () => {
+    ws.addEventListener('close', ev => {
+      if (process.env.OO_CDP_DEBUG) console.error('[cdp] websocket closed', ev.code, ev.reason || '', [...this.pending.values()].map(p => p.method).join(','));
       this.closed = true;
       for (const [, p] of this.pending) p.reject(new Error(`CDP connection closed (pending ${p.method})`));
       this.pending.clear();
@@ -214,4 +215,26 @@ async function launchOnce({ exe = EDGE, profileRoot = WORK, headless = true, arg
   browser._exitHook = () => { if (!browser.closed && proc.exitCode == null) { try { spawnSync('taskkill.exe', ['/PID', String(proc.pid), '/T', '/F'], { windowsHide: true }); } catch (e) { } } };
   process.on('exit', browser._exitHook);
   return browser;
+}
+
+/**
+ * Attach to a browser that is already running (e.g. Chrome in the Android emulator, after
+ * `adb forward tcp:9333 localabstract:chrome_devtools_remote`). close() only drops the connection and closes the tabs
+ * this script opened; it never kills anything.
+ */
+export async function connect(httpEndpoint = 'http://127.0.0.1:9333') {
+  const { webSocketDebuggerUrl } = await (await fetch(httpEndpoint + '/json/version')).json();
+  const ws = new WebSocket(webSocketDebuggerUrl);
+  await new Promise((resolve, reject) => { ws.addEventListener('open', resolve, { once: true }); ws.addEventListener('error', () => reject(new Error('WebSocket error')), { once: true }); });
+  const conn = new Connection(ws), opened = [];
+  return {
+    conn, remote: true,
+    send: (m, p, t) => conn.send(m, p, undefined, t),
+    async newPage(url = 'about:blank') {
+      const { targetId } = await conn.send('Target.createTarget', { url }); opened.push(targetId);
+      const { sessionId } = await conn.send('Target.attachToTarget', { targetId, flatten: true });
+      return new Session(conn, sessionId, targetId);
+    },
+    async close() { for (const id of opened) await conn.send('Target.closeTarget', { targetId: id }).catch(() => {}); try { ws.close(); } catch (e) { } },
+  };
 }

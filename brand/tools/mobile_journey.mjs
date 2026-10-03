@@ -6,11 +6,27 @@
 // bytes downloaded, JS heap, and a layout audit (sideways overflow, panels off screen or overlapping, small tap targets,
 // tiny text). Summary table at the end; everything in brand/perf/mobile/report.json. Live feeds that must never see
 // automated traffic are blocked, as in globe_shot.mjs.
-import { launch, sleep } from './cdp.mjs';
+import { launch, connect, sleep } from './cdp.mjs';
+// OO_ANDROID=1: run on real Chrome in the Android emulator instead (adb reverse tcp:8787 tcp:8787 and
+// adb forward tcp:9333 localabstract:chrome_devtools_remote first): its own screen, CPU and GPU, no emulation.
+const ANDROID = process.env.OO_ANDROID === '1';
+// the emulator's adbd sometimes resets its connection ("timeout expired while flushing socket"), which drops every
+// adb forward/reverse: re-make both links before each step (idempotent, ~50 ms)
+import { spawnSync } from 'node:child_process';
+import { join } from 'node:path';
+const ADB = join(process.env.LOCALAPPDATA || '', 'Android', 'Sdk', 'platform-tools', 'adb.exe');
+// only re-make a link that is missing: replacing a live forward cuts the DevTools connection running through it
+const adb = (...a) => spawnSync(ADB, a, { windowsHide: true, encoding: 'utf8' }).stdout || '';
+const adbLinks = () => {
+  if (!ANDROID) return;
+  if (!adb('reverse', '--list').includes('tcp:8787')) adb('reverse', 'tcp:8787', 'tcp:8787');
+  if (!adb('forward', '--list').includes('chrome_devtools_remote')) adb('forward', 'tcp:9333', 'localabstract:chrome_devtools_remote');
+};
+adbLinks();
 import { writeFile, mkdir } from 'node:fs/promises';
 
 const BASE = process.argv[2] || 'http://localhost:8787/';
-const OUT = new URL('../perf/mobile/', import.meta.url);
+const OUT = new URL(ANDROID ? '../perf/android/' : '../perf/mobile/', import.meta.url);
 await mkdir(OUT, { recursive: true });
 const W = 390, H = 844;
 const NET = process.env.OO_NET === 'slow' ? { latency: 150, downloadThroughput: 1.6e6 / 8, uploadThroughput: 0.75e6 / 8 } : { latency: 60, downloadThroughput: 9e6 / 8, uploadThroughput: 1.5e6 / 8 };
@@ -40,17 +56,19 @@ const AUDIT = `(() => {
   return out;
 })()`;
 
-const b = await launch({ windowSize: [W, H], args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', '--enable-unsafe-swiftshader'] });
+const b = ANDROID ? await connect() : await launch({ windowSize: [W, H], args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=d3d11', '--enable-unsafe-swiftshader'] });
 const report = [];
 try {
   const p = await b.newPage();
   await p.send('Page.enable'); await p.send('Runtime.enable'); await p.send('Network.enable'); await p.send('Performance.enable'); await p.send('Log.enable');
   await p.send('Network.setBlockedURLs', { urls: ['*celestrak.org*', '*opensky-network.org*', '*adsb.lol*', '*adsb.fi*', '*airplanes.live*', '*earthquake.usgs.gov*', '*wheretheiss.at*'] });
   await p.send('Network.emulateNetworkConditions', { offline: false, ...NET });
-  await p.send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 3, mobile: true, screenWidth: W, screenHeight: H });
-  await p.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
-  await p.send('Emulation.setUserAgentOverride', { userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Mobile Safari/537.36', platform: 'Android' });
-  await p.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  if (!ANDROID) {
+    await p.send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 3, mobile: true, screenWidth: W, screenHeight: H });
+    await p.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+    await p.send('Emulation.setUserAgentOverride', { userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Mobile Safari/537.36', platform: 'Android' });
+    await p.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  }
   let bytes = 0, errors = [];
   p.on('Network.loadingFinished', e => { bytes += e.encodedDataLength; });
   p.on('Runtime.exceptionThrown', e => errors.push('exception: ' + (e.exceptionDetails.exception?.description || e.exceptionDetails.text).split('\n')[0].slice(0, 160)));
@@ -79,6 +97,7 @@ try {
     return f.length ? { frames: f.length, fps: +(1000 * f.length / f.reduce((a, c) => a + c, 0)).toFixed(0), p50: +s[s.length >> 1].toFixed(0), p95: +s[Math.floor(s.length * 0.95)].toFixed(0), worst: +s[s.length - 1].toFixed(0), longTasks: lt.length, longMs: Math.round(lt.reduce((a, c) => a + c, 0)) } : null; };
   let n = 0;
   async function step(name, fn, { gesture = false } = {}) {
+    adbLinks();
     const e0 = errors.length, b0 = bytes, t0 = Date.now();
     if (gesture) await startFrames().catch(() => {});
     let note = '';
@@ -87,8 +106,13 @@ try {
     const m = Object.fromEntries((await p.send('Performance.getMetrics')).metrics.map(x => [x.name, x.value]));
     const audit = await p.eval(AUDIT).catch(e => ({ error: e.message }));
     const file = `${String(++n).padStart(2, '0')}-${name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.png`;
-    const shot = await p.send('Page.captureScreenshot', { format: 'png' }).catch(() => null);
-    if (shot) await writeFile(new URL(file, OUT), Buffer.from(shot.data, 'base64'));
+    if (ANDROID) {   // Android's own screen capture: a big DevTools screenshot of a WebGL page reset the adb link every time
+      const png = spawnSync(ADB, ['exec-out', 'screencap', '-p'], { windowsHide: true, maxBuffer: 64e6 }).stdout;
+      if (png && png.length) await writeFile(new URL(file, OUT), png);
+    } else {
+      const shot = await p.send('Page.captureScreenshot', { format: 'png' }).catch(() => null);
+      if (shot) await writeFile(new URL(file, OUT), Buffer.from(shot.data, 'base64'));
+    }
     const r = { step: name, s: +((Date.now() - t0) / 1000).toFixed(1), mb: +((bytes - b0) / 1e6).toFixed(1), heapMB: Math.round(m.JSHeapUsedSize / 1e6), frames, errors: errors.slice(e0), audit, note, file };
     report.push(r);
     const f = frames ? `${frames.fps} fps p95 ${frames.p95} worst ${frames.worst} ms, ${frames.longTasks} long tasks (${frames.longMs} ms)` : '';
