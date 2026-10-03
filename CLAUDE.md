@@ -4,7 +4,7 @@ Live open-data situation views on a static site: a 2D map (Leaflet), a 3D Earth 
 Local Group view (three.js). No build step; ES modules from `src/`, libraries via CDN import maps.
 
 **Status: v0.9.1 (the rebuild) published 2026-10-02 at the user's request. Publish only when the user asks: never push,
-tag, run `Publish Update.bat` or deploy on your own. Local commits are fine. Versions stay in 0.9.x (next: v0.9.2).**
+tag, run `Publish Update.bat` or deploy on your own. Local commits are fine. Versions stay tiny: next is v0.9.2.1, then v0.9.2.2.**
 
 Read first: `ROADMAP.md` (what's next, tick boxes as you go) · `docs/ARCHITECTURE.md` (structure, units, frames) ·
 `docs/NOTES.md` (per-view lessons, publishing pipeline, 2D map layer contract, feed status, Blender) — read only the
