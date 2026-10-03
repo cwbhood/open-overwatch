@@ -1,7 +1,7 @@
 # Roadmap — the rebuild
 
-Work happens on the local `rebuild` branch. **Release freeze:** nothing is pushed, tagged or deployed until the whole
-chunk below is done and reviewed; the next public version will be v0.9.1. (`git push` on this branch fails on purpose.)
+Work happens on the local `rebuild` branch. Nothing is pushed, tagged or deployed until the user says so (a local
+pre-push hook refuses pushes without OO_PUSH_OK=1). Published: v0.9.1 (2026-10-02), v0.9.2.1 (2026-10-03); next v0.9.2.2.
 
 Goal: one coherent, well-engineered project that zooms from a street to the Local Group on real, open data — code a
 programmer would enjoy reading, not three big HTML files.
@@ -45,10 +45,12 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 ## Stage 3 — launch like engineers
 - [x] Performance numbers + fixes (docs/PERFORMANCE.md, brand/tools/perf.mjs): shader pre-warm, graphics levels with auto step-down, software-GPU hint, phone header fix
 - [x] First-visit phone journey, emulated (brand/tools/mobile_journey.mjs): load times halved, touch picking, layout fixes on all three views
+- [x] Phones without phones: real Chrome in Google's Android emulator and Safari's engine with an iPhone profile (docs/TESTING.md)
 - [ ] Real-phone pass on the published beta (iPhone Safari + Android Chrome: a real GPU, memory limits) and README numbers
 - [x] 30-second capture of the full zoom (brand/tools/zoom_capture.mjs → brand/clip/, full 1080×1920 in brand/video/)
 - [ ] Decide how the public history looks (squash / fresh repo) — the user's call
-- [ ] Publish as v0.9.1
+- [x] Publish as v0.9.1 (2026-10-02)
+- [x] Publish as v0.9.2.1 (2026-10-03): other solar systems, look up, eclipses, light delay, under the hood, phone fixes
 
 ## Rules of thumb
 - One clear goal per session; read this file first, tick boxes as they land.

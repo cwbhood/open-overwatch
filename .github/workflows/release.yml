@@ -27,7 +27,7 @@ jobs:
           cp brand/textures/earth_fx_8k.jpg brand/textures/earth_fx_4k.jpg brand/textures/earth_fx_2k.jpg "$D/brand/textures/"   # globe clouds/glint
           cp -r brand/textures/sky brand/textures/sky_1k "$D/brand/textures/"                     # globe star field
           cp -r brand/textures/planets brand/textures/moons brand/textures/sky_equirect.jpg brand/textures/sky_equirect_2k.jpg "$D/brand/textures/"  # solar system
-          mkdir -p "$D/data" && cp -r data/solar "$D/data/"                                       # orbits, stars, spacecraft
+          mkdir -p "$D/data" && cp -r data/solar data/eclipses.json "$D/data/"                    # orbits, stars, spacecraft, exoplanets; eclipses
           cp -r brand/models/. "$D/brand/models/"   # satellites, aircraft/ and test/ (3D planes need aircraft/)
           rm -rf "$D/brand/models/previews"
           echo "$GITHUB_REF_NAME" > "$D/VERSION.txt"

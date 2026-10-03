@@ -3,9 +3,9 @@
 Live open-data situation views on a static site: a 2D map (Leaflet), a 3D Earth (CesiumJS) and a Solar System to
 Local Group view (three.js). No build step; ES modules from `src/`, libraries via CDN import maps.
 
-**Status: v0.9.1 (the rebuild) published 2026-10-02 at the user's request. Publish only when the user asks: never push,
+**Status: v0.9.2.1 published 2026-10-03 at the user's request (v0.9.1, the rebuild, on 2026-10-02). Publish only when the user asks: never push,
 tag, run `Publish Update.bat` or deploy on your own; work on the local `rebuild` branch (a local pre-push hook blocks pushes
-unless OO_PUSH_OK=1, set only when the user says push). Versions stay tiny: next is v0.9.2.1, then v0.9.2.2.**
+unless OO_PUSH_OK=1, set only when the user says push). Versions stay tiny: next is v0.9.2.2, then v0.9.2.3.**
 
 Read first: `ROADMAP.md` (what's next, tick boxes as you go) · `docs/ARCHITECTURE.md` (structure, units, frames) ·
 `docs/NOTES.md` (per-view lessons, publishing pipeline, 2D map layer contract, feed status, Blender) — read only the
