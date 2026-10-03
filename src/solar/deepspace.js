@@ -27,7 +27,7 @@ export function createDeepSpace({ scene, camera, renderer }) {
   })();
 
   // ---- HYG stars: brightness and size from the apparent magnitude as seen from wherever the camera is
-  const starUniforms = { uFade: { value: 0 }, uPR: { value: renderer.getPixelRatio() } };
+  const starUniforms = { uFade: { value: 0 }, uPR: { value: renderer.getPixelRatio() }, uBubble: { value: 0 }, uBubbleOn: { value: 1 } };
   let starPoints = null;
   let starsAsked = false, onStars = () => {};
   const needStars = () => { if (starsAsked) return; starsAsked = true; loadStars().then(() => onStars(), e => console.warn('stars', e)); };
@@ -41,11 +41,12 @@ export function createDeepSpace({ scene, camera, renderer }) {
     g.setAttribute('ci', new THREE.BufferAttribute(F.subarray(4 * N, 5 * N), 1));
     starPoints = new THREE.Points(g, new THREE.ShaderMaterial({
       uniforms: starUniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      vertexShader: LOGDEPTH_V + `attribute float absmag; attribute float ci; uniform float uPR; varying vec3 vC; varying float vA;
+      vertexShader: LOGDEPTH_V + `attribute float absmag; attribute float ci; uniform float uPR; uniform float uBubble; uniform float uBubbleOn; varying vec3 vC; varying float vA;
         vec3 bv(float c) { c = clamp(c, -0.4, 2.0); return c < 0.4 ? mix(vec3(0.62, 0.72, 1.0), vec3(1.0, 0.98, 0.95), (c + 0.4) / 0.8) : mix(vec3(1.0, 0.98, 0.95), vec3(1.0, 0.62, 0.35), (c - 0.4) / 1.6); }
         void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); float dpc = max(length(mv.xyz) / ${PC_AU.toFixed(3)}, 1e-6);
           float m = absmag + 5.0 * (log(dpc) / 2.302585 - 1.0), f = pow(10.0, -0.4 * (m - 6.5));   // apparent magnitude; f = 1 at mag 6.5
           gl_PointSize = clamp(1.6 + 2.2 * log(1.0 + f), 1.0, 14.0) * uPR; vA = clamp(f * 1.5, 0.0, 1.0); vC = bv(ci); gl_Position = projectionMatrix * mv;
+          if (length(position) < uBubble) { vC = mix(vC, vec3(0.49, 1.0, 0.65), 0.6 * uBubbleOn); vA = max(vA, 0.35 * uBubbleOn); }   // reached by our radio
           #include <logdepthbuf_vertex>
         }`,
       fragmentShader: LOGDEPTH_F + `uniform float uFade; varying vec3 vC; varying float vA;
@@ -59,10 +60,23 @@ export function createDeepSpace({ scene, camera, renderer }) {
     for (const [idx, name, ly, spectral] of meta.named || []) {
       const p = new THREE.Vector3(pos[idx * 3], pos[idx * 3 + 1], pos[idx * 3 + 2]);
       addBody({ key: 'star:' + name, name, kind: 'star', color: '#fff3d6', radius: 0, pos: p, fixed: true, star: true, ly, absmag: absmag[idx], layer: 'stars',
-        info: () => [['Distance', ly.toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' light-years'], ['= AU', bigNumber(ly * LY_AU) + ' AU'], ['Spectral type', spectral || '—'], ['Light left it', lightLeft(ly)]] });
+        info: () => [['Distance', ly.toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' light-years'], ['= AU', bigNumber(ly * LY_AU) + ' AU'], ['Spectral type', spectral || '—'], ['Light left it', lightLeft(ly)], ['Our radio', radioReach(ly)]] });
     }
     layer('stars').n = N;
   }
+  // ---- humanity's radio bubble: broadcasts since 1920 (KDKA) have travelled outward at the speed of light
+  const RADIO_YEAR = 1920;
+  const yearOf = jd => 2000 + (jd - 2451545.0) / 365.25;
+  let simYear = new Date().getUTCFullYear();
+  const radioReach = ly => { const y = Math.round(RADIO_YEAR + ly); return y <= simYear ? `reached it around ${y}` : `reaches it around ${y}`; };
+  const bubble = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 48), surfaceMaterial({
+    uniforms: { k: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    frag: { decl: 'uniform float k;', body: 'float f = pow(1.0 - abs(dot(normalize(vN), normalize(-vP))), 4.0); col = vec3(0.49, 1.0, 0.65) * (0.006 + 0.8 * f) * k; alpha = 1.0;' },
+  }));
+  bubble.visible = false; scene.add(bubble);
+  const bubbleBody = addBody({ key: 'radio', name: 'Our radio bubble', kind: 'radio bubble', color: '#7dffa6', radius: 0, pos: new THREE.Vector3(), fixed: true, bubble: true, layer: 'radio',
+    fact: 'Everything we have broadcast since the first radio stations of the 1920s is still travelling outward at the speed of light. Stars inside this sphere (tinted green) could have received it by now; the rest of the galaxy has no idea we are here.',
+    info: () => { const r = simYear - RADIO_YEAR; return [['Radius', `${Math.round(r)} light-years`], ['Started', `${RADIO_YEAR} (first commercial radio broadcasts)`], ['Share of the Milky Way', `${(r * 2 / 100000 * 100).toFixed(2)}% of its width`]]; } });
   const lightLeft = ly => {
     if (ly < 1.5) return Math.round(ly * 365.25) + ' days ago';
     const year = new Date().getUTCFullYear() - Math.round(ly);
@@ -120,10 +134,16 @@ export function createDeepSpace({ scene, camera, renderer }) {
       list.sort((a, b) => a.m - b.m).slice(0, PHONE ? 16 : 28).forEach(b => { b.vis = true; });
       if (camSun < 80 * LY_AU) list.filter(b => b.ly < 12).forEach(b => { b.vis = true; });
     },
-    frame({ camSun, fade }) {
+    frame({ camSun, fade, jd }) {
       if (camSun > 300 * LY_AU) milkyNeeded();
       if (camSun > 400) needStars();   // 2.2 MB: once past the planets (or on a search, or idle on desktops)
       starUniforms.uPR.value = renderer.getPixelRatio();
+      if (jd != null) simYear = yearOf(jd);
+      const rLy = Math.max(0, simYear - RADIO_YEAR), rAU = rLy * LY_AU, radioOn = layerOn('radio');
+      starUniforms.uBubble.value = rAU; starUniforms.uBubbleOn.value = radioOn ? fade(8, 40, camSun, 'ly') : 0;
+      bubble.scale.setScalar(Math.max(rAU, 1)); bubbleBody.pos.set(0, 0, rAU);
+      bubble.material.uniforms.k.value = radioOn ? 0.45 * fade(8, 60, camSun, 'ly') * (1 - fade(3000, 2e4, camSun, 'ly')) : 0;
+      bubble.visible = bubble.material.uniforms.k.value > 0.002;
       starUniforms.uFade.value = fade(0.02, 0.4, camSun, 'ly') * (1 - fade(2e4, 8e4, camSun, 'ly'));
       if (starPoints) starPoints.visible = layerOn('stars') && starUniforms.uFade.value > 0.002;
       oort.material.opacity = 0.55 * fade(1500, 2e4, camSun) * (1 - fade(3, 30, camSun, 'ly')); oort.visible = oort.material.opacity > 0.002;

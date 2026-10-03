@@ -79,6 +79,7 @@ export function createUI({ camera, controls, clock, nav, story, small, deep, qua
     if (!layerOn('labels') || !bodyVisible(b) || b.launched === false) return false;
     if (b.star) return camSun > 0.3 * LY_AU && b.vis;                              // the brightest few, once out among them
     if (b.here) return camSun > 30 * LY_AU;
+    if (b.bubble) return camSun > 12 * LY_AU && camSun < 3000 * LY_AU;               // the radio bubble
     if (b.web) return camSun > 2.5e7 * LY_AU;                                    // galaxy clusters
     if (b.far) return (camSun > 3000 * LY_AU || (b.key === 'gc' && camSun > 800 * LY_AU)) && camSun < 4e7 * LY_AU;
     if (b.key === 'sun') return camSun < 30 * LY_AU;
@@ -90,7 +91,8 @@ export function createUI({ camera, controls, clock, nav, story, small, deep, qua
     if (performance.now() - lastRank > 400) { lastRank = performance.now(); deep.rankStars(camSun); }
     const taken = [];
     for (const b of bodies) {
-      const el = labelFor(b); let s = labelShown(b, camSun, camFocus) ? screenOf(b.pos) : null;
+      const el = labelFor(b); if (el.textContent !== b.name) el.textContent = b.name;   // a few names change (the light-delay ghost)
+      let s = labelShown(b, camSun, camFocus) ? screenOf(b.pos) : null;
       if (s && b !== nav.focus && taken.some(t => Math.abs(t[0] - s[0]) < 60 && Math.abs(t[1] - s[1]) < 14)) s = null;
       if (!s || s[0] < -50 || s[1] < -20 || s[0] > innerWidth + 50 || s[1] > innerHeight + 20) { if (el.style.display !== 'none') el.style.display = 'none'; continue; }
       taken.push(s); el.style.display = ''; el.style.transform = `translate(${(s[0] + 9).toFixed(1)}px, ${(s[1] - 7).toFixed(1)}px)`;

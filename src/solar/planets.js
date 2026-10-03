@@ -91,7 +91,8 @@ export function createPlanets({ scene, sunView, renderer }) {
     if (key === 'earth') loadTexture(planetTexture(key)).then(firstMap);   // the others once they are more than a dot
     if (atm) { const h = halo(sunView, atm, key === 'earth' ? 1.1 : 0.6); h.scale.set(R, R * (1 - flat), R); spin.add(h); }
     const b = addBody({ key, name, kind: 'planet', color, radius: R, pos: new THREE.Vector3(), group, spin, mesh, big: true, fact: FACTS[key],
-      update(jd) { (key === 'earth' ? earthPosition : (j, o) => planetPosition(key, j, o))(jd, b.pos); group.position.copy(b.pos); orient(key, jd, spin.quaternion); },
+      update(jd) { b.posAt(jd, b.pos); group.position.copy(b.pos); orient(key, jd, spin.quaternion); },
+      posAt: (jd, out) => (key === 'earth' ? earthPosition(jd, out) : planetPosition(key, jd, out)),   // also for the light-delay ghost
       info() {
         const el = planetElements(key, b.jd ?? 0), dE = b.pos.distanceTo(byKey.earth.pos);
         return [['Distance from Sun', distance(b.pos.length())], ['From Earth', key === 'earth' ? '—' : distance(dE) + ' · light ' + lightTime(dE)],
@@ -111,6 +112,7 @@ export function createPlanets({ scene, sunView, renderer }) {
     const geo = new THREE.Vector3();
     const b = addBody({ key: 'moon', name: 'Moon', kind: 'moon', color: '#cfd3da', radius: R, pos: new THREE.Vector3(), geo, group, spin, mesh, fact: FACTS.moon,
       update(jd) { moonGeocentric(jd, geo); b.pos.copy(byKey.earth.pos).add(geo); group.position.copy(b.pos); orient('moon', jd, spin.quaternion); },
+      posAt(jd, out) { const g = moonGeocentric(jd, {}); earthPosition(jd, out); out.x += g.x; out.y += g.y; out.z += g.z; return out; },
       info: () => [['From Earth', Math.round(geo.length() / KM_AU).toLocaleString('en-US') + ' km'], ['Light from Earth', lightTime(geo.length())], ['Radius', '1,737 km']] });
     Sharpen.add(() => Sharpen.px(b) > innerHeight * SHARP, sharpTexture('moon'), t => swapTexture(mesh.material.uniforms.map, t));
   }

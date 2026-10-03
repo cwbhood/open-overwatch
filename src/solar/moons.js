@@ -120,6 +120,7 @@ export function createMoons({ scene, sunView, renderer }) {
         const planetName = () => byKey[m.planet]?.name || m.planet;
         const b = addBody({ key: m.name.toLowerCase(), name: m.name, kind: 'moon', color: label, radius: R, pos: new THREE.Vector3(), group, mesh, path: orbit, m, fact, layer: 'moons',
           parent: m.planet, near: m.a_km * KM_AU * 40, normal: new THREE.Vector3(0, 0, 1),
+          posAt(jd, out) { const P = byKey[m.planet]; if (!P?.posAt) return out.copy(P ? P.pos : out); P.posAt(jd, out); const o = moonOffset(m, jd, {}); out.x += o.x; out.y += o.y; out.z += o.z; return out; },
           info: () => [['Orbits', planetName()], ['From ' + planetName(), Math.round(m.a_km).toLocaleString('en-US') + ' km'], ['Once around', span(moonPeriod(m)) + (m.i > 90 ? ' (backwards)' : '')],
             ['Radius', m.radius_km.toLocaleString('en-US') + ' km'], ['From Earth', distance(b.pos.distanceTo(byKey.earth.pos))]] });
         if (real) {   // 1k once you are near the planet, 2k close up (desktops)

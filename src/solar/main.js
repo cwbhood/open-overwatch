@@ -14,6 +14,7 @@ import { createSmallBodies, CLASS_LAYERS } from './smallbodies.js';
 import { createSpacecraft } from './spacecraft.js';
 import { createDeepSpace } from './deepspace.js';
 import { createCosmicWeb } from './cosmic.js';
+import { createLightDelay } from './lightdelay.js';
 import { createStory } from './story.js';
 import { createUI } from './ui.js';
 import { createEmbed, EMBED } from './embed.js';
@@ -46,7 +47,8 @@ const sunView = new THREE.Vector3();   // the Sun in view space: every lit shade
 [{ id: 'orbits', name: 'Planet orbits', c: '#7dffa6', on: true }, { id: 'labels', name: 'Labels', c: '#e6edf3', on: true },
   { id: 'moons', name: 'Moons', c: '#cfd3da', on: true, n: 0 }, { id: 'dwarfs', name: 'Dwarf planets', c: '#e8cfb0', on: true }, { id: 'asteroids', name: 'Asteroids', c: '#c8b89e', on: true, n: 0 },
   ...CLASS_LAYERS, { id: 'comets', name: 'Comets', c: '#bfe3ff', on: true }, { id: 'craft', name: 'Spacecraft', c: '#ffb44d', on: true, n: 0 },
-  { id: 'stars', name: 'Stars near the Sun (HYG)', c: '#fff3d6', on: true, n: 0 }, { id: 'galaxy', name: 'Milky Way & galaxies', c: '#b6c6ff', on: true },
+  { id: 'stars', name: 'Stars near the Sun (HYG)', c: '#fff3d6', on: true, n: 0 }, { id: 'radio', name: 'Our radio bubble', c: '#7dffa6', on: true },
+  { id: 'lightdelay', name: 'Light delay (as seen from Earth)', c: '#7dffa6', on: true }, { id: 'galaxy', name: 'Milky Way & galaxies', c: '#b6c6ff', on: true },
 ].forEach(defineLayer);
 
 // ---- the world
@@ -79,6 +81,7 @@ const nav = {
     } else { camera.position.add(p.clone().sub(controls.target)); controls.target.copy(p); }
   },
 };
+const lightDelay = createLightDelay({ scene, nav });
 const story = createStory({ scene, clock, nav, caption: (...a) => ui.caption(...a), onTourChange: on => ui.tourLabel(on) });
 const quality = createQuality({ renderer, small, onAutoChange: q => { ui.renderLayers(); ui.caption(`Graphics set to ${q.name}`, 'Lowered automatically for smoother motion. You can change it in the layer panel.', '', 5000); } });
 const ui = createUI({ camera, controls, clock, nav, story, small, deep, quality });
@@ -108,10 +111,10 @@ function frame(t) {
   update(clock.tick(Math.max(dt, 0)));
   if (!embed.frame(view)) nav.frame();
   controls.update(); camera.updateMatrixWorld();
-  view.camSun = camera.position.length(); view.camFocus = camera.position.distanceTo(controls.target);
+  view.camSun = camera.position.length(); view.camFocus = camera.position.distanceTo(controls.target); view.jd = clock.jd;
   sunView.set(0, 0, 0).applyMatrix4(camera.matrixWorldInverse);
   Sharpen.tick();
-  sky.frame(view); planets.frame(view); moons.frame(view); small.frame(view); craft.frame(view); deep.frame(view); web.frame(view);
+  sky.frame(view); planets.frame(view); moons.frame(view); small.frame(view); craft.frame(view); deep.frame(view); web.frame(view); lightDelay.frame(view);
   story.updatePulse(); ui.frame(view);
   renderer.render(scene, camera);
   embed.api.ready = true;
