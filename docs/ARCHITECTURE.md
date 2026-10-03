@@ -45,6 +45,12 @@ same code runs in Node tests and in the render loop without allocating.
 | `format.js` | distances, light time, durations, HTML escaping |
 | `tle.js` | satellite element sets: CelesTrak / site-copy order, 2 h cache, parsing, epochs |
 | `geo.js` | great-circle destination, haversine, dead reckoning for aircraft and ships |
+| `socrates.js` | CelesTrak SOCRATES close-approach CSV parsing, upcoming conjunctions |
+| `passes.js` | satellite passes over an observer (rise / peak / set, look angles, sunlit + dark-sky visibility) |
+| `orientation.js` | W3C device orientation → camera direction and screen-up (look-up mode) |
+| `eclipse.js` | Moon shadow cones, where they meet the WGS84 ellipsoid, shadow outlines, what an observer sees |
+| `accuracy.js` | errors against JPL Horizons (shared by the tests and the in-app "Under the hood" panel) |
+| `gpu.js` | software-WebGL detection |
 
 Accuracy, checked by the tests against JPL Horizons on 2026-10-02: planets within arcminutes (JPL's own stated
 error for these formulas), main-belt asteroids within ~3×10⁻⁴ AU, the Moon within ~0.3°, the other moons within 0.4° of their orbit.

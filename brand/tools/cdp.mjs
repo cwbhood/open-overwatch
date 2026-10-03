@@ -151,8 +151,26 @@ export class Browser {
  * @param {[number, number]} [o.windowSize]
  */
 export const CHROME = String.raw`C:\Program Files\Google\Chrome\Application\chrome.exe`;
+/**
+ * Browsers left behind by a script that was killed hard (Windows TerminateProcess skips 'exit' handlers, so close()
+ * and the exit hook never ran): their main process still runs a profile under WORK but its parent script is gone.
+ * Killed once per run, before launching (a session of timed-out test runs had left ~100 of them, 992 processes).
+ */
+let reaped = false;
+function reapOrphans() {
+  if (reaped || process.platform !== 'win32') return; reaped = true;
+  const ps = `$w = '${WORK.replace(/'/g, "''")}'; $all = Get-CimInstance Win32_Process; $ids = @{}; $all | ForEach-Object { $ids[$_.ProcessId] = 1 };
+    $all | Where-Object { ($_.Name -eq 'msedge.exe' -or $_.Name -eq 'chrome.exe') -and $_.CommandLine -like ('*' + $w + '*edge-profile-*') -and $_.CommandLine -notlike '*--type=*' -and -not $ids.ContainsKey([int]$_.ParentProcessId) } | ForEach-Object { $_.ProcessId }`;
+  try {
+    const r = spawnSync('powershell.exe', ['-NoProfile', '-Command', ps], { encoding: 'utf8', windowsHide: true, timeout: 20000 });
+    const pids = (r.stdout || '').split(/\s+/).filter(Boolean);
+    for (const pid of pids) spawnSync('taskkill.exe', ['/PID', pid, '/T', '/F'], { windowsHide: true });
+    if (pids.length) console.error(`[cdp] killed ${pids.length} orphaned browser(s) from earlier runs`);
+  } catch (e) { /* best effort */ }
+}
 /** Launch Edge (or OO_BROWSER_EXE); if Edge exits at once (it does mid-update), retry once with Chrome. */
 export async function launch(o = {}) {
+  reapOrphans();
   const exe = o.exe || process.env.OO_BROWSER_EXE || EDGE;
   try { return await launchOnce({ ...o, exe }); }
   catch (e) { if (exe !== EDGE || !/exited early/.test(e.message)) throw e; return launchOnce({ ...o, exe: CHROME }); }
