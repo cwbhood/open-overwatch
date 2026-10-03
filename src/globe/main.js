@@ -16,6 +16,7 @@ import { Quality, LEVELS } from './quality.js';
 import { Conj } from './conjunctions.js';
 import { LookUp } from './lookup.js';
 import { Eclipses } from './eclipses.js';
+import { initMobile } from './mobile.js';
 import { toggle as toggleNerd } from './nerd.js';
 
 function applyVisibility() {
@@ -38,6 +39,7 @@ PRESETS.conj = () => Conj.openList();
 PRESETS.lookup = () => { hooks.clearPresets(); LookUp.enter(); };
 PRESETS.eclipses = () => Eclipses.openList();
 hooks.toggleNerd = toggleNerd;
+initMobile();   // phones only: the bottom dock
 $('#luExit').onclick = () => LookUp.leave();
 addEventListener('keydown', e => { if (e.key === 'Escape' && LookUp.active) LookUp.leave(); });
 setInterval(() => SatModels.refresh(), 400);

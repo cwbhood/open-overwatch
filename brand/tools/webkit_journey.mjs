@@ -45,11 +45,11 @@ await step('globe: open', async () => {
   await sleep(4000);
   return await page.evaluate(() => { const gl = OO3D.viewer.scene.context._gl, e = gl.getExtension('WEBGL_debug_renderer_info'); return `${OO3D.Sats.list.length} satellites · WebGL${gl instanceof WebGL2RenderingContext ? '2' : '1'} · ${e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)}`; });
 });
-await step('globe: Layers', async () => { await page.locator('#btnDock').tap(); await sleep(800); });
-await step('globe: Near misses', async () => { await page.locator('#btnDock').tap(); await page.locator('[data-go=conj]').tap(); await sleep(1500); });
-await step('globe: Eclipses', async () => { await page.locator('#card .x').tap(); await page.locator('[data-go=eclipses]').tap(); await sleep(2500); return await page.locator('#card .cj').count() + ' eclipses listed'; });
+await step('globe: Layers', async () => { await page.locator('[data-tab=layers]').tap(); await sleep(800); });
+await step('globe: Near misses', async () => { await page.locator('[data-tab=layers]').tap(); await page.locator('[data-tab=explore]').tap(); await sleep(500); await page.locator('#msheet [data-go=conj]').tap(); await sleep(1500); });
+await step('globe: Eclipses', async () => { await page.locator('#card .x').tap(); await page.locator('[data-tab=explore]').tap(); await sleep(500); await page.locator('#msheet [data-go=eclipses]').tap(); await sleep(2500); return await page.locator('#card .cj').count() + ' eclipses listed'; });
 await step('globe: Look up', async () => {
-  await page.locator('#card .x').tap(); await page.locator('[data-go=lookup]').tap(); await sleep(7000);
+  await page.locator('#card .x').tap(); await page.locator('[data-tab=lookup]').tap(); await sleep(7000);
   return await page.evaluate(() => [document.querySelector('#luWhere').textContent, document.querySelector('#luNow').textContent, document.querySelector('#luPass').textContent].join(' | '));
 });
 await step('globe: leave Look up', async () => { await page.locator('#luExit').tap(); await sleep(1000); });

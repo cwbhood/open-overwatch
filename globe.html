@@ -125,6 +125,25 @@ body.lookup #top,body.lookup #band,body.lookup #dock,body.lookup #card,body.look
   .tb{min-width:38px;height:38px} .chipbtn,.links a{min-height:40px} .go{min-height:44px;padding:10px 12px}
   #card .x{font-size:24px;padding:8px 14px} .ly{min-height:40px} .cj{min-height:48px}
 }
+/* phone control set (src/globe/mobile.js adds body.m and the dock only on phones; desktops never match any of this) */
+body.m #band,body.m .links,body.m #timebar .tb{display:none}
+body.m #timebar{padding:6px 10px} body.m .tnow{cursor:pointer}
+.m-dock,.m-sheet,.m-scrim{display:none}
+body.m .m-dock{display:flex;position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:6;padding:4px;gap:2px}
+.m-tab{flex:1;min-width:0;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid transparent;border-radius:10px;background:none;color:var(--dim);font:600 10px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+.m-tab i{font:normal 19px/1 var(--body);font-style:normal} .m-tab.on{color:var(--accent);border-color:var(--edge);background:rgba(125,255,166,.06)}
+body.m .m-scrim{display:block;position:fixed;inset:0;z-index:6;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s} body.m .m-scrim.show{opacity:1;pointer-events:auto}
+body.m .m-sheet{display:block;position:fixed;left:10px;right:10px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:7;max-height:calc(100dvh - 170px);overflow:auto;overscroll-behavior:contain;padding:12px;transform:translateY(130%);opacity:0;pointer-events:none;transition:transform .25s ease,opacity .2s}
+body.m .m-sheet.show{transform:none;opacity:1;pointer-events:auto}
+.m-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px} .m-head b{font:900 17px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)} .m-head span{font:500 11px/1.2 var(--mono);color:var(--dim);text-align:right}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.m-item{display:block;text-align:left;min-height:56px;padding:9px 11px;border-radius:10px;border:1px solid var(--edge-dim);background:rgba(230,237,243,.03);color:var(--ink);-webkit-tap-highlight-color:transparent}
+.m-item b{display:block;font:700 13px/1.2 var(--display);letter-spacing:.1em;text-transform:uppercase} .m-item span{display:block;margin-top:4px;font:400 10.5px/1.3 var(--body);color:var(--dim)}
+.m-item.on{border-color:var(--edge);color:var(--accent)} .m-now{margin-top:8px;width:100%}
+.m-rates{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.m-rate{min-height:48px;border-radius:10px;border:1px solid var(--edge-dim);background:rgba(230,237,243,.03);color:var(--ink);font:600 12px/1 var(--mono)} .m-rate.on{color:#04060a;background:var(--accent);border-color:var(--accent)}
+body.m #dock{bottom:calc(86px + env(safe-area-inset-bottom,0px))} body.m #card{bottom:calc(100px + env(safe-area-inset-bottom,0px))} body.m #credits{bottom:calc(86px + env(safe-area-inset-bottom,0px))} body.m #toast{bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+body.lookup .m-dock,body.lookup .m-sheet,body.lookup .m-scrim{display:none!important}
 </style>
 </head>
 <body>

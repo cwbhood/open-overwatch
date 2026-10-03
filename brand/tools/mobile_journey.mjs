@@ -148,9 +148,9 @@ try {
   await step('globe: settle 5 s', async () => { await sleep(5000); }, { gesture: true });
   await step('globe: one-finger drag', async () => { await drag(120, 420, 300, 380, 900); await drag(300, 380, 140, 460, 900); await sleep(800); }, { gesture: true });
   await step('globe: pinch in x3', async () => { for (let i = 0; i < 3; i++) { await pinch(195, 420, 60, 300, 700); await sleep(500); } await sleep(1500); return 'height ' + Math.round(await p.eval('OO3D.viewer.camera.positionCartographic.height / 1000')) + ' km'; }, { gesture: true });
-  await step('globe: open Layers', async () => (await tapSel('#btnDock')) ? '' : 'no Layers button');
-  await step('globe: close Layers', async () => (await tapSel('#btnDock')) ? '' : 'no Layers button');
-  await step('globe: tap Near misses', async () => (await tapSel('[data-go=conj]')) ? '' : 'no button');
+  await step('globe: open Layers', async () => (await tapSel('[data-tab=layers]')) ? '' : 'no Layers tab');
+  await step('globe: close Layers', async () => (await tapSel('[data-tab=layers]')) ? '' : 'no Layers tab');
+  await step('globe: Explore sheet, tap Near misses', async () => { if (!(await tapSel('[data-tab=explore]'))) return 'no Explore tab'; await sleep(500); return (await tapSel('#msheet [data-go=conj]')) ? '' : 'no destination'; });
   await step('globe: close card', async () => (await tapSel('#card .x')) ? '' : 'no close button');
   await step('globe: tap a satellite', async () => {
     const xy = await p.eval(`(() => { const S = OO3D.Sats, C = Cesium, sc = OO3D.viewer.scene; const occ = new C.EllipsoidalOccluder(C.Ellipsoid.WGS84, OO3D.viewer.camera.positionWC); for (const s of S.list) { if (!s.pt || !s.pt.show || !occ.isPointVisible(s.pt.position)) continue; const w = C.SceneTransforms.worldToWindowCoordinates ? C.SceneTransforms.worldToWindowCoordinates(sc, s.pt.position) : C.SceneTransforms.wgs84ToWindowCoordinates(sc, s.pt.position); if (w && w.x > 40 && w.x < innerWidth - 40 && w.y > 120 && w.y < innerHeight - 160) return [w.x, w.y, s.name]; } return null; })()`);

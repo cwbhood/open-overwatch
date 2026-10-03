@@ -62,7 +62,7 @@ Cesium and satellite.js load as classic scripts (globals); the app is ES modules
 relay), `viewer` (viewer, camera limits, shared primitive collections, star box), `earth` (imagery, the three shader
 shells, Sun/Moon directions), `layers` (switches + dock), `follow` (follow camera, glTF axis conventions),
 `satellites` (TLEs via core, SGP4 worker, models), `aircraft` (feeds, dead reckoning, models), `quakes`, `ui` (stats,
-band, presets, picking, card, lighting) and `main` (wiring, timers, boot). `state.js` holds the selection and late-bound
+band, presets, picking, card, lighting), `mobile` (phones only: bottom dock and sheets that click the existing controls) and `main` (wiring, timers, boot). `state.js` holds the selection and late-bound
 hooks so feature modules never import the UI. `window.OO3D` is the console handle.
 
 ## One zoom from street to galaxy
