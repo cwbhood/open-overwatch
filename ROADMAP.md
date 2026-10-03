@@ -33,7 +33,9 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 ## Stage 2b — the overkill wow (2026-10-02)
 - [x] Light delay (ghost where Earth sees the focused body) and our radio bubble (since 1920, stars inside tinted)
 - [x] Other solar systems: 6,339 NASA exoplanets at their stars; fly into any system (real sizes, habitable zone, transit-timed positions)
-- [ ] Look-up mode on phones (sensors: what is above you right now)
+- [x] Look-up mode (globe band → Look up): your sky from your location, phone sensors or drag; planets, bright stars,
+      overhead satellites and aircraft, compass ring, next ISS pass (core/passes.js, core/orientation.js, tested).
+      Needs the real-phone check: iOS compass + Android absolute orientation
 - [ ] Total solar eclipse of 2 August 2027: the Moon's shadow on the globe, next eclipse from your place
 - [ ] Accuracy + nerd panel (error vs JPL, fps, data age)
 

@@ -190,13 +190,19 @@ const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a
 export const Earth = {
   h: Infinity,
   update(h) { this.h = h; this.apply(); },
+  hidden: false,   // look-up mode: no map tiles or shells, a plain dark ground (set by lookup.js)
   apply() {
+    if (this.hidden) {
+      for (let k = 0; k < viewer.imageryLayers.length; k++) viewer.imageryLayers.get(k).show = false;
+      fxShell.primitive.show = cloudShell.primitive.show = limbShell.primitive.show = false; return;
+    }
     const h = this.h, real = smooth(2.0e4, 2.0e5, h);   // 0 = readable map, 1 = real day/night
     marbleLayer.alpha = smooth(1.2e5, 4.5e5, h);          // Blue Marble from space (level 8 ~ 600 m still matches the screen at ~300 km)
     // a layer at alpha 0, or one fully under the opaque Blue Marble, still costs tile downloads, texture units and a
     // globe shader variant per combination (each new variant is a compile stall mid-flight): switch those off
     marbleLayer.show = marbleLayer.alpha > 0.001;
     if (baseLayer) { baseLayer.nightAlpha = 1 - real; baseLayer.show = marbleLayer.alpha < 0.999; }   // close in, the map stays visible on the night side
+    limbShell.primitive.show = true;   // (look-up mode hides it)
     marbleLayer.nightAlpha = 1 - real;
     nightLayer.show = L.night.on && real > 0.001; nightLayer.alpha = real;
     // the globe dims its night side to 0.3 only at full lighting (linear in height between the two lighting fade

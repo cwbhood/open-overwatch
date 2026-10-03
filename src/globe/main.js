@@ -14,6 +14,7 @@ import { updateStats, updateBand, PRESETS, Lighting, select } from './ui.js';
 import { Space } from './space.js';
 import { Quality, LEVELS } from './quality.js';
 import { Conj } from './conjunctions.js';
+import { LookUp } from './lookup.js';
 
 function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
@@ -32,6 +33,9 @@ scene.preUpdate.addEventListener((sc, time) => { Follow.track(time); Lighting.up
 scene.preRender.addEventListener((sc, time) => { SatModels.updateSun(time); Sats.update(Time.nowMs()); Earth.update(camHeight()); Space.update(); });
 PRESETS.space = () => Space.go();
 PRESETS.conj = () => Conj.openList();
+PRESETS.lookup = () => { hooks.clearPresets(); LookUp.enter(); };
+$('#luExit').onclick = () => LookUp.leave();
+addEventListener('keydown', e => { if (e.key === 'Escape' && LookUp.active) LookUp.leave(); });
 setInterval(() => SatModels.refresh(), 400);
 setInterval(() => AirModels.refresh(), 500);
 setInterval(() => Air.update(Date.now()), 250);
@@ -93,7 +97,7 @@ every(15 * 60e3, () => Air.opensky(), 'Civil aircraft');
 every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
 
-window.OO3D = { Conj,
+window.OO3D = { Conj, LookUp,
   viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {
