@@ -14,6 +14,7 @@
 import { C, PHONE, store, loadImage } from './env.js';
 import { viewer, scene, globe } from './viewer.js';
 import { L } from './layers.js';
+import { state } from './state.js';
 
 export const R_EQ = 6378137, R_PO = 6356752.3142;
 globe.baseColor = C.Color.fromCssColorString('#0b1622');
@@ -209,7 +210,7 @@ export const Earth = {
     // distances); keep the city lights at the same apparent brightness while that dimming fades in
     const f = Math.min(1, Math.max(0, (h - 2.0e4) / (2.0e5 - 2.0e4)));
     nightLayer.brightness = 3.4 * 0.3 / (1 - 0.7 * f);
-    const sfx = smooth(1.2e5, 6.0e5, h), sc = smooth(7.0e4, 2.5e5, h) * (L.clouds.on ? 1 : 0);   // clouds stay full at ISS height
+    const sfx = smooth(1.2e5, 6.0e5, h), sc = smooth(7.0e4, 2.5e5, h) * (L.clouds.on && !state.weather ? 1 : 0);   // clouds stay full at ISS height
     const sea = (1 - marbleLayer.alpha) * smooth(2.5e4, 8.0e4, h) * (baseId === 'imagery' ? 1 : 0); // the dark map keeps its own sea
     Object.assign(fxShell.material.uniforms, { fade: sfx, ocean: sea, cshadow: sc });
     fxShell.primitive.show = Fx.ok && (sfx > 0.001 || sea > 0.001 || sc > 0.001);

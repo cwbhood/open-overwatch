@@ -48,8 +48,14 @@ await step('globe: open', async () => {
 await step('globe: Layers', async () => { await page.locator('[data-tab=layers]').tap(); await sleep(800); });
 await step('globe: Near misses', async () => { await page.locator('[data-tab=layers]').tap(); await page.locator('[data-tab=explore]').tap(); await sleep(500); await page.locator('#msheet [data-go=conj]').tap(); await sleep(1500); });
 await step('globe: Eclipses', async () => { await page.locator('#card .x').tap(); await page.locator('[data-tab=explore]').tap(); await sleep(500); await page.locator('#msheet [data-go=eclipses]').tap(); await sleep(2500); return await page.locator('#card .cj').count() + ' eclipses listed'; });
+await step('globe: Weather', async () => {
+  await page.locator('#card .x').tap(); await page.locator('[data-tab=explore]').tap(); await sleep(500); await page.locator('#msheet [data-go=weather]').tap();
+  await page.waitForFunction(() => window.OO3D && OO3D.Weather.end, null, { timeout: 30000 }); await sleep(6000);
+  const r = await page.evaluate(() => ({ t: document.querySelector('#wxTime').textContent, n: document.querySelector('#wxNote').textContent, sats: OO3D.Weather.ir.length, radar: OO3D.Weather.radar.length }));
+  await page.locator('#wx .x').tap(); await sleep(500); return `${r.t} · ${r.n} · radar frames ${r.radar}`;
+});
 await step('globe: Look up', async () => {
-  await page.locator('#card .x').tap(); await page.locator('[data-tab=lookup]').tap(); await sleep(7000);
+  await page.locator('[data-tab=lookup]').tap(); await sleep(7000);
   return await page.evaluate(() => [document.querySelector('#luWhere').textContent, document.querySelector('#luNow').textContent, document.querySelector('#luPass').textContent].join(' | '));
 });
 await step('globe: leave Look up', async () => { await page.locator('#luExit').tap(); await sleep(1000); });

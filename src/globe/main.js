@@ -2,7 +2,7 @@
 import { C, $, toast, PHONE } from './env.js';
 import { viewer, scene, globe, camera, satPts, airPts, airIcons, qkPts, camHeight } from './viewer.js';
 import { L, initDock } from './layers.js';
-import { hooks } from './state.js';
+import { hooks, state } from './state.js';
 import { Earth, BASES, setBase, currentBase, sunlitView, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, moonPosition } from './earth.js';
 import { Follow, MODEL_FIX, SOLAR_AXIS } from './follow.js';
 import { Sats, SatModels, SHADOW_FILL } from './satellites.js';
@@ -19,11 +19,12 @@ import { LookUp } from './lookup.js';
 import { Eclipses } from './eclipses.js';
 import { initMobile } from './mobile.js';
 import { initNavpad } from './navpad.js';
+import { Weather, initWeather } from './weather.js';
 import { toggle as toggleNerd } from './nerd.js';
 
 function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
-  airPts.show = airIcons.show = true;
+  airPts.show = airIcons.show = !state.weather; satPts.show = !state.weather;
   for (const a of Air.map.values()) { const on = airShown(a); a.pt.show = on && !a.ent; a.icon.show = on && !a.ent; if (!on && a.ent) AirModels.drop(a); }
   qkPts.show = L.quakes.on; Lighthouses.apply();
   Earth.apply(); updateBand(); updateStats();
@@ -40,9 +41,11 @@ PRESETS.space = () => Space.go();
 PRESETS.conj = () => Conj.openList();
 PRESETS.lookup = () => { hooks.clearPresets(); LookUp.enter(); };
 PRESETS.eclipses = () => Eclipses.openList();
+PRESETS.weather = () => Weather.toggle();
 hooks.toggleNerd = toggleNerd;
 initMobile();   // phones only: the bottom dock
-initNavpad();   // everything else: zoom, north and reset buttons
+initNavpad();
+initWeather();   // everything else: zoom, north and reset buttons
 $('#luExit').onclick = () => LookUp.leave();
 addEventListener('keydown', e => { if (e.key === 'Escape' && LookUp.active) LookUp.leave(); });
 setInterval(() => SatModels.refresh(), 400);
@@ -109,7 +112,7 @@ every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
 
 window.OO3D = { Conj, LookUp, Eclipses,
-  viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, Lighthouses, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
+  viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, Lighthouses, Weather, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {
     const pos = C.Cartesian3.fromDegrees(lon, lat, h), R = C.Matrix4.getMatrix3(C.Transforms.eastNorthUpToFixedFrame(pos), new C.Matrix3());

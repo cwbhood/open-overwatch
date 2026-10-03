@@ -45,6 +45,9 @@ user enters in the 2D map's Setup tab (stored only in their browser).
 |---|---|---|---|
 | Earthquakes | [USGS](https://earthquake.usgs.gov) real-time feeds | direct | M2.5+ day / significant |
 | Lighthouses (3D globe) | [OpenStreetMap](https://www.openstreetmap.org) `man_made=lighthouse` via Overpass, built by `brand/tools/make_lighthouses.py` | static `data/lighthouses.json` | ODbL: credit "© OpenStreetMap contributors" (shown on every lighthouse card). Heights, light patterns and ranges are only as complete as mappers made them; many have a name and position only. Refresh by deleting `brand/source/lighthouses/` and re-running the script |
+| Weather: infrared clouds (3D globe) | NASA [GIBS](https://nasa-gibs.github.io/gibs-api-docs/) tiles of NOAA GOES-East, GOES-West and JMA Himawari, band 13 "clean infrared" | direct, WMTS tiles with CORS | 10-minute images, about 40-50 min old. Covers the Americas, the Pacific and Asia-Australia; **not** Europe, Africa or the Indian Ocean (Meteosat has no free tile service). The newest frame is found by probing back from now |
+| Weather: rain radar (3D globe) | [RainViewer](https://www.rainviewer.com/api.html) public radar composite (`api.rainviewer.com/public/weather-maps.json`) | direct, tiles with CORS | 10-minute frames, last 2 h, zoom 7. Only where national radars exist. Credit "Radar © RainViewer.com" is shown. Their free terms can change; if they do the layer reports "Radar unreachable" and everything else keeps working |
+| Weather: rain from space (3D globe) | NASA GIBS `IMERG_Precipitation_Rate_30min` | direct, WMTS tiles | Global 60 N to 60 S, but about 7 hours old (a still, not animated) |
 | Natural events | NASA [EONET](https://eonet.gsfc.nasa.gov) | direct | |
 | Disaster alerts | [GDACS](https://www.gdacs.org) (EU/UN) | direct, paged | up to 1000 events |
 | Tropical cyclones | EONET; NOAA [NHC](https://www.nhc.noaa.gov) advisories | NHC via relay | |

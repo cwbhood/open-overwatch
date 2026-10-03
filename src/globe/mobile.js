@@ -10,7 +10,7 @@ import { Follow } from './follow.js';
 const PLACES = {
   ground: ['Street', 'London at 3 km, tilted'], air: ['Airspace', 'Europe from 1,400 km'], earth: ['Earth', 'The whole planet, sunlit side'],
   geo: ['GEO belt', '36,000 km up, where TV satellites sit'], moon: ['Moon', 'Fly out and look at it'], conj: ['Near misses', 'Close approaches in orbit'],
-  lookup: ['Look up', 'Your sky, with the phone as a window'], eclipses: ['Eclipses', 'Solar eclipses 2027 to 2030'], space: ['Solar System', 'Keep going: planets, stars, galaxies'],
+  weather: ['Weather', 'Live clouds, rain radar, rain from space'], lookup: ['Look up', 'Your sky, with the phone as a window'], eclipses: ['Eclipses', 'Solar eclipses 2027 to 2030'], space: ['Solar System', 'Keep going: planets, stars, galaxies'],
 };
 const RATES = [[-3600, '« 1 h/s'], [0, '❚❚ Pause'], [1, '▶ Live'], [60, '› 1 min/s'], [600, '» 10 min/s'], [3600, '⏩ 1 h/s']];
 

@@ -36,7 +36,7 @@ export function updateBand() {
   $('#bandName').textContent = name;
   $('#bandAlt').textContent = h > 1e6 ? fmt(h / 1000) + ' km above Earth' : h > 1e4 ? fmt(h / 1000) + ' km' : fmt(h) + ' m';
   showPlaceNames(L.labels.on && h < 3.0e6);
-  airIcons.show = h > 6.0e4;   // from low down, flat top-down icons near the horizon look like upright cards; models cover it
+  airIcons.show = h > 6.0e4 && !state.weather;   // from low down, flat top-down icons near the horizon look like upright cards; models cover it
 }
 camera.percentageChanged = 0.02; camera.changed.addEventListener(updateBand);
 setInterval(updateBand, 250);   // lookAt/follow moves don't always raise camera.changed

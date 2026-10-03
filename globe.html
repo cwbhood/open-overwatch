@@ -143,6 +143,15 @@ body.m .m-sheet.show{transform:none;opacity:1;pointer-events:auto}
 .m-rates{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .m-rate{min-height:48px;border-radius:10px;border:1px solid var(--edge-dim);background:rgba(230,237,243,.03);color:var(--ink);font:600 12px/1 var(--mono)} .m-rate.on{color:#04060a;background:var(--accent);border-color:var(--accent)}
 body.m #dock{bottom:calc(86px + env(safe-area-inset-bottom,0px))} body.m #card{bottom:calc(100px + env(safe-area-inset-bottom,0px))} body.m #credits{bottom:calc(86px + env(safe-area-inset-bottom,0px))} body.m #toast{bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+/* weather mode panel (src/globe/weather.js) */
+#wx{position:fixed;left:50%;bottom:96px;transform:translate(-50%,160%);width:min(440px,calc(100vw - 20px));padding:12px 14px;z-index:5;opacity:0;pointer-events:none;transition:transform .3s,opacity .2s}
+#wx.show{transform:translateX(-50%);opacity:1;pointer-events:auto}
+.wx-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px} .wx-head b{font:900 16px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:#7fd0ff} .wx-head span{flex:1;font:500 11px/1.2 var(--mono);color:var(--dim)} .wx-head .x{border:0;background:none;color:var(--faint);font-size:20px;padding:2px 8px}
+.wx-sets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px} .wx-sets .chipbtn{opacity:.55} .wx-sets .chipbtn.on{opacity:1;border-color:#7fd0ff;color:#7fd0ff}
+.wx-play{display:flex;align-items:center;gap:10px} .wx-play input{flex:1;accent-color:#7fd0ff;min-height:28px} #wxPlay{min-width:44px}
+#wx .note{margin-top:6px}
+body.m #wx{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+body.lookup #wx{display:none}
 body.lookup .m-dock,body.lookup .m-sheet,body.lookup .m-scrim{display:none!important}
 /* desktop navigation pad (src/globe/navpad.js; not built on phones, which have the dock) */
 #navpad{position:fixed;right:14px;bottom:48px;z-index:5;display:flex;flex-direction:column;gap:2px;padding:4px}
@@ -184,6 +193,7 @@ body.lookup #navpad{display:none}
   <button class="go" data-go="moon">Moon</button>
   <button class="go" data-go="conj" title="Upcoming close approaches between objects in orbit">Near misses</button>
   <button class="go" data-go="lookup" style="color:#7dffa6" title="Your sky right now: point your phone up">Look up</button>
+  <button class="go" data-go="weather" style="color:#7fd0ff" title="Live clouds, rain radar and rain from space">Weather</button>
   <button class="go" data-go="eclipses" title="Solar eclipses 2027-2030: watch the Moon's shadow cross the Earth">Eclipses</button>
   <button class="go" data-go="space" style="color:var(--accent)" title="Keep zooming out: the planets, the stars, the galaxy">Solar system ↗</button>
 </nav>
