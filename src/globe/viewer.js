@@ -20,6 +20,10 @@ if (!scene.sun) scene.sun = new C.Sun();   // Cesium only makes the Sun (and Moo
 scene.moon.show = true; scene.sun.show = true; scene.sun.glowFactor = 1.6;   // a brilliant star from orbit, not a dull disc
 ctrl.maximumZoomDistance = 6.0e8;   // past the Moon (~384,000 km)
 ctrl.minimumZoomDistance = 150;
+// The camera controller reads a depth pixel back from the GPU (readPixels) on every zoom / pinch step to find the point
+// under the cursor: a full pipeline stall each time, 1.25 s of a phone's hand-off pinch. This globe has no terrain or
+// 3D tiles, so the ellipsoid intersection it falls back to is the same point. (Nothing else here uses pickPosition.)
+Object.defineProperty(scene, 'pickPositionSupported', { get: () => false });
 
 // stars: NASA SVS Deep Star Maps 2020 as cube faces in ICRF axes (brand/tools/make_skybox.py; 1024 px faces on phones).
 // Cesium.SkyBox reads each face vertically flipped vs the OpenGL convention; make_skybox.py writes them that way.

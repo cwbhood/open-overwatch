@@ -11,6 +11,7 @@
 | `brand/tools/zoomtest.mjs` | real wheel events from Earth through the hand-off to the stars and back, frame by frame |
 | `brand/tools/mobile_journey.mjs` | a first visit A to Z on a phone: landing, globe, Solar System, 2D map, with touch, screenshots and a layout audit |
 | `brand/tools/webkit_journey.mjs` | the same journey in Safari's engine (Playwright WebKit) with an iPhone 15 profile |
+| `brand/tools/android_profile.mjs` | one gesture on the Android emulator with the JavaScript profiler on: `map`, `mapspace`, `mappinch`, `mapspacepinch`, `handoff`; `OO_CSS='…'` A/B tests a style, `OO_CALLERS='regex'` prints who calls a slow native function |
 
 All of them block the live feeds that must never see automated traffic (CelesTrak above all).
 
@@ -40,7 +41,13 @@ Things to know about the emulator:
 - **A fresh image** spends its first minutes updating Google Play Services. Each crash of Play Services takes Chrome
   down with it, so let it settle before measuring.
 - **adb resets:** the emulator's adbd sometimes resets ("timeout expired while flushing socket"), which drops every
-  forward and reverse. The journey re-makes only the missing ones, because replacing a live forward cuts DevTools.
+  forward and reverse. The journey re-makes only the missing ones, because replacing a live forward cuts DevTools,
+  and retries a page that comes up as Chrome's "site can't be reached".
+- **A first visit every time:** the journey and the profiler close leftover localhost tabs (a background globe tab
+  costs about a second of load time) and clear the site's storage, so the welcome presets show and the map does not
+  reopen wherever the last run left it.
+- **Paint costs are noisy:** the emulator decodes and rasterises through the host GPU, so the 2D map's pinch p95
+  moves between 80 and 180 ms run to run with an idle main thread. Run an A/B at least twice each way.
 
 **iPhone: there is no iOS simulator outside a Mac.** `webkit_journey.mjs` catches WebKit-only breakage, for example
 Cesium needing `OffscreenCanvas`, which iOS only has since 16.4 (the globe page now shims it). For the real iOS
@@ -49,9 +56,18 @@ Simulator, install Xcode (free) on a Mac and open the site in the Simulator's Sa
 ## Latest results (2026-10-03, local build)
 | | Android emulator (Pixel 8, Chrome 124, 4 GB) | WebKit, iPhone 15 profile |
 |---|---|---|
-| Globe on screen | 4.6 s | 6.2 s |
-| Globe motion | 43–51 fps (60 Hz screen), worst frame 200 ms | — |
-| Hand-off to the Solar System | works; 16 long tasks (2.8 s) while the view loads | — |
-| Solar System | 49–56 fps | WebGL2, TRAPPIST-1 builds |
-| 2D map drag + pinch | 27 fps (to look at) | works |
-| JavaScript errors | none | none (after the OffscreenCanvas shim) |
+| Globe on screen | 3.6 s | 6.2 s |
+| Globe motion | 51–56 fps (60 Hz screen), worst frame 167 ms | — |
+| Hand-off to the Solar System | after 10 pinches; 8 long tasks (2.3 s) as the view first loads | — |
+| Solar System | 35–57 fps | WebGL2, TRAPPIST-1 builds |
+| 2D map drag | 60 fps (p95 33 ms) | Space preset works |
+| 2D map pinch | p95 80–180 ms: tile decode and raster, no JavaScript | — |
+| JavaScript errors | none | none |
+
+Desktop (`zoomtest.mjs`): 4,902 frames from Earth to the stars, p95 6.2 ms, no frame over 50 ms.
+
+What fixed the hand-off stutter on phones (profiled with `android_profile.mjs handoff`): aircraft updates once a
+second when far out (1.1 s → 0.1 s of work); the docked-satellite check every 10 s without allocating (860 → 65 ms);
+no depth readback from the GPU on every pinch step (`pickPositionSupported` off, 1.25 s); the Solar System's
+background texture uploads wait while a finger is down. Left: shader programs linking on first use at the hand-off
+(~0.3 s in three.js and Cesium each).

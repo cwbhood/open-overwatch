@@ -208,19 +208,28 @@ export const SatModels = {
     near.sort((p, q) => p[0] - q[0]);
     // docked vehicles and station modules have their own TLEs at the station's position: no model, no dot. Checked over
     // the whole catalogue (not just near the camera), so Follow/selection can never pick a docked one.
-    const pos = s => { const i = s.idx * 6; return [b[i] + b[i + 3] * dt, b[i + 1] + b[i + 4] * dt, b[i + 2] + b[i + 5] * dt]; };
-    this.stations = this.stations || Sats.list.filter(x => ['iss', 'css'].includes(this.classify(x)));
-    const docked = new Set();
-    for (const st2 of this.stations) {
-      if (Number.isNaN(b[st2.idx * 6])) continue; const P = pos(st2);
-      for (const s of Sats.list) { if (s === st2 || Number.isNaN(b[s.idx * 6])) continue; const Q = pos(s); if (Math.hypot(Q[0] - P[0], Q[1] - P[1], Q[2] - P[2]) < 5) docked.add(s); }
+    // Docking changes on a scale of days: rechecked every 10 s, not every refresh (the full pass, stations x 18,000
+    // objects, was the globe's second-biggest main-thread cost on a phone), with no allocation in the inner loop.
+    if (!this.dockedAt || Date.now() - this.dockedAt > 10e3) {
+      this.dockedAt = Date.now();
+      this.stations = this.stations || Sats.list.filter(x => ['iss', 'css'].includes(this.classify(x)));
+      const docked = new Set();
+      for (const st2 of this.stations) {
+        const j = st2.idx * 6; if (Number.isNaN(b[j])) continue;
+        const px = b[j] + b[j + 3] * dt, py = b[j + 1] + b[j + 4] * dt, pz = b[j + 2] + b[j + 5] * dt;
+        for (const s of Sats.list) {
+          if (s === st2) continue; const i = s.idx * 6, x = b[i]; if (Number.isNaN(x)) continue;
+          const dx = x + b[i + 3] * dt - px; if (dx > 5 || dx < -5) continue;
+          const dy = b[i + 1] + b[i + 4] * dt - py, dz = b[i + 2] + b[i + 5] * dt - pz; if (dx * dx + dy * dy + dz * dz < 25) docked.add(s);
+        }
+      }
+      for (const s of Sats.list) {
+        const was = s.docked; s.docked = docked.has(s);
+        if (was !== s.docked && s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
+        if (s.docked && s.ent && s !== this.followed) this.drop(s);
+      }
     }
-    for (const s of Sats.list) {
-      const was = s.docked; s.docked = docked.has(s);
-      if (was !== s.docked && s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
-      if (s.docked && s.ent && s !== this.followed) this.drop(s);
-    }
-    const want = new Set(near.filter(x => !docked.has(x[1])).slice(0, this.max).map(x => x[1]));
+    const want = new Set(near.filter(x => !x[1].docked).slice(0, this.max).map(x => x[1]));
     if (this.followed) want.add(this.followed);
     const sel = state.selected; if (sel && sel.kind === 'sat' && !sel.docked) want.add(sel);
     for (const s of [...this.pool.values()]) if (!want.has(s)) this.drop(s);

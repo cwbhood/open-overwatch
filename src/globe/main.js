@@ -42,7 +42,9 @@ $('#luExit').onclick = () => LookUp.leave();
 addEventListener('keydown', e => { if (e.key === 'Escape' && LookUp.active) LookUp.leave(); });
 setInterval(() => SatModels.refresh(), 400);
 setInterval(() => AirModels.refresh(), 500);
-setInterval(() => Air.update(Date.now()), 250);
+// aircraft dead reckoning: 4 times a second close in, once a second from high up (a quarter-second of flight is invisible
+// from 1,000 km, and each pass moves ~8,000 dots: the globe's biggest main-thread cost on a phone)
+{ let lastAir = 0; setInterval(() => { const now = Date.now(); if (now - lastAir < (camHeight() > 1.0e6 ? 1000 : 250)) return; lastAir = now; Air.update(now); }, 250); }
 setInterval(() => Air.prune(), 30e3);
 
 /** Run a feed now and every `ms`. A failure is logged and retried on the next run; only one that keeps failing
@@ -90,7 +92,7 @@ Sats.load().catch(e => toast('Satellites failed: ' + e.message));
 // start-up was 6 s of main-thread work on a phone, landing in the middle of the pinch); phones a little later
 { // ...and on phones only while nobody is touching it (the work would otherwise land in the middle of a gesture)
   let lastInput = performance.now();
-  for (const ev of ['pointerdown', 'pointermove', 'wheel']) addEventListener(ev, () => { lastInput = performance.now(); }, { passive: true, capture: true });
+  for (const ev of ['pointerdown', 'pointermove', 'wheel']) addEventListener(ev, () => { lastInput = performance.now(); window.OO_inputAt = Date.now(); }, { passive: true, capture: true });   // OO_inputAt: read by the preloaded Solar System view
   const t0 = performance.now(), wait = setInterval(() => {
     const now = performance.now();
     if (now - t0 < (PHONE ? 15e3 : 10e3) || (PHONE && now - lastInput < 3000)) return;

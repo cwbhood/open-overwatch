@@ -166,7 +166,14 @@ loads.forEach(settle);
       for (const t of [m.map, ...Object.values(m.uniforms || {}).map(u => u.value)]) if (t && t.isTexture && t.image && !done.has(t)) out.push(t); });
     return out;
   };
-  const step = () => { const t = pending()[0]; if (t) { renderer.initTexture(t); done.add(t); idle(step); } else setTimeout(() => idle(step), 1500); };
+  // "idle" between two frames of a pinch is not idle: an upload (up to ~0.4 s for a big map on a phone) waits until
+  // nobody has touched this page, or the globe around it, for 1.5 s
+  for (const ev of ['pointerdown', 'pointermove', 'wheel']) addEventListener(ev, () => { window.OO_inputAt = Date.now(); }, { passive: true, capture: true });
+  const touched = () => { let t = window.OO_inputAt || 0; try { if (EMBED && parent.OO_inputAt) t = Math.max(t, parent.OO_inputAt); } catch (e) { /* not same-origin */ } return Date.now() - t < 1500; };
+  const step = () => {
+    if (touched()) { setTimeout(() => idle(step), 700); return; }
+    const t = pending()[0]; if (t) { renderer.initTexture(t); done.add(t); idle(step); } else setTimeout(() => idle(step), 1500);
+  };
   idle(step);
   const warm = () => new Promise(res => idle(() => renderer.compileAsync(scene, camera).catch(e => console.warn('shader warm-up', e)).finally(res)));
   embed.api.warm = false;   // the globe waits for this before handing over

@@ -36,7 +36,7 @@ async function step(name, fn) {
   console.log(`${String(n).padStart(2)} ${name.padEnd(30)} ${String(r.s).padStart(5)} s  ${note}`);
   for (const e of r.errors.slice(0, 4)) console.log('     ' + e);
 }
-const tapText = async (re) => { const el = page.locator('button, a').filter({ hasText: re }).first(); await el.tap({ timeout: 8000 }); };
+const tapText = async (re) => { const el = page.locator('button:visible, a:visible').filter({ hasText: re }).first(); await el.tap({ timeout: 8000 }); };
 
 await step('landing', async () => { await page.goto(BASE + 'index.html'); return await page.title(); });
 await step('globe: open', async () => {

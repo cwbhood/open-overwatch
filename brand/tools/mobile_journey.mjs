@@ -63,6 +63,10 @@ try {
   await p.send('Page.enable'); await p.send('Runtime.enable'); await p.send('Network.enable'); await p.send('Performance.enable'); await p.send('Log.enable');
   await p.send('Network.setBlockedURLs', { urls: ['*celestrak.org*', '*opensky-network.org*', '*adsb.lol*', '*adsb.fi*', '*airplanes.live*', '*earthquake.usgs.gov*', '*wheretheiss.at*'] });
   await p.send('Network.emulateNetworkConditions', { offline: false, ...NET });
+  if (ANDROID) {   // a true first visit: no leftover tabs (background globes eat CPU) and no remembered choices or map view
+    for (const t of await (await fetch('http://127.0.0.1:9333/json/list')).json()) if (t.type === 'page' && /localhost:8787/.test(t.url)) await fetch('http://127.0.0.1:9333/json/close/' + t.id).catch(() => {});
+    await p.send('Storage.clearDataForOrigin', { origin: BASE.replace(/\/[^/]*$/, '').replace(/^(https?:\/\/[^/]+).*/, '$1'), storageTypes: 'all' });
+  }
   if (!ANDROID) {
     await p.send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 3, mobile: true, screenWidth: W, screenHeight: H });
     await p.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
@@ -125,7 +129,12 @@ try {
   }
   const nav = async (path, waitJs, ms = 60000) => {
     const loaded = p.waitFor('Page.loadEventFired', { timeoutMs: 120000 }); const t0 = Date.now();
-    await p.send('Page.navigate', { url: BASE + path }); await loaded; const load = (Date.now() - t0) / 1000;
+    await p.send('Page.navigate', { url: BASE + path }); await loaded; let load = (Date.now() - t0) / 1000;
+    if (await p.eval(`location.protocol === 'chrome-error:'`)) {   // adb dropped the reverse link: re-make it and retry once
+      adbLinks(); await sleep(1000); const again = p.waitFor('Page.loadEventFired', { timeoutMs: 120000 });
+      await p.send('Page.navigate', { url: BASE + path }); await again; load = (Date.now() - t0) / 1000;
+      if (await p.eval(`location.protocol === 'chrome-error:'`)) throw new Error('page did not load (the phone cannot reach this PC)');
+    }
     if (waitJs) await p.poll(waitJs, { timeoutMs: ms, intervalMs: 300 }).catch(() => {});
     return `load event ${load.toFixed(1)} s, ready ${((Date.now() - t0) / 1000).toFixed(1)} s`;
   };
@@ -150,8 +159,8 @@ try {
   });
   await step('globe: pinch out to the Solar System', async () => {
     await tapSel('#card .x');
-    for (let i = 0; i < 14; i++) { await pinch(195, 420, 300, 50, 600); await sleep(250); if (await p.eval(`document.querySelector('iframe')?.style.opacity === '1'`)) break; }
-    await sleep(2500); return (await p.eval(`document.querySelector('iframe')?.style.opacity === '1'`)) ? 'handed over' : 'still on the globe at ' + Math.round(await p.eval('OO3D.viewer.camera.positionCartographic.height / 1000')) + ' km';
+    let n = 0; for (; n < 24; n++) { await pinch(195, 420, 300, 50, 600); await sleep(250); if (await p.eval(`document.querySelector('iframe')?.style.opacity === '1'`)) break; }
+    await sleep(2500); return (await p.eval(`document.querySelector('iframe')?.style.opacity === '1'`)) ? `handed over after ${n + 1} pinches` : 'still on the globe at ' + Math.round(await p.eval('OO3D.viewer.camera.positionCartographic.height / 1000')) + ' km';
   }, { gesture: true });
 
   // ---- C. Solar System on its own
