@@ -17,6 +17,7 @@ export const LAYERS = [
   { id: 'air', group: 'Air', name: 'Civil aircraft (OpenSky, every 15 min)', color: '#5fd3ff', on: true },
   { id: 'mil', group: 'Air', name: 'Military aircraft (adsb.lol, every 60 s)', color: '#ffb44d', on: true },
   { id: 'quakes', group: 'Earth', name: 'Earthquakes M2.5+ · 24 h', color: '#ff7b4f', on: true },
+  { id: 'lighthouses', group: 'Earth', name: 'Lighthouses of the world', color: '#ffe27a', on: !PHONE },
   { id: 'clouds', group: 'Earth', name: 'Clouds (NASA Blue Marble)', color: '#e6edf3', on: true },
   { id: 'night', group: 'Earth', name: 'City lights on the night side', color: '#fff1d0', on: true },
   { id: 'labels', group: 'Earth', name: 'Place names when close', color: '#8b9bab', on: true },

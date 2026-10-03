@@ -44,6 +44,7 @@ user enters in the 2D map's Setup tab (stored only in their browser).
 | What | Source | How | Notes |
 |---|---|---|---|
 | Earthquakes | [USGS](https://earthquake.usgs.gov) real-time feeds | direct | M2.5+ day / significant |
+| Lighthouses (3D globe) | [OpenStreetMap](https://www.openstreetmap.org) `man_made=lighthouse` via Overpass, built by `brand/tools/make_lighthouses.py` | static `data/lighthouses.json` | ODbL: credit "© OpenStreetMap contributors" (shown on every lighthouse card). Heights, light patterns and ranges are only as complete as mappers made them; many have a name and position only. Refresh by deleting `brand/source/lighthouses/` and re-running the script |
 | Natural events | NASA [EONET](https://eonet.gsfc.nasa.gov) | direct | |
 | Disaster alerts | [GDACS](https://www.gdacs.org) (EU/UN) | direct, paged | up to 1000 events |
 | Tropical cyclones | EONET; NOAA [NHC](https://www.nhc.noaa.gov) advisories | NHC via relay | |

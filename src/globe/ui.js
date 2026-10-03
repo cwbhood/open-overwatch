@@ -71,6 +71,7 @@ function tipFor(o) {
   if (o.kind === 'sat') return `${o.name} · ${L[o.layer].name.split(' (')[0]}`;
   if (o.kind === 'air') return `${o.flight || o.hex} · ${o.ground ? 'on ground' : fmt((o.alt || 0) / 0.3048) + ' ft'}${o.mil ? ' · military' : ''}`;
   if (o.kind === 'quake') return `M${o.mag.toFixed(1)} · ${o.place}`;
+  if (o.kind === 'lighthouse') return `${o.name || 'Lighthouse'}${o.heightM ? ' · ' + fmt(o.heightM) + ' m' : ''}`;
   return '';
 }
 let hoverRaf = 0;
@@ -99,6 +100,10 @@ export function select(o) {
     Sats.orbit(o);
   } else if (o.kind === 'air') {
     html = `<div class="k" style="--c:${o.mil ? '#ffb44d' : '#5fd3ff'}">${o.mil ? 'Military aircraft' : 'Aircraft'} · ${esc(o.src)}</div><h2>${esc(o.flight || o.hex)}</h2><dl>${row('ICAO hex', o.hex)}${o.type ? row('Type', o.type) : ''}${o.reg ? row('Registration', o.reg) : ''}${o.country ? row('Country', o.country) : ''}${row('Altitude', o.ground ? 'on ground' : fmt((o.alt || 0) / 0.3048) + ' ft')}${row('Speed', o.gs != null ? fmt(o.gs / 0.514444) + ' kt' : '—')}${row('Track', o.track != null ? Math.round(o.track) + '°' : '—')}${row('Squawk', o.squawk || '—')}${row('Last fix', Math.round((Date.now() - o.ts) / 1000) + ' s ago')}</dl>`;
+  } else if (o.kind === 'lighthouse') {
+    const wd = /^Q\d+$/.test(o.wiki) ? `<div class="acts"><a class="chipbtn" href="https://www.wikidata.org/wiki/${o.wiki}" target="_blank" rel="noopener">Wikidata</a></div>` : '';
+    const light = [o.colour, o.character].filter(Boolean).join(' · ');
+    html = `<div class="k" style="--c:#ffe27a">${o.status ? 'Disused lighthouse' : 'Lighthouse'}</div><h2>${esc(o.name || 'Unnamed lighthouse')}</h2><dl>${o.heightM ? row('Height', fmt(o.heightM) + ' m') : ''}${light ? row('Light', light) : ''}${o.rangeNm ? row('Range', fmt(o.rangeNm) + ' nautical miles') : ''}${o.built ? row('Built', o.built) : ''}${o.operator ? row('Run by', o.operator) : ''}${row('Position', o.lat.toFixed(4) + '°, ' + o.lon.toFixed(4) + '°')}</dl>${wd}<div class="note" style="margin-top:8px">© OpenStreetMap contributors (ODbL)</div>`;
   } else if (o.kind === 'quake') {
     const link = /^https:\/\//.test(o.url) ? `<div class="acts"><a class="chipbtn" href="${esc(o.url)}" target="_blank" rel="noopener">USGS page</a></div>` : '';
     html = `<div class="k" style="--c:#ff7b4f">Earthquake</div><h2>M${o.mag.toFixed(1)}</h2><dl>${row('Where', o.place)}${row('When', new Date(o.time).toISOString().slice(0, 16).replace('T', ' ') + ' UTC')}${row('Depth', fmt(o.depth) + ' km')}</dl>${link}`;
@@ -117,6 +122,7 @@ function flyToObject(o) {
   release();
   if (o.kind === 'sat') { const st = SatModels.state(o), p = st.ok ? st.pos : o.pt.position, h = C.Cartesian3.magnitude(p) - 6371000; camera.flyToBoundingSphere(new C.BoundingSphere(p, 1), { offset: new C.HeadingPitchRange(0, -0.6, Math.max(2.5e6, h * 0.6)), duration: 2.5 }); }
   else if (o.kind === 'air') flyDeg(o.cur?.lon ?? o.lon, (o.cur?.lat ?? o.lat) - 0.35, 45000, -50);
+  else if (o.kind === 'lighthouse') flyDeg(o.lon, o.lat - 0.025, 7000, -45);
   else flyDeg(o.lon, o.lat - 1.2, 3.5e5, -60);
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (Follow.obj) Follow.stop(); else closeCard(); } });

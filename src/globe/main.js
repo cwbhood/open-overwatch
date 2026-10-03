@@ -10,6 +10,7 @@ import { warmModels, warmAgain, warmSlowly } from './warm.js';
 import { Air, AirModels, airShown } from './aircraft.js';
 import { Time } from './time.js';
 import { Quakes } from './quakes.js';
+import { Lighthouses } from './lighthouses.js';
 import { updateStats, updateBand, PRESETS, Lighting, select } from './ui.js';
 import { Space } from './space.js';
 import { Quality, LEVELS } from './quality.js';
@@ -24,7 +25,7 @@ function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
   airPts.show = airIcons.show = true;
   for (const a of Air.map.values()) { const on = airShown(a); a.pt.show = on && !a.ent; a.icon.show = on && !a.ent; if (!on && a.ent) AirModels.drop(a); }
-  qkPts.show = L.quakes.on;
+  qkPts.show = L.quakes.on; Lighthouses.apply();
   Earth.apply(); updateBand(); updateStats();
 }
 hooks.applyVisibility = applyVisibility;
@@ -108,7 +109,7 @@ every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
 
 window.OO3D = { Conj, LookUp, Eclipses,
-  viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
+  viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, Lighthouses, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {
     const pos = C.Cartesian3.fromDegrees(lon, lat, h), R = C.Matrix4.getMatrix3(C.Transforms.eastNorthUpToFixedFrame(pos), new C.Matrix3());
