@@ -38,19 +38,16 @@ class CompositeProvider {
     });
   }
 }
-const SATS = [['GOES-East_ABI_Band13_Clean_Infrared', 0], ['GOES-West_ABI_Band13_Clean_Infrared', 0], ['Himawari_AHI_Band13_Clean_Infrared', 1]];   // [layer, level-0 tile column to probe]
+const SATS = [['GOES-East_ABI_Band13_Clean_Infrared'], ['GOES-West_ABI_Band13_Clean_Infrared'], ['Himawari_AHI_Band13_Clean_Infrared']];
 const FRAMES = PHONE ? 4 : 6, STEP = 30 * 60e3, PLAY_MS = 900;
 const iso = ms => new Date(ms).toISOString().slice(0, 19) + 'Z';
 const hhmm = ms => new Date(ms).toISOString().slice(11, 16) + ' UTC';
 
-async function haveTile(layer, time, col, matrix, minBytes) {   // a missing time comes back blank (~1 kB) or as an error
-  try { const r = await fetch(`${GIBS}${layer}/default/${time}/${matrix}/0/0/${col}.png`); return r.ok && (await r.blob()).size > minBytes; } catch (e) { return false; }
-}
 async function haveWms(layer, time, minBytes) {   // whole-world 256x128 image: WMS answers a missing time with a blank image (WMTS: a 404 without CORS headers)
   try { const r = await fetch(`https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=${layer}&STYLES=&SRS=EPSG:4326&BBOX=-180,-90,180,90&WIDTH=256&HEIGHT=128&FORMAT=image/png&TRANSPARENT=true&TIME=${time}`); return r.ok && (await r.blob()).size > minBytes; } catch (e) { return false; }
 }
-async function latest(layer, col, matrix, step, from, to, minBytes) {   // newest time (ms) in [to, from] that has data
-  for (let t = Math.floor(from / step) * step; t >= to; t -= step) if (await (matrix ? haveTile(layer, iso(t), col, matrix, minBytes) : haveWms(layer, iso(t), minBytes))) return t;
+async function latest(layer, step, from, to, minBytes) {   // newest time (ms) in [to, from] that has data
+  for (let t = Math.floor(from / step) * step; t >= to; t -= step) if (await haveWms(layer, iso(t), minBytes)) return t;
   return null;
 }
 
@@ -64,8 +61,8 @@ export const Weather = {
     this.ready = (async () => {
       const now = Date.now();
       const [ir, rainAt, maps] = await Promise.all([
-        Promise.all(SATS.map(async ([layer, col]) => ({ layer, latest: await latest(layer, col, '2km', 600e3, now - 25 * 60e3, now - 4 * 3600e3, 3000) }))),
-        latest('IMERG_Precipitation_Rate_30min', 0, null, 1800e3, now - 3 * 3600e3, now - 30 * 3600e3, 1500),
+        Promise.all(SATS.map(async ([layer]) => ({ layer, latest: await latest(layer, 600e3, now - 25 * 60e3, now - 4 * 3600e3, 2000) }))),
+        latest('IMERG_Precipitation_Rate_30min', 1800e3, now - 3 * 3600e3, now - 30 * 3600e3, 1500),
         fetch('https://api.rainviewer.com/public/weather-maps.json').then(r => r.json()).catch(() => null)]);
       this.ir = ir.filter(s => s.latest); this.rainAt = rainAt || 0;
       this.radar = maps && maps.radar ? maps.radar.past.map(f => ({ time: f.time * 1000, url: maps.host + f.path })) : [];

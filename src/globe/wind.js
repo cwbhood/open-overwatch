@@ -87,7 +87,7 @@ export const Wind = {
   },
   makeCanvas() {
     const cv = document.createElement('canvas'); cv.id = 'windcv'; cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:3';
-    document.body.append(cv); this.canvas = cv; this.ctx = cv.getContext('2d', { desynchronized: true }); addEventListener('resize', () => this.windOn && this.resize());
+    document.body.append(cv); this.canvas = cv; this.ctx = cv.getContext('2d'); addEventListener('resize', () => this.windOn && this.resize());
   },
   resize() {   // phones: a canvas a third the pixels; thin streaks hardly notice, and the per-frame fade and composite cost far less
     const dpr = PHONE ? 0.6 : Math.min(devicePixelRatio || 1, 2);

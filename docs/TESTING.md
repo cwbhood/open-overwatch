@@ -11,6 +11,7 @@
 | `brand/tools/zoomtest.mjs` | real wheel events from Earth through the hand-off to the stars and back, frame by frame |
 | `brand/tools/mobile_journey.mjs` | a first visit A to Z on a phone: landing, globe, Solar System, 2D map, with touch, screenshots and a layout audit |
 | `brand/tools/webkit_journey.mjs` | the same journey in Safari's engine (Playwright WebKit) with an iPhone 15 profile |
+| `brand/tools/wind_fixture.mjs` | a made-up wind grid the journeys serve as `data/wind.json` (and they block Open-Meteo: its per-IP hourly quota) |
 | `brand/tools/android_profile.mjs` | one gesture on the Android emulator with the JavaScript profiler on: `map`, `mapspace`, `mappinch`, `mapspacepinch`, `handoff`, `weather`; `OO_CSS='…'` A/B tests a style, `OO_CALLERS='regex'` prints who calls a slow native function |
 
 All of them block the live feeds that must never see automated traffic (CelesTrak above all).
@@ -53,24 +54,24 @@ Things to know about the emulator:
 Cesium needing `OffscreenCanvas`, which iOS only has since 16.4 (the globe page now shims it). For the real iOS
 Simulator, install Xcode (free) on a Mac and open the site in the Simulator's Safari.
 
-## Latest results (2026-10-03, local build)
-| | Android emulator (Pixel 8, Chrome 124, 4 GB) | WebKit, iPhone 15 profile |
+## Latest results (2026-10-03, local build, Android emulator unless noted)
+| | morning | evening |
 |---|---|---|
-| Globe on screen | 3.6 s | 6.2 s |
-| Globe motion | 51–56 fps (60 Hz screen), worst frame 167 ms | — |
-| Hand-off to the Solar System | after 10 pinches; 8 long tasks (2.3 s) as the view first loads | — |
-| Solar System | 35–57 fps | WebGL2, TRAPPIST-1 builds |
-| 2D map drag | 60 fps (p95 33 ms) | Space preset works |
-| 2D map pinch | p95 80–180 ms: tile decode and raster, no JavaScript | — |
-| JavaScript errors | none | none |
+| Globe on screen | 4.6 s | 4.3 s |
+| Dragging the globe (all satellites loaded) | 14-16 fps | 47-57 fps |
+| Zoom out to the Solar System | 8 long tasks, 2.4 s | 0 long tasks, 54 fps |
+| Solar System drag + pinch | 53 fps | 60 fps |
+| 2D map drag + pinch | 27-49 fps (noisy) | 60 fps |
+| Opening Weather (once) | 12 long tasks, 2.2 s | 8 long tasks, 2.4 s |
+| iPhone profile (WebKit) | all steps pass | all steps pass, no errors |
+| Desktop zoom, Earth to the stars | p95 6.2 ms | p95 6.2 ms, no frame over 50 ms |
 
-Desktop (`zoomtest.mjs`): 4,902 frames from Earth to the stars, p95 6.2 ms, no frame over 50 ms.
-
-What fixed the hand-off stutter on phones (profiled with `android_profile.mjs handoff`): aircraft updates once a
-second when far out (1.1 s → 0.1 s of work); the docked-satellite check every 10 s without allocating (860 → 65 ms);
-no depth readback from the GPU on every pinch step (`pickPositionSupported` off, 1.25 s); the Solar System's
-background texture uploads wait while a finger is down. Left: shader programs linking on first use at the hand-off
-(~0.3 s in three.js and Cesium each).
+**The satellite dots were the biggest cost on phones.** Every moved dot costs Cesium a high/low precision split, and once more
+than a tenth of a point collection moves it re-uploads the whole vertex buffer: ~11,000 dots, every frame. Dragging the globe
+ran at 15 fps with the dots and ~60 without. Far out they now all move together every few frames (8 on phones above 20,000 km,
+4 above 1,500 km, 2 in low orbit) and nothing is uploaded in between; a dot moves ~125 m a frame, well under a pixel. Moving them
+in rotating slices did not help: each slice was still over a tenth. It also showed a trap: an unpropagated satellite reads
+`undefined`, not NaN, from the worker buffer and became a NaN position.
 
 ### Weather mode on the Android emulator (2026-10-03)
 Measured with `android_profile.mjs weather`, the journey's "Weather with wind" step, and A/B runs (hide the canvas, empty it).

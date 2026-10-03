@@ -1,7 +1,7 @@
 // Satellites: TLEs from the shared source (src/core/tle.js), SGP4 for every dot in a worker, and Blender-built glTF
 // models with exact per-frame SGP4 for the nearest ones.
-import { C, toast, bigStore, getText, ON_SITE, NO_ENV_MAP } from './env.js';
-import { viewer, camera, satPts, orbitLines } from './viewer.js';
+import { C, toast, bigStore, getText, ON_SITE, NO_ENV_MAP, PHONE } from './env.js';
+import { viewer, camera, satPts, orbitLines, camHeight } from './viewer.js';
 import { L, LAYERS, setCount } from './layers.js';
 import { state, hooks } from './state.js';
 import { Follow, MODEL_FIX, SOLAR_AXIS } from './follow.js';
@@ -81,12 +81,20 @@ export const Sats = {
     tick();
     hooks.updateStats();
   },
-  scratch: new C.Cartesian3(),
+  scratch: new C.Cartesian3(), frameNo: 0,
   update(now) { // extrapolate from the last worker tick (ECF, km): straight along v for a few seconds, else round the orbit
     if (state.weather) return;   // weather mode hides every dot: no position work for ~19,000 of them
     const st = this.state; if (!st) return; const dt = (now - st.t) / 1000, b = st.buf, P = this.scratch, curve = Math.abs(dt) > 3;
-    for (const s of this.list) {
-      const i = s.idx * 6, x = b[i]; if (Number.isNaN(x)) { s.pt.show = false; continue; }
+    // Every moved dot costs Cesium a high/low precision split, and once more than a tenth of them move it re-uploads the
+    // whole vertex buffer (~11,000 dots): on a phone that buffer was most of the frame (dragging the globe: 15 fps with the
+    // dots, 97 without). A satellite moves ~125 m a frame, far under a pixel from orbit, so far out all of them move together
+    // every few frames and the frames in between upload nothing. Time-lapse moves them every frame.
+    const h = camHeight(), fast = !Time.live && Math.abs(Time.rate) > 60;
+    const every = fast ? 1 : h > 2.0e7 ? (PHONE ? 8 : 4) : h > 1.5e6 ? (PHONE ? 4 : 2) : h > 1.5e5 && PHONE ? 2 : 1;
+    if ((this.frameNo = (this.frameNo + 1) % 840) % every) return;
+    const list = this.list;
+    for (let n = 0; n < list.length; n++) {
+      const s = list[n], i = s.idx * 6, x = b[i]; if (!(x === x) || x === undefined) { s.pt.show = false; continue; }   // not propagated yet (or failed): undefined must not slip through as NaN
       s.pt.show = L[s.layer].on && !s.ent && !s.docked; if (!s.pt.show) continue;   // hidden dots: no position work
       const y = b[i + 1], z = b[i + 2], vx = b[i + 3], vy = b[i + 4], vz = b[i + 5];
       if (!curve) { P.x = (x + vx * dt) * 1000; P.y = (y + vy * dt) * 1000; P.z = (z + vz * dt) * 1000; }

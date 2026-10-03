@@ -8,6 +8,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { windFixture } from './wind_fixture.mjs';
 
 const require = createRequire(path.join(process.env.PLAYWRIGHT_DIR || path.join(os.homedir(), 'open-overwatch-work', 'pw'), 'package.json'));
 const { webkit, devices } = require('playwright');
@@ -21,6 +22,8 @@ const browser = await webkit.launch();
 const ctx = await browser.newContext({ ...devices['iPhone 15'], geolocation: { latitude: 51.5007, longitude: -0.1246 }, permissions: ['geolocation'] });
 for (const host of ['celestrak.org', 'opensky-network.org', 'adsb.lol', 'adsb.fi', 'airplanes.live', 'earthquake.usgs.gov', 'wheretheiss.at'])
   await ctx.route(new RegExp(`https?://([^/]*\\.)?${host.replace('.', '\\.')}/`), r => r.abort());
+await ctx.route(/api\.open-meteo\.com/, r => r.abort());   // never spend Open-Meteo's hourly quota from tests
+await ctx.route(/\/data\/wind\.json/, r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(windFixture()) }));
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', e => errors.push('page error: ' + String(e.message).split('\n')[0].slice(0, 200)));

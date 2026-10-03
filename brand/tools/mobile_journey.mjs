@@ -7,6 +7,7 @@
 // tiny text). Summary table at the end; everything in brand/perf/mobile/report.json. Live feeds that must never see
 // automated traffic are blocked, as in globe_shot.mjs.
 import { launch, connect, sleep } from './cdp.mjs';
+import { windFixture } from './wind_fixture.mjs';
 // OO_ANDROID=1: run on real Chrome in the Android emulator instead (adb reverse tcp:8787 tcp:8787 and
 // adb forward tcp:9333 localabstract:chrome_devtools_remote first): its own screen, CPU and GPU, no emulation.
 const ANDROID = process.env.OO_ANDROID === '1';
@@ -61,7 +62,10 @@ const report = [];
 try {
   const p = await b.newPage();
   await p.send('Page.enable'); await p.send('Runtime.enable'); await p.send('Network.enable'); await p.send('Performance.enable'); await p.send('Log.enable');
-  await p.send('Network.setBlockedURLs', { urls: ['*celestrak.org*', '*opensky-network.org*', '*adsb.lol*', '*adsb.fi*', '*airplanes.live*', '*earthquake.usgs.gov*', '*wheretheiss.at*'] });
+  await p.send('Network.setBlockedURLs', { urls: ['*celestrak.org*', '*opensky-network.org*', '*adsb.lol*', '*adsb.fi*', '*airplanes.live*', '*earthquake.usgs.gov*', '*wheretheiss.at*', '*api.open-meteo.com*'] });
+  // the wind grid: a fixed made-up one in place of data/wind.json (Open-Meteo itself is blocked above: its hourly quota)
+  await p.send('Fetch.enable', { patterns: [{ urlPattern: '*data/wind.json*' }] });
+  p.on('Fetch.requestPaused', e => p.send('Fetch.fulfillRequest', { requestId: e.requestId, responseCode: 200, responseHeaders: [{ name: 'Content-Type', value: 'application/json' }, { name: 'Access-Control-Allow-Origin', value: '*' }], body: Buffer.from(JSON.stringify(windFixture())).toString('base64') }).catch(() => {}));
   await p.send('Network.emulateNetworkConditions', { offline: false, ...NET });
   if (ANDROID) {   // a true first visit: no leftover tabs (background globes eat CPU) and no remembered choices or map view
     for (const t of await (await fetch('http://127.0.0.1:9333/json/list')).json()) if (t.type === 'page' && /localhost:8787/.test(t.url)) await fetch('http://127.0.0.1:9333/json/close/' + t.id).catch(() => {});
