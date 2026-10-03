@@ -42,7 +42,7 @@ try {
       '#cap small{display:block;margin-top:8px;font:500 15px/1.3 "IBM Plex Mono",monospace;letter-spacing:.04em;text-transform:none;color:#cfe;opacity:.9}';
     document.head.appendChild(st); const c = document.createElement('div'); c.id = 'cap'; document.body.appendChild(c);
   })()`);
-  const caption = (t, s = '') => p.eval(`document.querySelector('#cap').innerHTML = ${JSON.stringify(t ? `${t}${s ? `<small>${s}</small>` : ''}` : '')}`);
+  const caption = async (t, s = '') => { await p.eval(`document.querySelector('#cap').innerHTML = ${JSON.stringify(t ? `${t}${s ? `<small>${s}</small>` : ''}` : '')}`); await p.eval('new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))'); };
   const shot = async () => {
     const s = await p.send('Page.captureScreenshot', { format: 'jpeg', quality: 92 });
     await writeFile(path.join(OUT, `frame_${String(++n).padStart(5, '0')}.jpg`), Buffer.from(s.data, 'base64'));
@@ -66,6 +66,8 @@ try {
   await p.poll(`document.querySelector('iframe')?.style.opacity === '1'`, { timeoutMs: 20000 }).catch(() => console.log('hand-off did not happen'));
   for (let i = 0; i < 12; i++) { await sleep(70); await shot(); }   // the 0.7 s cross-fade in real time
   // ---- B: the Solar System view, driven frame by frame
+  await p.eval(`(() => { const doc = document.querySelector('iframe').contentDocument, st = doc.createElement('style');   // the Solar System view's own chrome off too
+    st.textContent = '#top,#band,#cap,#card,#credits,#dock,#menuBtn,#nerd,#load,#err{display:none!important}'; doc.head.appendChild(st); })()`);
   await p.eval(`(() => { const S = document.querySelector('iframe').contentWindow.OOSS; window.__S = S;
     S.controls.enableDamping = false; S.nav.fly = null; window.__focus = { key: 'capture', name: '', radius: 0, pos: S.controls.target.clone() }; S.nav.focus = window.__focus;
     window.__dir = S.camera.position.clone().sub(S.controls.target).normalize(); window.__jd0 = S.clock.jd; S.clock.setRate(0);
@@ -74,26 +76,29 @@ try {
   })()`);
   const solar = async (js, frames = 3) => { await p.eval(`(() => { const S = window.__S, T = S.THREE; ${js} })()`); await p.eval(`window.__frames(${frames})`); };
   const LY = 63241.077, earth = await p.eval(`window.__S.byKey.earth.pos.toArray()`);
+  await p.eval(`Promise.all([window.__S.exo.load(), window.__S.web.load()])`);   // TRAPPIST-1's catalogue position, the galaxies
   const trap = await p.eval(`window.__S.byKey['exo:TRAPPIST-1'].pos.toArray()`);
-  // B1: Earth out to 30 light-years, the target sliding from Earth to the Sun, the view tilting to 28 deg above the ecliptic (9 s)
-  const FB = 9 * FPS;
+  console.log('trappist', trap.map(x => (x / LY).toFixed(3)).join(', '), 'ly');
+  // B1: Earth out to 260 light-years (beyond our radio bubble), the target sliding from Earth to the Sun, the view tilting (9 s)
+  const FB = 9 * FPS, said = new Set(), sayOnce = async (k, t, sub) => { if (!said.has(k)) { said.add(k); await caption(t, sub); } };
   for (let i = 0; i < FB; i++) {
-    const u = ease(i / (FB - 1)), d = logLerp(0.0022, 30 * LY, u), w = Math.min(1, Math.max(0, (Math.log(d) - Math.log(0.05)) / (Math.log(3) - Math.log(0.05))));
+    const u = ease(i / (FB - 1)), d = logLerp(0.0022, 260 * LY, u), w = Math.min(1, Math.max(0, (Math.log(d) - Math.log(0.05)) / (Math.log(3) - Math.log(0.05))));
     const tilt = lerp(0, 1, Math.min(1, u * 1.6));
     await solar(`const e = new T.Vector3(${earth}), d0 = window.__dir.clone(), d1 = new T.Vector3(0.55, -0.62, 0.56).normalize(), dir = d0.lerp(d1, ${tilt}).normalize();
       S.clock.setJd(window.__jd0 + ${i / FPS / 86400}); const tg = e.multiplyScalar(${1 - w}); window.__place(tg.x, tg.y, tg.z, ${d}, dir);`, i < 3 ? 6 : 2);
-    if (i === 60) await caption('The planets, right now', 'JPL orbits · checked against NASA in the tests');
-    if (i === 120) await caption('1.57 million asteroids', 'every one on its own orbit, on the GPU');
-    if (i === 185) await caption('Our radio bubble', 'everything we have broadcast since 1920');
-    if (i === 250) await caption('');
+    if (d > 1.2) await sayOnce('pl', 'The planets, right now', 'JPL orbits · checked against NASA in the tests');
+    if (d > 9) await sayOnce('ast', '1.57 million asteroids', 'every one on its own orbit, on the GPU');
+    if (d > 2000) await sayOnce('off', '');
+    if (d > 140 * LY) await sayOnce('radio', 'Our radio bubble', 'everything we have broadcast since 1920');
     await shot();
   }
   // B2: 40 light-years to TRAPPIST-1 and into its system (4 s), its planets orbiting (2.5 s)
   const FC = 4 * FPS, FD = 75;
   for (let i = 0; i < FC; i++) {
-    const u = ease(i / (FC - 1)), d = logLerp(30 * LY, 0.16, u), tw = Math.min(1, u * 1.15);
+    const u = ease(i / (FC - 1)), d = logLerp(260 * LY, 0.16, u), tw = Math.min(1, u * 1.15);
     await solar(`const t = new T.Vector3(${trap}).multiplyScalar(${tw}); window.__place(t.x, t.y, t.z, ${d}, new T.Vector3(0.55, -0.62, 0.56).normalize());`, i > FC - 10 ? 6 : 2);
     if (i === 40) await caption('Another solar system', 'TRAPPIST-1 · 40 light-years · NASA Exoplanet Archive');
+    if (i === FC - 1) await p.poll(`!!window.__S.exo.X.built`, { timeoutMs: 15000 }).then(() => p.eval('window.__frames(4)')).catch(() => console.log('TRAPPIST-1 system did not build'));
     await shot();
   }
   for (let i = 0; i < FD; i++) {

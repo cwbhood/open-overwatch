@@ -1,4 +1,4 @@
-<p align="center"><img src="brand/clip/zoom-preview.webp" width="300" alt="One zoom: a London street, every satellite, the Moon, the planets, 1.57 million asteroids, another solar system, the cosmic web"></p>
+<p align="center"><img src="brand/clip/zoom-preview.webp" width="300" alt="One zoom: a live city street, every satellite, the Moon, the planets, 1.57 million asteroids, another solar system, the cosmic web"></p>
 
 # Open Overwatch
 
