@@ -52,7 +52,9 @@ await step('globe: Weather', async () => {
   await page.locator('#card .x').tap(); await page.locator('[data-tab=explore]').tap(); await sleep(500); await page.locator('#msheet [data-go=weather]').tap();
   await page.waitForFunction(() => window.OO3D && OO3D.Weather.end, null, { timeout: 30000 }); await sleep(6000);
   const r = await page.evaluate(() => ({ t: document.querySelector('#wxTime').textContent, n: document.querySelector('#wxNote').textContent, sats: OO3D.Weather.ir.length, radar: OO3D.Weather.radar.length }));
-  await page.locator('#wx .x').tap(); await sleep(500); return `${r.t} · ${r.n} · radar frames ${r.radar}`;
+  await page.locator('[data-set=wind]').tap(); await page.locator('[data-set=temp]').tap(); await sleep(7000);
+  const w = await page.evaluate(() => { const cv = document.querySelector('#windcv'); if (!cv) return 0; const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 20) n++; return n; });
+  await page.locator('#wx .x').tap(); await sleep(500); return `${r.t} · ${r.n} · radar frames ${r.radar} · wind streak pixels ${w}`;
 });
 await step('globe: Look up', async () => {
   await page.locator('[data-tab=lookup]').tap(); await sleep(7000);

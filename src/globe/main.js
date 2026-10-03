@@ -20,6 +20,7 @@ import { Eclipses } from './eclipses.js';
 import { initMobile } from './mobile.js';
 import { initNavpad } from './navpad.js';
 import { Weather, initWeather } from './weather.js';
+import { Wind } from './wind.js';
 import { toggle as toggleNerd } from './nerd.js';
 
 function applyVisibility() {
@@ -112,7 +113,7 @@ every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
 
 window.OO3D = { Conj, LookUp, Eclipses,
-  viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, Lighthouses, Weather, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
+  viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, Lighthouses, Weather, Wind, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {
     const pos = C.Cartesian3.fromDegrees(lon, lat, h), R = C.Matrix4.getMatrix3(C.Transforms.eastNorthUpToFixedFrame(pos), new C.Matrix3());

@@ -11,6 +11,7 @@ import { viewer, camHeight } from './viewer.js';
 import { Earth } from './earth.js';
 import { state, hooks } from './state.js';
 import { PRESETS } from './ui.js';
+import { Wind } from './wind.js';
 
 const GIBS = 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/';
 const SCHEME = () => new C.GeographicTilingScheme({ rectangle: C.Rectangle.fromDegrees(-180, -198, 396, 90), numberOfLevelZeroTilesX: 2, numberOfLevelZeroTilesY: 1 });   // see earth.js
@@ -36,7 +37,7 @@ async function latest(layer, col, matrix, step, from, to, minBytes) {   // newes
 
 export const Weather = {
   on: false, playing: false, frame: FRAMES - 1, timer: 0, ready: null, layers: new Map(),
-  sets: { ir: { name: 'Infrared clouds', on: true }, radar: { name: 'Rain radar', on: true }, rain: { name: 'Rain from space', on: false } },
+  sets: { ir: { name: 'Infrared clouds', on: true }, radar: { name: 'Rain radar', on: true }, rain: { name: 'Rain from space', on: false }, wind: { name: 'Wind', on: false }, temp: { name: 'Temperature', on: false } },
   ir: [], radar: [], rainAt: 0,
 
   async init() {
@@ -81,6 +82,8 @@ export const Weather = {
         }
       }
     }
+    const fields = (set, f) => { if (this.on && this.sets[set].on) f(true).catch(() => { this.sets[set].on = false; this.build(); toast('Wind and temperature data is not reachable right now'); }); else f(false); };
+    fields('wind', on => Wind.setWind(on)); fields('temp', on => Wind.setTemp(on));
     viewer.scene.requestRender();
     this.label();
   },
@@ -89,7 +92,8 @@ export const Weather = {
     $('#wxTime').textContent = `${hhmm(at)} · ${ago >= 90 ? Math.round(ago / 60) + ' h' : ago + ' min'} ago`;
     $('#wxSlider').value = this.frame; $('#wxPlay').textContent = this.playing ? '❚❚' : '▶';
     const rain = this.sets.rain.on && this.rainAt ? ` Rain from space: ${hhmm(this.rainAt)}.` : '';
-    $('#wxNote').textContent = (this.ir.length ? `Infrared: ${this.ir.length} of 3 satellites reached.` : 'No infrared images reachable.') + (this.sets.radar.on && !this.radar.length ? ' Radar unreachable.' : '') + rain;
+    const field = (this.sets.wind.on || this.sets.temp.on) && Wind.grid ? ` Wind/temperature: ${Wind.grid.at.slice(11)} UTC (Open-Meteo).` : '';
+    $('#wxNote').textContent = field + (this.ir.length ? `Infrared: ${this.ir.length} of 3 satellites reached.` : 'No infrared images reachable.') + (this.sets.radar.on && !this.radar.length ? ' Radar unreachable.' : '') + rain;
   },
   set(frame) { this.frame = (frame + FRAMES) % FRAMES; this.show(); },
   play(on) {
@@ -108,6 +112,7 @@ export const Weather = {
   close() {
     this.on = false; state.weather = false; this.play(false); $('#wx').classList.remove('show');
     for (const ls of this.layers.values()) for (const l of ls) viewer.imageryLayers.remove(l, true);
+    Wind.setWind(false); Wind.setTemp(false); Wind.dropTemp();
     this.layers.clear(); Earth.apply(); hooks.applyVisibility(); viewer.scene.requestRender();
     document.querySelector('[data-go="weather"]')?.classList.remove('on');
   },
