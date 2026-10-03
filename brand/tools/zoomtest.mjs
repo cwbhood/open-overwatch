@@ -17,7 +17,8 @@ try {
   await p.send('Emulation.setDeviceMetricsOverride', { width: P.width, height: P.height, deviceScaleFactor: P.dpr, mobile: P.mobile });
   await p.send('Emulation.setCPUThrottlingRate', { rate: P.cpu });
   const loaded = p.waitFor('Page.loadEventFired', { timeoutMs: 120000 });
-  await p.send('Page.navigate', { url: 'http://localhost:8787/globe.html' });
+  if (process.env.OO_LAYERS_OFF) await p.send('Page.addScriptToEvaluateOnNewDocument', { source: `for (const id of ${JSON.stringify(process.env.OO_LAYERS_OFF.split(','))}) localStorage.setItem('oo3d.ly.' + id, 'false');` });   // OO_LAYERS_OFF=companies,volcanoes: switch layers off to find the one that costs
+  await p.send('Page.navigate', { url: 'http://localhost:8787/globe.html' + (process.env.OO_QUERY || '') });
   await loaded; await sleep(12000);
   // in-page recorder: frame intervals with the phase and scale at each frame
   await p.eval(`(() => { window.__z = []; let last = performance.now();

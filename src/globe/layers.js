@@ -18,6 +18,11 @@ export const LAYERS = [
   { id: 'mil', group: 'Air', name: 'Military aircraft (adsb.lol, every 60 s)', color: '#ffb44d', on: true },
   { id: 'quakes', group: 'Earth', name: 'Earthquakes M2.5+ · 24 h', color: '#ff7b4f', on: true },
   { id: 'lighthouses', group: 'Earth', name: 'Lighthouses of the world', color: '#ffe27a', on: !PHONE },
+  { id: 'sun', group: 'Earth', name: 'Sun overhead and time zones', color: '#ffd45c', on: false },
+  { id: 'buildings', group: 'Earth', name: '3D buildings (needs a free ion token)', color: '#c9d3e0', on: false },
+  { id: 'volcanoes', group: 'Earth', name: 'Volcanoes of the world (Wikidata)', color: '#ff5a36', on: !PHONE },
+  { id: 'companies', group: 'Earth', name: 'Big employers as towers (Wikidata)', color: '#ff9f5c', on: !PHONE },
+  { id: 'aurora', group: 'Earth', name: 'Aurora forecast (NOAA, live)', color: '#7dffb0', on: !PHONE },
   { id: 'clouds', group: 'Earth', name: 'Clouds (NASA Blue Marble)', color: '#e6edf3', on: true },
   { id: 'night', group: 'Earth', name: 'City lights on the night side', color: '#fff1d0', on: true },
   { id: 'labels', group: 'Earth', name: 'Place names when close', color: '#8b9bab', on: true },
@@ -25,6 +30,8 @@ export const LAYERS = [
 export const L = Object.fromEntries(LAYERS.map(l => [l.id, l]));
 for (const l of LAYERS) l.on = store.get('ly.' + l.id, l.on);
 
+/** Make the dock's switches match the layers' state (after something else changed them). */
+export function syncDock() { for (const l of LAYERS) { const b = document.querySelector(`[data-ly="${l.id}"]`); if (b) b.classList.toggle('off', !l.on); } }
 export function setCount(id, n) { const el = $('#n-' + id); if (el) el.textContent = n ? fmt(n) : ''; }
 
 /** bases: { id: { name } }, currentBase(): id, onBase(id) */

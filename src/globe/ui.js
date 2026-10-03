@@ -7,6 +7,7 @@ import { Follow, release } from './follow.js';
 import { Sats, SatModels } from './satellites.js';
 import { Air, AirModels } from './aircraft.js';
 import { Quakes } from './quakes.js';
+import { Country } from './country.js';
 import { sunlitView, moonPosition, showPlaceNames } from './earth.js';
 import { Time } from './time.js';
 
@@ -71,6 +72,8 @@ function tipFor(o) {
   if (o.kind === 'sat') return `${o.name} · ${L[o.layer].name.split(' (')[0]}`;
   if (o.kind === 'air') return `${o.flight || o.hex} · ${o.ground ? 'on ground' : fmt((o.alt || 0) / 0.3048) + ' ft'}${o.mil ? ' · military' : ''}`;
   if (o.kind === 'quake') return `M${o.mag.toFixed(1)} · ${o.place}`;
+  if (o.kind === 'volcano') return `${o.name}${o.elevationM ? ' · ' + fmt(o.elevationM) + ' m' : ''}`;
+  if (o.kind === 'company') return `${o.name} · ${fmt(o.employees)} employees`;
   if (o.kind === 'lighthouse') return `${o.name || 'Lighthouse'}${o.heightM ? ' · ' + fmt(o.heightM) + ' m' : ''}`;
   return '';
 }
@@ -83,7 +86,15 @@ handler.setInputAction(m => {
     t.textContent = tipFor(o); t.style.display = 'block'; t.style.left = (m.endPosition.x + 14) + 'px'; t.style.top = (m.endPosition.y + 12) + 'px'; scene.canvas.style.cursor = 'pointer';
   });
 }, C.ScreenSpaceEventType.MOUSE_MOVE);
-handler.setInputAction(c => { const o = pickObj(c.position); if (o) select(o); else closeCard(); }, C.ScreenSpaceEventType.LEFT_CLICK);
+let clickNo = 0;
+handler.setInputAction(c => {
+  const o = pickObj(c.position), n = ++clickNo; if (o) { select(o); return; }
+  // nothing under the cursor: the country under it, if the click landed on the Earth
+  const p = camera.pickEllipsoid(c.position, scene.globe.ellipsoid);
+  if (!p) { closeCard(); return; }
+  const g = C.Cartographic.fromCartesian(p);
+  Country.at(C.Math.toDegrees(g.longitude), C.Math.toDegrees(g.latitude)).then(k => { if (n !== clickNo) return; if (k) select(k); else closeCard(); }).catch(() => { if (n === clickNo) closeCard(); });
+}, C.ScreenSpaceEventType.LEFT_CLICK);
 // double-click a satellite or aircraft to follow it (replaces Cesium's default entity tracking)
 viewer.screenSpaceEventHandler.removeInputAction(C.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 handler.setInputAction(c => {
@@ -94,12 +105,21 @@ handler.setInputAction(c => {
 const row = (k, v) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`;
 export function select(o) {
   state.selected = o; orbitLines.removeAll(); let html = '';
+  if (o.kind !== 'country') Country.clear(); else Country.highlight(o);
   if (o.kind === 'sat') {
     const i = Sats.info(o), l = L[o.layer];
     html = `<div class="k" style="--c:${l.color}">${esc(l.name)}</div><h2>${esc(o.name)}</h2><dl>${row('NORAD', o.id)}${row('Altitude', fmt(i.alt) + ' km')}${row('Speed', fmt(i.speed) + ' km/h')}${row('Orbit period', i.period.toFixed(1) + ' min')}${row('Inclination', i.incl.toFixed(1) + '°')}${row('Over', i.lat.toFixed(2) + ', ' + i.lon.toFixed(2))}</dl>`;
     Sats.orbit(o);
   } else if (o.kind === 'air') {
     html = `<div class="k" style="--c:${o.mil ? '#ffb44d' : '#5fd3ff'}">${o.mil ? 'Military aircraft' : 'Aircraft'} · ${esc(o.src)}</div><h2>${esc(o.flight || o.hex)}</h2><dl>${row('ICAO hex', o.hex)}${o.type ? row('Type', o.type) : ''}${o.reg ? row('Registration', o.reg) : ''}${o.country ? row('Country', o.country) : ''}${row('Altitude', o.ground ? 'on ground' : fmt((o.alt || 0) / 0.3048) + ' ft')}${row('Speed', o.gs != null ? fmt(o.gs / 0.514444) + ' kt' : '—')}${row('Track', o.track != null ? Math.round(o.track) + '°' : '—')}${row('Squawk', o.squawk || '—')}${row('Last fix', Math.round((Date.now() - o.ts) / 1000) + ' s ago')}</dl>`;
+  } else if (o.kind === 'volcano') {
+    const wd = /^Q\d+$/.test(o.wiki) ? `<div class="acts"><a class="chipbtn" href="https://www.wikidata.org/wiki/${o.wiki}" target="_blank" rel="noopener">Wikidata</a></div>` : '';
+    html = `<div class="k" style="--c:#ff5a36">Volcano</div><h2>${esc(o.name)}</h2><dl>${row('Type', o.type)}${o.elevationM ? row('Summit', fmt(o.elevationM) + ' m') : ''}${o.country ? row('Country', o.country) : ''}${row('Position', o.lat.toFixed(3) + '°, ' + o.lon.toFixed(3) + '°')}</dl>${wd}<div class="note" style="margin-top:8px">Wikidata says what this is, not whether it is erupting. Recent eruptions: Smithsonian Global Volcanism Program.</div>`;
+  } else if (o.kind === 'company') {
+    const wd = /^Q\d+$/.test(o.wiki) ? `<div class="acts"><a class="chipbtn" href="https://www.wikidata.org/wiki/${o.wiki}" target="_blank" rel="noopener">Wikidata</a></div>` : '';
+    html = `<div class="k" style="--c:${o.color}">${esc(o.group)}</div><h2>${esc(o.name)}</h2><dl>${row('Employees', fmt(o.employees))}${o.industry ? row('Industry', o.industry) : ''}${o.country ? row('Headquarters', o.country) : ''}${o.founded ? row('Founded', o.founded) : ''}${o.exchange ? row('Listed on', o.exchange) : ''}</dl>${wd}<div class="note" style="margin-top:8px">Wikidata is edited by volunteers: figures can be out of date or wrong. Tower height follows employees, not value.</div>`;
+  } else if (o.kind === 'country') {
+    html = Country.html(o);
   } else if (o.kind === 'lighthouse') {
     const wd = /^Q\d+$/.test(o.wiki) ? `<div class="acts"><a class="chipbtn" href="https://www.wikidata.org/wiki/${o.wiki}" target="_blank" rel="noopener">Wikidata</a></div>` : '';
     const light = [o.colour, o.character].filter(Boolean).join(' · ');
@@ -114,15 +134,19 @@ export function select(o) {
   card.classList.add('show');
   card.querySelector('.x').onclick = closeCard;
   if ($('#btnFocus')) $('#btnFocus').onclick = () => flyToObject(o);
+  if (o.kind === 'country') Country.after(o);
   if ($('#btnFollow')) $('#btnFollow').onclick = () => following ? Follow.stop() : o.kind === 'air' ? AirModels.follow(o) : SatModels.follow(o);
 }
 hooks.reselect = select;
-export function closeCard() { state.selected = null; orbitLines.removeAll(); $('#card').classList.remove('show'); }
+export function closeCard() { state.selected = null; orbitLines.removeAll(); Country.clear(); $('#card').classList.remove('show'); }
 function flyToObject(o) {
   release();
   if (o.kind === 'sat') { const st = SatModels.state(o), p = st.ok ? st.pos : o.pt.position, h = C.Cartesian3.magnitude(p) - 6371000; camera.flyToBoundingSphere(new C.BoundingSphere(p, 1), { offset: new C.HeadingPitchRange(0, -0.6, Math.max(2.5e6, h * 0.6)), duration: 2.5 }); }
   else if (o.kind === 'air') flyDeg(o.cur?.lon ?? o.lon, (o.cur?.lat ?? o.lat) - 0.35, 45000, -50);
   else if (o.kind === 'lighthouse') flyDeg(o.lon, o.lat - 0.025, 7000, -45);
+  else if (o.kind === 'country') Country.fly(o);
+  else if (o.kind === 'volcano') flyDeg(o.lon, o.lat - 0.2, 3.5e4, -40);
+  else if (o.kind === 'company') flyDeg(o.lon, o.lat - 0.6, 4.0e5, -50);
   else flyDeg(o.lon, o.lat - 1.2, 3.5e5, -60);
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (Follow.obj) Follow.stop(); else closeCard(); } });

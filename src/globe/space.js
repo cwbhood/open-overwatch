@@ -56,7 +56,7 @@ function leave(s) {
 
 /** Every frame: preload when climbing, hand over when past the Moon and looking back at Earth. */
 function update() {
-  if (active || busy) return;
+  if (active || busy || state.noHandoff) return;
   const h = camHeight();
   if (h > PRELOAD_M) ensureFrame();
   if (Follow.obj || state.lookingAtMoon || camera._currentFlight) return;   // not mid-flight: go() hands over on arrival

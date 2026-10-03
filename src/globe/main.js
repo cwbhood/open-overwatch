@@ -20,14 +20,23 @@ import { Eclipses } from './eclipses.js';
 import { initMobile } from './mobile.js';
 import { initNavpad } from './navpad.js';
 import { Weather, initWeather } from './weather.js';
+import { Aurora } from './aurora.js';
+import { Flybys } from './flybys.js';
+import { Companies } from './companies.js';
+import { Volcanoes } from './volcanoes.js';
+import { SunLine } from './sunline.js';
+import { Buildings } from './buildings.js';
+import { Share } from './share.js';
+import { Tour } from './tour.js';
 import { Wind } from './wind.js';
+import { Country } from './country.js';
 import { toggle as toggleNerd } from './nerd.js';
 
 function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
   airPts.show = airIcons.show = !state.weather; satPts.show = !state.weather;
   for (const a of Air.map.values()) { const on = airShown(a); a.pt.show = on && !a.ent; a.icon.show = on && !a.ent; if (!on && a.ent) AirModels.drop(a); }
-  qkPts.show = L.quakes.on; Lighthouses.apply();
+  qkPts.show = L.quakes.on; Lighthouses.apply(); Aurora.apply(); Companies.apply(); Volcanoes.apply(); SunLine.apply(); Buildings.apply();
   Earth.apply(); updateBand(); updateStats();
 }
 hooks.applyVisibility = applyVisibility;
@@ -43,6 +52,8 @@ PRESETS.conj = () => Conj.openList();
 PRESETS.lookup = () => { hooks.clearPresets(); LookUp.enter(); };
 PRESETS.eclipses = () => Eclipses.openList();
 PRESETS.weather = () => Weather.toggle();
+PRESETS.tour = () => { hooks.clearPresets(); Tour.start(); };
+PRESETS.flybys = () => { hooks.clearPresets(); Flybys.openList(); };
 hooks.toggleNerd = toggleNerd;
 initMobile();   // phones only: the bottom dock
 initNavpad();
@@ -94,7 +105,7 @@ updateBand(); applyVisibility();
   }
   await until(10000, () => globe.tilesLoaded);
   $('#boot').classList.add('out'); setTimeout(() => $('#boot').remove(), 900);
-  updateBand(); return high;
+  updateBand(); Share.restore().catch(e => console.warn('share link', e)); return high;
 })();
 Sats.load().catch(e => toast('Satellites failed: ' + e.message));
 // load the Solar System view in the background once the globe has settled, so zooming out never waits on it (its
@@ -112,9 +123,10 @@ Sats.load().catch(e => toast('Satellites failed: ' + e.message));
 every(15 * 60e3, () => Air.opensky(), 'Civil aircraft');
 every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
+setInterval(() => Aurora.apply(), 60e3);   // refreshes itself every 10 minutes while the layer is on
 
 window.OO3D = { Conj, LookUp, Eclipses,
-  viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, Lighthouses, Weather, Wind, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
+  viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, Lighthouses, Weather, Wind, Country, Aurora, Flybys, Companies, Volcanoes, SunLine, Buildings, Share, Tour, setIonToken: t => Buildings.setToken(t), L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {
     const pos = C.Cartesian3.fromDegrees(lon, lat, h), R = C.Matrix4.getMatrix3(C.Transforms.eastNorthUpToFixedFrame(pos), new C.Matrix3());

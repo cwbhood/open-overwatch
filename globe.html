@@ -143,6 +143,18 @@ body.m .m-sheet.show{transform:none;opacity:1;pointer-events:auto}
 .m-rates{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .m-rate{min-height:48px;border-radius:10px;border:1px solid var(--edge-dim);background:rgba(230,237,243,.03);color:var(--ink);font:600 12px/1 var(--mono)} .m-rate.on{color:#04060a;background:var(--accent);border-color:var(--accent)}
 body.m #dock{bottom:calc(86px + env(safe-area-inset-bottom,0px))} body.m #card{bottom:calc(100px + env(safe-area-inset-bottom,0px))} body.m #credits{bottom:calc(86px + env(safe-area-inset-bottom,0px))} body.m #toast{bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+/* country dossier (src/globe/country.js) */
+.cn-sec{margin-top:10px;padding-top:8px;border-top:1px solid var(--edge-dim);font:500 12px/1.5 var(--mono);color:var(--dim)} .cn-sec h3{margin:0 0 4px;font:700 11px/1.2 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.cn-news{display:block;padding:6px 0;border-bottom:1px solid var(--edge-dim);color:var(--ink);text-decoration:none;font:500 12px/1.35 var(--body)} .cn-news:hover span{color:var(--accent)} .cn-news i{display:block;font:500 10px/1.2 var(--mono);font-style:normal;color:var(--faint);margin-top:2px}
+#card{max-height:calc(100dvh - 190px);overflow:auto}
+/* flybys */
+.fb-scale{position:relative;height:30px;margin:14px 4px 6px;border-top:1px solid var(--edge-dim)} .fb-scale i{position:absolute;top:-5px;width:9px;height:9px;margin-left:-4px;border-radius:50%;background:#cdd5e0} .fb-scale b{position:absolute;top:-6px;width:11px;height:11px;margin-left:-5px;border-radius:50%;background:#ffb44d;box-shadow:0 0 10px #ffb44d} .fb-scale span{position:absolute;top:8px;transform:translateX(-50%);font:500 9.5px/1 var(--mono);color:var(--faint)} .fb-scale span:first-of-type{left:0;transform:none}
+/* employers in the country dossier */
+.cn-co{display:flex;align-items:center;gap:8px;width:100%;padding:5px 2px;border:0;border-bottom:1px solid var(--edge-dim);background:none;color:var(--ink);text-align:left;font:500 12px/1.3 var(--body)} .cn-co:hover span{color:var(--accent)} .cn-co i{width:8px;height:8px;border-radius:50%;flex:none} .cn-co span{flex:1} .cn-co b{font:600 11px/1 var(--mono);color:var(--dim)}
+/* guided tour caption */
+#tourcap{position:fixed;left:50%;bottom:96px;transform:translate(-50%,20px);z-index:7;display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center;padding:11px 20px;max-width:min(560px,calc(100vw - 24px));opacity:0;pointer-events:none;transition:opacity .4s,transform .4s}
+#tourcap.show{opacity:1;transform:translateX(-50%)} #tourcap b{font:900 20px/1.1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:#ff9f5c} #tourcap span{font:500 12.5px/1.4 var(--body);color:var(--ink)}
+body.m #tourcap{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 /* weather mode panel (src/globe/weather.js) */
 #wx{position:fixed;left:50%;bottom:96px;transform:translate(-50%,160%);width:min(440px,calc(100vw - 20px));padding:12px 14px;z-index:5;opacity:0;pointer-events:none;transition:transform .3s,opacity .2s}
 #wx.show{transform:translateX(-50%);opacity:1;pointer-events:auto}
@@ -193,6 +205,8 @@ body.lookup #navpad{display:none}
   <button class="go" data-go="moon">Moon</button>
   <button class="go" data-go="conj" title="Upcoming close approaches between objects in orbit">Near misses</button>
   <button class="go" data-go="lookup" style="color:#7dffa6" title="Your sky right now: point your phone up">Look up</button>
+  <button class="go" data-go="tour" style="color:#ff9f5c" title="A guided 80-second flight through what this globe can do">▶ Tour</button>
+  <button class="go" data-go="flybys" style="color:#ffb44d" title="Asteroids and comets passing Earth in the next 60 days">Flybys</button>
   <button class="go" data-go="weather" style="color:#7fd0ff" title="Live clouds, rain radar and rain from space">Weather</button>
   <button class="go" data-go="eclipses" title="Solar eclipses 2027-2030: watch the Moon's shadow cross the Earth">Eclipses</button>
   <button class="go" data-go="space" style="color:var(--accent)" title="Keep zooming out: the planets, the stars, the galaxy">Solar system ↗</button>

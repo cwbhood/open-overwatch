@@ -7,6 +7,7 @@ import { state } from './state.js';
 import { Follow } from './follow.js';
 import { PRESETS } from './ui.js';
 import { LookUp } from './lookup.js';
+import { Share } from './share.js';
 
 const MAX_H = 5.9e8;   // the camera stops at 6e8 (viewer.js)
 
@@ -17,6 +18,7 @@ export function initNavpad() {
     <button data-n="out" title="Zoom out  (−)" aria-label="Zoom out">−</button>
     <button data-n="north" id="npNorth" title="North up and level  (N)" aria-label="North up"><svg viewBox="0 0 24 24" id="npNeedle"><path d="M12 2 17 13H7z" fill="#ff6b5e"/><path d="M12 22 7 13h10z" fill="#8b9bab"/></svg></button>
     <button data-n="down" title="Look straight down  (T)" aria-label="Top-down view">⤓</button>
+    <button data-n="share" title="Copy a link to this view" aria-label="Copy link to this view">⎘</button>
     <button data-n="reset" title="Reset view: the whole Earth  (R)" aria-label="Reset view">◎</button>`;
   document.body.append(pad);
   const needle = $('#npNeedle');
@@ -47,6 +49,7 @@ export function initNavpad() {
     north: () => orient(0, camera.pitch, 'north up'),
     down: () => orient(0, -Math.PI / 2, 'top-down'),
     reset: () => PRESETS.earth(),
+    share: () => Share.copy(),
   };
   pad.addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) A[b.dataset.n](); });
   pad.addEventListener('pointerdown', e => e.stopPropagation());   // the buttons never start a globe drag

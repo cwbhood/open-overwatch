@@ -28,3 +28,9 @@ brand/source/2mrs/
 # perf.mjs measurements (summaries go in docs/PERFORMANCE.md)
 brand/perf/
 brand/source/exoplanets/
+data/flybys.json
+data/news.json
+data/wind.json
+brand/source/companies/
+brand/source/countries/
+brand/source/volcanoes.json

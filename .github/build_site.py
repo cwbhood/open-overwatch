@@ -10,7 +10,7 @@
   refresh it). The website reads these instead of CelesTrak, which firewalls networks that download too often; the
   download version falls back to them when CelesTrak fails.
 """
-import io, json, os, subprocess, sys, tarfile, time, urllib.request
+import re, io, json, os, subprocess, sys, tarfile, time, urllib.request
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 OUT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, '_site'))
@@ -132,6 +132,59 @@ def mirror_wind(path):
         print(f'wind: FAILED {e}')
 
 
+def mirror_news(path, countries_path):
+    """Best effort: English-language headlines from news outlets in the ~70 biggest economies (GDELT DOC API, open data), one request
+    every 7 s as GDELT asks, as data/news.json: {t, countries: {ISO2: [{title, url, domain, date}]}}. The globe's country
+    dossier reads this first, so a visitor's click never spends GDELT's one-request-per-few-seconds limit."""
+    try:
+        facts = json.load(open(countries_path, encoding='utf-8'))['countries']
+    except Exception as e:
+        print(f'news: no country list ({e})'); return
+    top = sorted((iso for iso, f in facts.items() if f.get('gdp')), key=lambda i: -facts[i]['gdp'])[:70]
+    out, fails = {}, 0
+    for iso in top:
+        name = re.sub(r'[^A-Za-z]', '', facts[iso]['name'])
+        url = ('https://api.gdeltproject.org/api/v2/doc/doc?query=' + urllib.parse.quote(f'sourcecountry:{name} sourcelang:english')
+               + '&mode=artlist&format=json&maxrecords=10&timespan=1d&sort=hybridrel')
+        for attempt in range(3):
+            time.sleep(7 if attempt == 0 else 40)
+            try:
+                req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
+                txt = urllib.request.urlopen(req, timeout=60).read().decode('utf-8', 'replace')
+                d = json.loads(txt) if txt.strip().startswith('{') else None
+                if d is None: raise ValueError(txt.strip()[:60])
+                out[iso] = [{'title': a['title'][:160], 'url': a['url'], 'domain': a.get('domain', ''), 'date': a.get('seendate', '')} for a in d.get('articles', [])
+                            if a.get('url', '').startswith(('http://', 'https://'))][:8]
+                break
+            except Exception as e:
+                if attempt == 2: fails += 1; print(f'news {iso}: FAILED {e}')
+        if fails >= 8: print('news: giving up after repeated failures'); break
+    if out:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump({'t': int(time.time() * 1000), 'source': 'GDELT Project (gdeltproject.org)', 'countries': out}, f, ensure_ascii=False, separators=(',', ':'))
+    print(f'news: {len(out)} countries, {sum(len(v) for v in out.values())} headlines')
+
+
+def mirror_flybys(path):
+    """Best effort: asteroid and comet close approaches inside ~20 lunar distances over the next 60 days (NASA/JPL CNEOS close-approach
+    API, public domain; it sends no CORS headers, hence this copy) -> data/flybys.json: {t, rows: [{des, name, tca, au, minAu, kms, h, km}]}."""
+    try:
+        url = 'https://ssd-api.jpl.nasa.gov/cad.api?dist-max=0.05&date-min=now&date-max=%2B60&sort=date&fullname=true&diameter=true'
+        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'}), timeout=60))
+        f = d['fields']; rows = []
+        for r in d['data']:
+            x = dict(zip(f, r))
+            rows.append({'des': x['des'], 'name': (x.get('fullname') or x['des']).strip(), 'tca': round((float(x['jd']) - 2440587.5) * 86400000), 'au': float(x['dist']), 'minAu': float(x['dist_min']),
+                         'kms': float(x['v_rel']), 'h': float(x['h']) if x.get('h') else None, 'km': float(x['diameter']) if x.get('diameter') else None})
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as fh:
+            json.dump({'t': int(time.time() * 1000), 'source': 'NASA/JPL CNEOS close-approach data', 'rows': rows}, fh, separators=(',', ':'))
+        print(f'flybys: {len(rows)} approaches')
+    except Exception as e:
+        print(f'flybys: FAILED {e}')
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     n = extract('HEAD', ['.'], OUT, SKIP_ROOT)
@@ -160,6 +213,8 @@ def main():
     mirror_tles(os.path.join(OUT, 'data', 'tle'))
     mirror_socrates(os.path.join(OUT, 'data', 'socrates.json'))
     mirror_wind(os.path.join(OUT, 'data', 'wind.json'))
+    mirror_flybys(os.path.join(OUT, 'data', 'flybys.json'))
+    mirror_news(os.path.join(OUT, 'data', 'news.json'), os.path.join(OUT, 'data', 'countries.json'))
 
 
 if __name__ == '__main__':
