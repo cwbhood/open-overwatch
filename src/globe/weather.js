@@ -19,6 +19,25 @@ const nasa = new C.Credit('Clouds and rain: NASA GIBS (NOAA GOES-East/West, JMA 
 const rv = new C.Credit('Radar © RainViewer.com');
 const gibsProvider = (layer, time, matrix, max) => new C.UrlTemplateImageryProvider({ url: `${GIBS}${layer}/default/${time}/${matrix}/{z}/{y}/{x}.png`, tilingScheme: SCHEME(),
   rectangle: C.Rectangle.fromDegrees(-180, -90, 180, 90), tileWidth: 512, tileHeight: 512, maximumLevel: max, credit: nasa });
+/** The three infrared satellites as ONE imagery layer: each 512 px tile is the three GIBS tiles drawn onto one canvas.
+ *  Three layers meant up to three more textures per globe tile, and Cesium builds (and links, on the main thread) a globe
+ *  shader for every texture count it meets: opening weather built 14 programs and pressing play 13 more. */
+class CompositeProvider {
+  constructor(urls, maximumLevel) {
+    Object.assign(this, { urls, tilingScheme: SCHEME(), rectangle: C.Rectangle.fromDegrees(-180, -90, 180, 90), tileWidth: 512, tileHeight: 512, maximumLevel, minimumLevel: 0,
+      tileDiscardPolicy: undefined, errorEvent: new C.Event(), credit: nasa, proxy: undefined, hasAlphaChannel: true, ready: true });
+  }
+  getTileCredits() { return undefined; }
+  pickFeatures() { return undefined; }
+  requestImage(x, y, level) {
+    const url = u => u.replace('{z}', level).replace('{y}', y).replace('{x}', x);
+    return Promise.all(this.urls.map(u => C.Resource.fetchImage({ url: url(u), preferImageBitmap: false }).catch(() => null))).then(imgs => {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 512; const cx = cv.getContext('2d');
+      for (const im of imgs) if (im) cx.drawImage(im, 0, 0, 512, 512);
+      return cv;
+    });
+  }
+}
 const SATS = [['GOES-East_ABI_Band13_Clean_Infrared', 0], ['GOES-West_ABI_Band13_Clean_Infrared', 0], ['Himawari_AHI_Band13_Clean_Infrared', 1]];   // [layer, level-0 tile column to probe]
 const FRAMES = PHONE ? 4 : 6, STEP = 30 * 60e3, PLAY_MS = 900;
 const iso = ms => new Date(ms).toISOString().slice(0, 19) + 'Z';
@@ -60,7 +79,7 @@ export const Weather = {
   layersFor(set, k) {
     const key = set + k; if (this.layers.has(key)) return this.layers.get(key);
     const at = this.end - (FRAMES - 1 - k) * STEP, out = [];
-    if (set === 'ir') for (const s of this.ir) { const t = s.latest - (FRAMES - 1 - k) * STEP; out.push(this.add(gibsProvider(s.layer, iso(t), '2km', 5))); }
+    if (set === 'ir' && this.ir.length) out.push(this.add(new CompositeProvider(this.ir.map(s => `${GIBS}${s.layer}/default/${iso(s.latest - (FRAMES - 1 - k) * STEP)}/2km/{z}/{y}/{x}.png`), 5)));
     else if (set === 'radar' && this.radar.length) {
       const f = this.radar.reduce((a, b) => Math.abs(b.time - at) < Math.abs(a.time - at) ? b : a);
       out.push(this.add(new C.UrlTemplateImageryProvider({ url: `${f.url}/256/{z}/{x}/{y}/2/1_1.png`, maximumLevel: 7, credit: rv })));
