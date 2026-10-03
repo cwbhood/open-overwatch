@@ -1,16 +1,18 @@
 // Wind and temperature for weather mode. One live snapshot from Open-Meteo (open data, CC BY 4.0, non-commercial use, no key):
-// 10 m wind and 2 m temperature on a 10-degree grid, ~15 minutes old, kept for 30 minutes in localStorage so reopening the
-// mode costs nothing. Wind is drawn as moving streaks on a canvas laid over the globe (each particle is advected through
+// 10 m wind and 2 m temperature on a 10-degree grid. The site's scheduled build mirrors it (data/wind.json, refreshed every
+// 6 h, so visitors spend none of Open-Meteo's per-IP hourly quota); without the mirror the browser asks Open-Meteo itself
+// (~15 minutes old). Kept for 30 minutes in localStorage so reopening the mode costs nothing. Wind is drawn as moving streaks on a canvas laid over the globe (each particle is advected through
 // the bilinear wind field and projected with the camera); temperature is a colour wash made once from the same grid.
 import { C, store, PHONE } from './env.js';
 import { viewer, scene, camera, camHeight } from './viewer.js';
+import { fetchAsset } from '../core/assets.js';
 
 const LATS = [], LONS = [];
 for (let la = -80; la <= 80; la += 10) LATS.push(la);
 for (let lo = -180; lo < 180; lo += 10) LONS.push(lo);
 const NX = LONS.length, NY = LATS.length, COUNT = PHONE ? 900 : 3800;
-const CHUNK = 306, TTL = 30 * 60e3, KEY = 'wx.grid.v1';
-const R = 6378137;
+const CHUNK = 306, TTL = 30 * 60e3, MIRROR_MAX = 7 * 3600e3, KEY = 'wx.grid.v1';
+const R = 6378137, E2 = 0.00669437999014, RAD = Math.PI / 180, VP = new C.Matrix4();
 const COLORS = ['#7fe8ff', '#b6f5ff', '#ffffff', '#fff3a8', '#ffc46b', '#ff7a5c'];   // calm to gale
 const EDGES = [3, 6, 10, 15, 22];   // m/s between the colours
 
@@ -22,6 +24,16 @@ export const Wind = {
     this.loading = (async () => {
       const c = store.get(KEY, null);
       if (c && Date.now() - c.t < TTL && c.u && c.u.length === NX * NY) return (this.grid = c);
+      // the site's scheduled build keeps a copy (data/wind.json, up to 6 h old): no quota spent, one small file
+      const mirror = await fetchAsset('data/wind.json', 'json').catch(() => null);
+      if (mirror && mirror.u && mirror.u.length === NX * NY && Date.now() - mirror.t < MIRROR_MAX) { store.set(KEY, mirror); return (this.grid = mirror); }
+      try { return (this.grid = await this.live()); }
+      catch (e) { if (mirror && mirror.u && mirror.u.length === NX * NY) return (this.grid = mirror); throw e; }   // an old snapshot beats none
+    })().catch(e => { this.loading = null; throw e; });
+    return this.loading;
+  },
+  async live() {   // straight from Open-Meteo: 612 locations (it limits visitors per hour), used only when the site's copy is missing or stale
+    {
       const pts = []; for (const la of LATS) for (const lo of LONS) pts.push([la, lo]);
       const u = new Array(NX * NY), v = new Array(NX * NY), t = new Array(NX * NY); let when = '';
       const jobs = []; for (let i = 0; i < pts.length; i += CHUNK) jobs.push(i);
@@ -33,9 +45,8 @@ export const Wind = {
         rows.forEach((r, j) => { const s = r.current.wind_speed_10m, d = r.current.wind_direction_10m * Math.PI / 180;   // direction the wind blows FROM
           u[i + j] = -s * Math.sin(d); v[i + j] = -s * Math.cos(d); t[i + j] = r.current.temperature_2m; when = r.current.time; });
       }));
-      const g = { t: Date.now(), at: when, u, v, temp: t }; store.set(KEY, g); return (this.grid = g);
-    })().catch(e => { this.loading = null; throw e; });
-    return this.loading;
+      const g = { t: Date.now(), at: when, u, v, temp: t }; store.set(KEY, g); return g;
+    }
   },
 
   // bilinear sample of the grid: out = [u, v, temp]
@@ -76,7 +87,7 @@ export const Wind = {
   },
   makeCanvas() {
     const cv = document.createElement('canvas'); cv.id = 'windcv'; cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:3';
-    document.body.append(cv); this.canvas = cv; this.ctx = cv.getContext('2d'); addEventListener('resize', () => this.windOn && this.resize());
+    document.body.append(cv); this.canvas = cv; this.ctx = cv.getContext('2d', { desynchronized: true }); addEventListener('resize', () => this.windOn && this.resize());
   },
   resize() {   // phones: a canvas a third the pixels; thin streaks hardly notice, and the per-frame fade and composite cost far less
     const dpr = PHONE ? 0.6 : Math.min(devicePixelRatio || 1, 2);
@@ -97,6 +108,7 @@ export const Wind = {
   frame() {
     if (!this.windOn) return;
     this.raf = requestAnimationFrame(() => this.frame());
+    if (PHONE && (this.tick = (this.tick || 0) + 1) % 2) return;   // phones: streaks at half the frame rate; the globe keeps its own
     this.camDist = C.Cartesian3.magnitude(camera.positionWC);
     const ctx = this.ctx, W = this.canvas.width, H = this.canvas.height, dpr = this.dpr;
     const hidden = !viewer.useDefaultRenderLoop || document.body.classList.contains('lookup') || camHeight() > 2.5e8;
@@ -104,18 +116,24 @@ export const Wind = {
     // the camera moved: old streaks no longer line up with the globe
     const c = camera.positionWC, d = camera.directionWC, key = [c.x, c.y, c.z, d.x, d.y, d.z], moved = !this.last || key.some((v, i) => Math.abs(v - this.last[i]) > 1e-6 * (i < 3 ? R : 1)); this.last = key;
     if (moved) { ctx.clearRect(0, 0, W, H); for (const p of this.parts) p.px = NaN; }
-    else { ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = 'rgba(0,0,0,0.07)'; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over'; }
-    const k = Math.max(0.04, Math.min(1, camHeight() / 2.0e7)) * 0.9 / 111e3 * 900, s = [0, 0, 0], buckets = COLORS.map(() => []);   // degrees per m/s per frame
-    const pos = new C.Cartesian3(), win = new C.Cartesian2();
+    else { ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = PHONE ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.07)'; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over'; }
+    const k = Math.max(0.04, Math.min(1, camHeight() / 2.0e7)) * 0.9 / 111e3 * 900 * (PHONE ? 2 : 1), s = [0, 0, 0], buckets = COLORS.map(() => []);   // degrees per m/s per frame
+    // our own world -> screen: one view-projection matrix per frame, then four multiplies a particle (Cesium's
+    // worldToWindowCoordinates costs ~15% of a phone's main thread at 900 particles)
+    const M = C.Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, VP), cw = this.canvas.clientWidth || innerWidth, ch = this.canvas.clientHeight || innerHeight;
+    const hor = R + 0.07 * this.camDist, cx = c.x, cy = c.y, cz = c.z;
     for (const p of this.parts) {
       this.sample(p.lon, p.lat, s); const speed = Math.hypot(s[0], s[1]);
       p.lon += s[0] * k / Math.max(0.2, Math.cos(p.lat * Math.PI / 180)); p.lat += s[1] * k; p.age++;
       if (p.age > p.life || p.lat > 84 || p.lat < -84) { this.spawn(p); continue; }
       if (p.lon > 180) p.lon -= 360; else if (p.lon < -180) p.lon += 360;
-      if (!this.facing(p.lon, p.lat)) { p.px = NaN; continue; }
-      C.Cartesian3.fromDegrees(p.lon, p.lat, 0, undefined, pos);
-      const w = C.SceneTransforms.worldToWindowCoordinates(scene, pos, win); if (!w) { p.px = NaN; continue; }
-      const x = w.x * dpr, y = w.y * dpr;
+      const la = p.lat * RAD, lo = p.lon * RAD, sl = Math.sin(la), cl = Math.cos(la), ux = cl * Math.cos(lo), uy = cl * Math.sin(lo);
+      if (ux * cx + uy * cy + sl * cz < hor) { p.px = NaN; continue; }   // behind the horizon
+      const n = R / Math.sqrt(1 - E2 * sl * sl), X = n * ux, Y = n * uy, Z = n * (1 - E2) * sl;
+      const w = M[3] * X + M[7] * Y + M[11] * Z + M[15]; if (w <= 0) { p.px = NaN; continue; }
+      const nx = (M[0] * X + M[4] * Y + M[8] * Z + M[12]) / w, ny = (M[1] * X + M[5] * Y + M[9] * Z + M[13]) / w;
+      if (nx < -1.2 || nx > 1.2 || ny < -1.2 || ny > 1.2) { p.px = NaN; continue; }
+      const x = (nx * 0.5 + 0.5) * cw * dpr, y = (0.5 - ny * 0.5) * ch * dpr;
       if (!Number.isNaN(p.px) && Math.abs(x - p.px) < 80 && Math.abs(y - p.py) < 80) { let b = 0; while (b < EDGES.length && speed > EDGES[b]) b++; buckets[b].push(p.px, p.py, x, y); }
       p.px = x; p.py = y;
     }

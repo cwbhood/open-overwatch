@@ -73,15 +73,23 @@ background texture uploads wait while a finger is down. Left: shader programs li
 (~0.3 s in three.js and Cesium each).
 
 ### Weather mode on the Android emulator (2026-10-03)
-Measured with `android_profile.mjs weather` and the journey's "Weather with wind" step.
+Measured with `android_profile.mjs weather`, the journey's "Weather with wind" step, and A/B runs (hide the canvas, empty it).
 
 | | before | after |
 |---|---|---|
-| Wind streaks, still | 35 fps | 54 fps |
-| Wind, dragging the globe | 32 fps | 56 fps |
-| Wind + temperature wash | 28 fps | 56 fps |
+| Wind streaks, still | 29-35 fps | 46 fps |
+| Wind, dragging the globe | 32 fps | 43 fps |
+| Wind + temperature wash | 28 fps | 42 fps |
+| Clouds + radar only (no wind) | 44-55 fps | same |
 
-What did it: on phones the wind canvas is 0.6 of the CSS pixels (the fade and composite of a full-screen canvas were the cost,
-not the particles) with 900 particles instead of 1,400; and weather mode skips the satellite and aircraft position updates
-while it has them hidden (580 ms of work per profile). Left: opening the mode makes Cesium link a new globe shader for the extra
-imagery layers (about 0.5 s, once), which a pre-warm at boot could hide.
+What the A/B runs showed: the particles' JavaScript was never the main cost. A full-screen canvas laid over the WebGL globe costs
+about 15 fps just to composite on the emulator (an empty one costs the same). What helped: updating the streaks at half the frame
+rate on phones (about +15 fps), a canvas at 0.6 of the CSS pixels, projecting particles with our own matrix (Cesium's
+`worldToWindowCoordinates` was 15% of the main thread; the maths is checked against it to 0 px), and skipping the satellite and
+aircraft position updates while weather mode hides them (580 ms of work per profile). Left: opening the mode makes Cesium link a
+new globe shader for the extra imagery layers (about 0.5 s, once), which a pre-warm at boot could hide.
+
+**Test hygiene:** Open-Meteo limits each IP per hour (a live open is 612 locations). A burst of test runs exhausts it and wind then
+silently does not draw, which looks like a speed-up. The site build now mirrors the grid (`data/wind.json`, every 6 h, see
+`build_site.py`) and the browser reads that first; to test before a release, put a file of that shape in `data/` by hand and delete
+it afterwards. Always check "wind canvas ... lit" is non-zero when measuring.

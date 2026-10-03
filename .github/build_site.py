@@ -103,6 +103,35 @@ def mirror_socrates(path):
         print(f'socrates: FAILED {e}')
 
 
+def mirror_wind(path):
+    """Best effort: a wind + temperature snapshot (Open-Meteo, CC BY 4.0, non-commercial) on the 10-degree grid src/globe/wind.js
+    uses, as data/wind.json: {t, at, u, v, temp} (m/s east, m/s north, deg C; latitudes -80..80 south to north, then longitudes
+    -180..170). The browser reads this file first, so visitors never spend Open-Meteo's per-IP quota (612 locations per open)."""
+    import math
+    try:
+        pts = [(la, lo) for la in range(-80, 81, 10) for lo in range(-180, 180, 10)]
+        u, v, t, when = [None] * len(pts), [None] * len(pts), [None] * len(pts), ''
+        for i in range(0, len(pts), 306):
+            part = pts[i:i + 306]
+            url = ('https://api.open-meteo.com/v1/forecast?latitude=' + ','.join(str(a) for a, b in part) + '&longitude=' + ','.join(str(b) for a, b in part)
+                   + '&current=wind_speed_10m,wind_direction_10m,temperature_2m&wind_speed_unit=ms')
+            req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
+            rows = json.load(urllib.request.urlopen(req, timeout=120))
+            if not isinstance(rows, list):
+                raise ValueError(str(rows)[:120])
+            for j, r in enumerate(rows):
+                c = r['current']; d = math.radians(c['wind_direction_10m'])   # the direction the wind blows FROM
+                u[i + j] = round(-c['wind_speed_10m'] * math.sin(d), 2); v[i + j] = round(-c['wind_speed_10m'] * math.cos(d), 2)
+                t[i + j] = c['temperature_2m']; when = c['time']
+            time.sleep(2)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump({'t': int(time.time() * 1000), 'at': when, 'u': u, 'v': v, 'temp': t}, f, separators=(',', ':'))
+        print(f'wind: {len(pts)} points at {when}')
+    except Exception as e:
+        print(f'wind: FAILED {e}')
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     n = extract('HEAD', ['.'], OUT, SKIP_ROOT)
@@ -130,6 +159,7 @@ def main():
     print(f'versions.json: {len(versions)} versions')
     mirror_tles(os.path.join(OUT, 'data', 'tle'))
     mirror_socrates(os.path.join(OUT, 'data', 'socrates.json'))
+    mirror_wind(os.path.join(OUT, 'data', 'wind.json'))
 
 
 if __name__ == '__main__':
