@@ -36,7 +36,9 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] Look-up mode (globe band → Look up): your sky from your location, phone sensors or drag; planets, bright stars,
       overhead satellites and aircraft, compass ring, next ISS pass (core/passes.js, core/orientation.js, tested).
       Needs the real-phone check: iOS compass + Android absolute orientation
-- [ ] Total solar eclipse of 2 August 2027: the Moon's shadow on the globe, next eclipse from your place
+- [x] Solar eclipses 2027–2030 (globe band → Eclipses): Horizons Sun/Moon every minute, live umbra + penumbra, path of
+      totality, coverage from your location. 2027-08-02 greatest eclipse 25.51°N 33.16°E 10:06:39 UT, 6 min 27 s
+      (NASA: 25°31'N 33°08'E, 6 min 23 s); the six central eclipses land within ~0.1° of NASA's points
 - [ ] Accuracy + nerd panel (error vs JPL, fps, data age)
 
 ## Stage 3 — launch like engineers

@@ -15,6 +15,7 @@ import { Space } from './space.js';
 import { Quality, LEVELS } from './quality.js';
 import { Conj } from './conjunctions.js';
 import { LookUp } from './lookup.js';
+import { Eclipses } from './eclipses.js';
 
 function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
@@ -34,6 +35,7 @@ scene.preRender.addEventListener((sc, time) => { SatModels.updateSun(time); Sats
 PRESETS.space = () => Space.go();
 PRESETS.conj = () => Conj.openList();
 PRESETS.lookup = () => { hooks.clearPresets(); LookUp.enter(); };
+PRESETS.eclipses = () => Eclipses.openList();
 $('#luExit').onclick = () => LookUp.leave();
 addEventListener('keydown', e => { if (e.key === 'Escape' && LookUp.active) LookUp.leave(); });
 setInterval(() => SatModels.refresh(), 400);
@@ -97,7 +99,7 @@ every(15 * 60e3, () => Air.opensky(), 'Civil aircraft');
 every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
 
-window.OO3D = { Conj, LookUp,
+window.OO3D = { Conj, LookUp, Eclipses,
   viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {
