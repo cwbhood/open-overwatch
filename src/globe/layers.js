@@ -42,6 +42,7 @@ export function initDock({ bases, currentBase, onBase, quality }) {
       html += '<div class="sep"></div><h3>Graphics</h3>' + [['auto', `Auto (${quality.levels[quality.current()].name.toLowerCase()})`], ...Object.entries(quality.levels).map(([id, q]) => [id, q.name])]
         .map(([id, name]) => `<button class="ly ${(auto ? id === 'auto' : id === quality.chosen()) ? '' : 'off'}" data-q="${id}" style="--c:#e6edf3"><i></i><span class="t">${esc(name)}</span></button>`).join('');
     }
+    html += '<div class="sep"></div><button class="ly" data-nerd="1" style="--c:#ffd27a"><i></i><span class="t">Under the hood: speed, data age, accuracy</span></button>';
     html += '<p class="note">Drag to orbit, scroll to zoom, right-drag to tilt. Click anything for details.</p>';
     $('#dock').innerHTML = html;
   }
@@ -50,6 +51,7 @@ export function initDock({ bases, currentBase, onBase, quality }) {
     const b = e.target.closest('[data-ly]'), base = e.target.closest('[data-base]'), q = e.target.closest('[data-q]');
     if (base) { onBase(base.dataset.base); render(); return; }
     if (q) { quality.choose(q.dataset.q); render(); return; }
+    if (e.target.closest('[data-nerd]')) { hooks.toggleNerd?.(); return; }
     if (!b) return;
     const l = L[b.dataset.ly]; l.on = !l.on; store.set('ly.' + l.id, l.on); b.classList.toggle('off', !l.on); hooks.applyVisibility();
   });

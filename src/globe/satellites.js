@@ -21,7 +21,7 @@ onmessage = e => {
   if (m.type === 'load') { recs = m.tles.map(([l1, l2]) => { try { return satellite.twoline2satrec(l1, l2); } catch (err) { return null; } }); return; }
   if (m.type === 'tick') {
     const t0 = new Date(m.t), t1 = new Date(m.t + 1000), g0 = satellite.gstime(t0), g1 = satellite.gstime(t1);
-    const out = new Float32Array(recs.length * 6);
+    const out = new Float32Array(recs.length * 6), w0 = performance.now();
     for (let i = 0; i < recs.length; i++) {
       const r = recs[i]; let ok = false;
       if (r) {
@@ -33,12 +33,12 @@ onmessage = e => {
       }
       if (!ok) out[i * 6] = NaN;
     }
-    postMessage({ t: m.t, buf: out }, [out.buffer]);
+    postMessage({ t: m.t, buf: out, ms: performance.now() - w0 }, [out.buffer]);
   }
 };`;
 
 export const Sats = {
-  list: [], byId: new Map(), state: null, worker: null,
+  list: [], byId: new Map(), state: null, worker: null, sources: {}, tickMs: 0,
   async load() {
     const seen = new Set(), elements = [], failed = [];
     // fetch the groups four at a time (one after another cost seconds of round trips on phones; more at once would be
@@ -55,6 +55,7 @@ export const Sats = {
         await breathe();
         const { r: res, e } = got.get(g);
         if (e) { console.warn('satellites', g, e.message); failed.push(g); continue; }   // one group missing is no news
+        this.sources[g] = { source: res.source, ageMs: res.ageMs };
         if (res.source === 'stale cache') console.warn(`${g}: using TLEs cached ${Math.round(res.ageMs / 3600e3)} h ago`);
         for (const t of parseTle(res.txt)) {
           if (seen.has(t.id)) continue; seen.add(t.id);
@@ -73,7 +74,7 @@ export const Sats = {
         translucencyByDistance: s.layer === 'starlink' ? new C.NearFarScalar(4.0e7, 1.0, 1.6e8, 0.0) : undefined });
     }
     this.worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' })));
-    this.worker.onmessage = e => { this.state = { t: e.data.t, buf: e.data.buf }; };
+    this.worker.onmessage = e => { this.state = { t: e.data.t, buf: e.data.buf }; this.tickMs = e.data.ms; };
     this.worker.postMessage({ type: 'load', tles: elements });
     // ask for positions at the clock's time: once a second live, more often when the clock runs fast
     const tick = () => { this.worker.postMessage({ type: 'tick', t: Time.nowMs() }); setTimeout(tick, Math.max(150, Math.min(1000, 20000 / Math.max(1, Math.abs(Time.rate))))); };

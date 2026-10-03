@@ -106,6 +106,12 @@ a{color:var(--accent)}
 #credits{position:fixed;right:14px;bottom:16px;z-index:4;font:500 9.5px/1.3 var(--mono);color:var(--faint);max-width:330px;text-align:right}
 #credits a{color:var(--faint)}
 #menuBtn{display:none}
+#nerd{position:fixed;right:14px;top:90px;width:360px;background:rgba(5,8,12,.94);max-height:calc(100% - 200px);overflow:auto;padding:14px 16px;z-index:6;font:500 12px/1.5 var(--mono)}
+#nerd .k{font:600 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--warm)} #nerd h3{margin:12px 0 4px;font:700 13px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+#nerd dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0} #nerd dt{color:var(--faint)} #nerd dd{margin:0;text-align:right}
+#nerd table{width:100%;border-collapse:collapse} #nerd td,#nerd th{padding:2px 4px;text-align:right} #nerd td:first-child{text-align:left} #nerd th{color:var(--faint);font-weight:500}
+#nerd .x{position:absolute;right:8px;top:8px;border:0;background:none;color:var(--faint);font-size:16px;padding:6px 10px}
+@media (max-width: 900px){ #nerd{left:10px;right:10px;width:auto;top:auto;bottom:86px;max-height:60vh} }
 /* fingers: ~40 px tap targets */
 @media (pointer:coarse){ .tb{min-width:36px;height:36px} .rung{padding:13px 12px} .ly,.ly.sub{min-height:40px} #cardX{padding:10px 14px;font-size:20px} #menuBtn{min-width:40px;min-height:40px} }
 
@@ -161,6 +167,7 @@ a{color:var(--accent)}
     <button class="btn" id="bTour"><b>▶</b> Guided tour: Earth to Andromeda</button>
     <button class="btn" id="bPulse"><b>◎</b> Send a light pulse from the Sun</button>
     <button class="btn" id="bAlign"><b>☍</b> Next planetary alignment</button>
+    <button class="btn" id="bNerd"><b>⌁</b> Under the hood: speed &amp; accuracy vs NASA</button>
   </div>
   <p class="note">Drag to orbit, scroll or pinch to zoom, click anything for details. Planets are drawn to their real size: zoom in to see them.</p>
 </div>

@@ -71,10 +71,10 @@ export const Air = {
     const now = Date.now(), ts = (c && rows === c.rows) ? c.t : now;
     for (const [hex, flight, country, lon, lat, alt, ground, gs, track, squawk, vr] of rows)
       this.upsert({ hex, flight, country, lon, lat, alt: alt || 0, ground: !!ground, gs, track, vr: vr ?? 0, squawk, emerg: EMERGENCY.includes(squawk), mil: false, ts, src: 'OpenSky' });
-    setCount('air', rows.length); hooks.updateStats();
+    this.snapshotAt = ts; setCount('air', rows.length); hooks.updateStats();
   },
   async military() {
-    const d = await getJSON('https://api.adsb.lol/v2/mil', { relay: true }), now = Date.now(); let n = 0;
+    const d = await getJSON('https://api.adsb.lol/v2/mil', { relay: true }), now = Date.now(); let n = 0; this.milAt = now;
     for (const a of d.ac || []) {
       if (a.lat == null || a.lon == null) continue; n++;
       const ground = a.alt_baro === 'ground';

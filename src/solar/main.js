@@ -16,6 +16,7 @@ import { createDeepSpace } from './deepspace.js';
 import { createCosmicWeb } from './cosmic.js';
 import { createLightDelay } from './lightdelay.js';
 import { createExoplanets } from './exoplanets.js';
+import { createNerd } from './nerd.js';
 import { createStory } from './story.js';
 import { createUI } from './ui.js';
 import { createEmbed, EMBED } from './embed.js';
@@ -91,6 +92,8 @@ const story = createStory({ scene, clock, nav, caption: (...a) => ui.caption(...
 const quality = createQuality({ renderer, small, onAutoChange: q => { ui.renderLayers(); ui.caption(`Graphics set to ${q.name}`, 'Lowered automatically for smoother motion. You can change it in the layer panel.', '', 5000); } });
 const ui = createUI({ camera, controls, clock, nav, story, small, deep, quality, exo });
 exo.onChange = () => { applyLayers(); ui.renderLayers(); };
+const nerd = createNerd({ renderer, quality, small, exo, moons });
+document.querySelector('#bNerd').onclick = () => nerd.toggle();
 small.onChange = () => ui.renderLayers();
 if (quality.software) setTimeout(() => ui.caption('Slow graphics', SOFTWARE_HINT, '', 15000), 10e3);
 
@@ -113,7 +116,7 @@ const embed = createEmbed({ camera, controls, nav, clock, loop, update });
 if (EMBED) { small.defer(true); const enter = embed.api.enterFromGlobe; embed.api.enterFromGlobe = s => { small.defer(false); return enter(s); }; }
 function frame(t) {
   if (!loop.running) return;
-  const dt = Math.min((t - lastT) / 1000, 0.1); lastT = t; quality.tick(t);
+  const dt = Math.min((t - lastT) / 1000, 0.1); lastT = t; quality.tick(t); nerd.tick(t);
   update(clock.tick(Math.max(dt, 0)));
   if (!embed.frame(view)) nav.frame();
   controls.update(); camera.updateMatrixWorld();

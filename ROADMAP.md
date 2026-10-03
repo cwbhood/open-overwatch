@@ -39,7 +39,8 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] Solar eclipses 2027–2030 (globe band → Eclipses): Horizons Sun/Moon every minute, live umbra + penumbra, path of
       totality, coverage from your location. 2027-08-02 greatest eclipse 25.51°N 33.16°E 10:06:39 UT, 6 min 27 s
       (NASA: 25°31'N 33°08'E, 6 min 23 s); the six central eclipses land within ~0.1° of NASA's points
-- [ ] Accuracy + nerd panel (error vs JPL, fps, data age)
+- [x] Under the hood panels (` key / buttons): fps + frame times, draw calls, GPU, data sources and ages, SGP4 worker
+      timing; the Solar System's errors measured live in the browser against JPL Horizons (core/accuracy.js, also tested)
 
 ## Stage 3 — launch like engineers
 - [x] Performance numbers + fixes (docs/PERFORMANCE.md, brand/tools/perf.mjs): shader pre-warm, graphics levels with auto step-down, software-GPU hint, phone header fix

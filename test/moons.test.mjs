@@ -20,3 +20,10 @@ for (const [name, ref] of Object.entries(H.moons)) {
     assert.ok(Math.abs(len(q) / len(r) - 1) < 0.02, `${name}: ${len(q).toFixed(0)} vs ${len(r).toFixed(0)} km`);
   });
 }
+
+test('accuracy report (the panel shows these live): every body measured, all within the tested bounds', async () => {
+  const { measureAgainstHorizons } = await import('../src/core/accuracy.js');
+  const rows = measureAgainstHorizons(H, M);
+  assert.equal(rows.length, 6 + 1 + 1 + Object.keys(H.moons).length);
+  for (const r of rows) assert.ok(r.deg < (r.what === 'geocentric' ? 0.5 : 1), `${r.name}: ${r.deg.toFixed(3)} deg`);
+});

@@ -16,6 +16,7 @@ import { Quality, LEVELS } from './quality.js';
 import { Conj } from './conjunctions.js';
 import { LookUp } from './lookup.js';
 import { Eclipses } from './eclipses.js';
+import { toggle as toggleNerd } from './nerd.js';
 
 function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
@@ -36,6 +37,7 @@ PRESETS.space = () => Space.go();
 PRESETS.conj = () => Conj.openList();
 PRESETS.lookup = () => { hooks.clearPresets(); LookUp.enter(); };
 PRESETS.eclipses = () => Eclipses.openList();
+hooks.toggleNerd = toggleNerd;
 $('#luExit').onclick = () => LookUp.leave();
 addEventListener('keydown', e => { if (e.key === 'Escape' && LookUp.active) LookUp.leave(); });
 setInterval(() => SatModels.refresh(), 400);
