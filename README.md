@@ -91,3 +91,8 @@ Live feeds: adsb.lol, adsb.fi, airplanes.live, OpenSky, USGS, NOAA, NASA EONET/F
 aisstream.io, SondeHub, RainViewer, TeleGeography. Basemap © Esri. Full list with terms:
 [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). These are public and volunteer services; check each one's terms before
 any commercial use.
+
+## The creator
+Made by Destin Jones ([@cwbhood](https://github.com/cwbhood)), with Claude as the building partner. Also by Destin:
+**[Ironbound](https://github.com/cwbhood/godot-open-rts)**, a free, open source 3D real-time strategy game built in Godot
+where your city builds itself while you run the army and the trade routes.

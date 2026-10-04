@@ -13,6 +13,37 @@
 <meta property="og:description" content="Aircraft, satellites, ships, storms and quakes on one live map. Free, open data, runs in your browser.">
 <meta property="og:image" content="https://cwbhood.github.io/open-overwatch/brand/social/og-1200x630.png">
 <meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://cwbhood.github.io/open-overwatch/#creator",
+      "name": "Destin Jones",
+      "url": "https://cwbhood.github.io/open-overwatch/#creator",
+      "image": "https://cwbhood.github.io/open-overwatch/brand/creator/destin-jones-800.webp",
+      "description": "Open source builder who loves vibe coding and new ways to use technology to get more done. Creator of Open Overwatch and Ironbound, built with Claude as the building partner.",
+      "sameAs": [
+        "https://github.com/cwbhood",
+        "https://github.com/cwbhood/open-overwatch",
+        "https://github.com/cwbhood/godot-open-rts",
+        "https://cwbhood.github.io/godot-open-rts/"
+      ]
+    },
+    {
+      "@type": "WebApplication",
+      "name": "Open Overwatch",
+      "url": "https://cwbhood.github.io/open-overwatch/",
+      "applicationCategory": "ReferenceApplication",
+      "operatingSystem": "Any (web browser)",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "codeRepository": "https://github.com/cwbhood/open-overwatch",
+      "author": { "@id": "https://cwbhood.github.io/open-overwatch/#creator" }
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -255,6 +286,24 @@ footer a{color:var(--ink-dim)}
 .rv{opacity:0;transform:translateY(26px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.scan,.dot{animation:none}html{scroll-behavior:auto}}
+/* creator + "also by" */
+.creator{display:grid;grid-template-columns:minmax(220px,340px) 1fr;gap:clamp(36px,6vw,80px);align-items:center}
+.creator .portrait{position:relative;border:1px solid var(--line-strong);background:var(--panel)}
+.creator .portrait::before{content:"";position:absolute;inset:-1px;border-top:2px solid var(--accent);pointer-events:none;z-index:1}
+.creator .portrait img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover}
+.creator .lede{max-width:640px;margin:18px 0 0}
+.creator .lede + .lede{margin-top:14px}
+.creator .cta{margin-top:28px;display:flex;flex-wrap:wrap;gap:14px}
+.also{margin-top:clamp(56px,8vw,96px);display:grid;grid-template-columns:1.15fr .85fr;border:1px solid var(--line-strong);background:linear-gradient(160deg,#0a1119,#05080c);position:relative}
+.also::before{content:"";position:absolute;inset:-1px;border-top:2px solid var(--evt);pointer-events:none}
+.also picture{display:block}
+.also img{width:100%;height:100%;object-fit:cover;min-height:240px}
+.also .txt{padding:clamp(24px,3.5vw,40px);display:grid;align-content:center;gap:14px}
+.also h3{margin:0;font:900 clamp(36px,4vw,54px)/.95 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.also p{margin:0;color:var(--ink-dim);font-size:16px}
+.also .tag{font:500 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--evt)}
+.also .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px}
+@media (max-width:900px){.creator{grid-template-columns:1fr}.creator .portrait{max-width:320px}.also{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -262,7 +311,7 @@ footer a{color:var(--ink-dim)}
 <nav id="nav">
   <div class="wrap">
     <a class="brand" href="#top"><img src="brand/emblem/emblem-256.png" alt="">Open Overwatch</a>
-    <div class="links"><a href="#features">Features</a><a href="#launch">Versions</a><a href="#live">Live</a><a href="#fleet">Fleet</a><a href="#get">Download</a><a class="gh" href="https://github.com/cwbhood/open-overwatch">GitHub</a></div>
+    <div class="links"><a href="#features">Features</a><a href="#launch">Versions</a><a href="#live">Live</a><a href="#fleet">Fleet</a><a href="#get">Download</a><a href="#creator">Creator</a><a class="gh" href="https://github.com/cwbhood/open-overwatch">GitHub</a></div>
     <a class="btn small primary" href="#launch">Launch map</a>
   </div>
 </nav>
@@ -452,6 +501,46 @@ footer a{color:var(--ink-dim)}
   </div>
 </section>
 
+<section id="creator">
+  <div class="wrap">
+    <div class="creator">
+      <div class="portrait rv">
+        <picture>
+          <source srcset="brand/creator/destin-jones-480.webp 480w, brand/creator/destin-jones-800.webp 800w" sizes="(max-width:900px) 320px, 340px" type="image/webp">
+          <img src="brand/creator/destin-jones-480.jpg" width="480" height="600" alt="Portrait of Destin Jones, creator of Open Overwatch and Ironbound" loading="lazy" decoding="async">
+        </picture>
+      </div>
+      <div>
+        <div class="eyebrow rv">The creator</div>
+        <h2 class="rv">Built by<br>Destin Jones.</h2>
+        <p class="lede rv">I love open source and vibe coding, and I'm always chasing the next new approach that lets technology get more done. Open Overwatch is that idea pointed at the world: open data from public feeds, live, on one screen.</p>
+        <p class="lede rv">I drive these projects with Claude as my building partner. I set the direction and make the calls, Claude helps build it, and all of it ships in the open so anyone can read it, fork it and take it further.</p>
+        <div class="cta rv">
+          <a class="btn" href="https://github.com/cwbhood">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 8.4 22.9c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5Z"/></svg>
+            github.com/cwbhood</a>
+        </div>
+      </div>
+    </div>
+
+    <article class="also rv" aria-labelledby="also-ironbound">
+      <picture>
+        <source srcset="brand/creator/ironbound-800.webp 800w, brand/creator/ironbound-1280.webp 1280w" sizes="(max-width:900px) 100vw, 680px" type="image/webp">
+        <img src="brand/creator/ironbound-800.jpg" width="800" height="450" alt="Ironbound screenshot: tanks, helicopters and support vehicles lined up on desert sand next to an oasis, with the player's city headquarters in the corner" loading="lazy" decoding="async">
+      </picture>
+      <div class="txt">
+        <span class="tag">Also by Destin · in development</span>
+        <h3 id="also-ironbound">Ironbound</h3>
+        <p>A free, open source 3D real-time strategy game built in Godot. Your city builds itself while you run the army and the trade routes: trade with rival factions grows the city, the city drives production and science, and science unlocks new military tech.</p>
+        <div class="cta">
+          <a class="btn primary small" href="https://cwbhood.github.io/godot-open-rts/">Visit the Ironbound site</a>
+          <a class="btn small" href="https://github.com/cwbhood/godot-open-rts">Source on GitHub</a>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
 <section class="final">
   <img class="bg" src="brand/hero/hero-wide.webp" alt="" loading="lazy">
   <div class="wrap">
@@ -474,6 +563,7 @@ footer a{color:var(--ink-dim)}
     <div>
       <p>Data: adsb.lol, adsb.fi, airplanes.live, OpenSky, CelesTrak, USGS, NOAA/NHC/NWS, NASA EONET &amp; FIRMS, GDACS, GDELT, Digitraffic, aisstream.io, SondeHub, RainViewer, TeleGeography. Basemap © Esri. Night lights: NASA Black Marble.</p>
       <p><a href="https://github.com/cwbhood/open-overwatch">GitHub</a> · <a href="https://github.com/cwbhood/open-overwatch/releases">Releases</a> · <a href="https://github.com/cwbhood/open-overwatch/issues">Report a bug</a></p>
+      <p>Made by <a href="#creator">Destin Jones</a> · Also by Destin: <a href="https://cwbhood.github.io/godot-open-rts/">Ironbound</a>, an open source RTS (<a href="https://github.com/cwbhood/godot-open-rts">source</a>)</p>
     </div>
   </div>
 </footer>
