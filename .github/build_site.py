@@ -141,24 +141,26 @@ def mirror_news(path, countries_path):
     except Exception as e:
         print(f'news: no country list ({e})'); return
     top = sorted((iso for iso, f in facts.items() if f.get('gdp')), key=lambda i: -facts[i]['gdp'])[:70]
-    out, fails = {}, 0
+    out, fails, started = {}, 0, time.time()
+    # A hard budget: this runs inside every site build, and GDELT answers 429 to the build servers at times. One 7 s pause between
+    # requests, a 15 s timeout each, no retries, stop after 3 failures in a row or 5 minutes in all (whatever was collected is kept).
     for iso in top:
+        if time.time() - started > 300: print('news: out of time, keeping what we have'); break
         name = re.sub(r'[^A-Za-z]', '', facts[iso]['name'])
         url = ('https://api.gdeltproject.org/api/v2/doc/doc?query=' + urllib.parse.quote(f'sourcecountry:{name} sourcelang:english')
                + '&mode=artlist&format=json&maxrecords=10&timespan=1d&sort=hybridrel')
-        for attempt in range(3):
-            time.sleep(7 if attempt == 0 else 40)
-            try:
-                req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
-                txt = urllib.request.urlopen(req, timeout=60).read().decode('utf-8', 'replace')
-                d = json.loads(txt) if txt.strip().startswith('{') else None
-                if d is None: raise ValueError(txt.strip()[:60])
-                out[iso] = [{'title': a['title'][:160], 'url': a['url'], 'domain': a.get('domain', ''), 'date': a.get('seendate', '')} for a in d.get('articles', [])
-                            if a.get('url', '').startswith(('http://', 'https://'))][:8]
-                break
-            except Exception as e:
-                if attempt == 2: fails += 1; print(f'news {iso}: FAILED {e}')
-        if fails >= 8: print('news: giving up after repeated failures'); break
+        time.sleep(7)
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
+            txt = urllib.request.urlopen(req, timeout=15).read().decode('utf-8', 'replace')
+            d = json.loads(txt) if txt.strip().startswith('{') else None
+            if d is None: raise ValueError(txt.strip()[:60])
+            out[iso] = [{'title': a['title'][:160], 'url': a['url'], 'domain': a.get('domain', ''), 'date': a.get('seendate', '')} for a in d.get('articles', [])
+                        if a.get('url', '').startswith(('http://', 'https://'))][:8]
+            fails = 0
+        except Exception as e:
+            fails += 1; print(f'news {iso}: FAILED {e}')
+            if fails >= 3: print('news: three failures in a row, giving up'); break
     if out:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w', encoding='utf-8') as f:
