@@ -19,7 +19,7 @@ export const LAYERS = [
   { id: 'quakes', group: 'Earth', name: 'Earthquakes M2.5+ · 24 h', color: '#ff7b4f', on: true },
   { id: 'lighthouses', group: 'Earth', name: 'Lighthouses of the world', color: '#ffe27a', on: !PHONE },
   { id: 'sun', group: 'Earth', name: 'Sun overhead and time zones', color: '#ffd45c', on: false },
-  { id: 'buildings', group: 'Earth', name: '3D buildings (needs a free ion token)', color: '#c9d3e0', on: false },
+  { id: 'buildings', group: 'Earth', name: '3D buildings (OpenStreetMap, close up)', color: '#c9d3e0', on: false },
   { id: 'volcanoes', group: 'Earth', name: 'Volcanoes of the world (Wikidata)', color: '#ff5a36', on: !PHONE },
   { id: 'companies', group: 'Earth', name: 'Big employers as towers (Wikidata)', color: '#ff9f5c', on: !PHONE },
   { id: 'aurora', group: 'Earth', name: 'Aurora forecast (NOAA, live)', color: '#7dffb0', on: !PHONE },
