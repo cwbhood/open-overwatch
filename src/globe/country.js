@@ -5,6 +5,7 @@
 import { C, esc, fmt } from './env.js';
 import { scene, camera } from './viewer.js';
 import { fetchAsset } from '../core/assets.js';
+import { prepare, inCountry, countryAt, mainBox } from '../core/borders.js';
 import { Quakes } from './quakes.js';
 import { Lighthouses } from './lighthouses.js';
 import { Companies } from './companies.js';
@@ -20,21 +21,17 @@ const mirrorNews = async () => mirror !== undefined ? mirror : (mirror = await f
 
 function load() {
   if (!loading) loading = Promise.all([fetchAsset('data/borders.json', 'json'), fetchAsset('data/countries.json', 'json')]).then(([b, c]) => {
-    for (const x of b) { x.box = x.poly.map(p => { let w = 180, s = 90, e = -180, n = -90; for (const [lo, la] of p[0]) { if (lo < w) w = lo; if (lo > e) e = lo; if (la < s) s = la; if (la > n) n = la; } return [w, s, e, n]; }); }
-    data = { borders: b, facts: c.countries, credit: c.source };
+    data = { borders: prepare(b), facts: c.countries, credit: c.source };
   }).catch(e => { loading = null; throw e; });
   return loading;
 }
-
-const inRing = (r, x, y) => { let c = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [xi, yi] = r[i], [xj, yj] = r[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
-const inCountry = (b, x, y) => b.poly.some((p, k) => { const bx = b.box[k]; return x >= bx[0] && x <= bx[2] && y >= bx[1] && y <= bx[3] && inRing(p[0], x, y) && !p.slice(1).some(h => inRing(h, x, y)); });
 
 export const Country = {
   current: null,
   /** The country at a longitude/latitude (degrees), or null at sea. Loads the data on first use. */
   async at(lon, lat) {
     await load();
-    const b = data.borders.find(b => inCountry(b, lon, lat));
+    const b = countryAt(data.borders, lon, lat);
     return b ? { kind: 'country', iso: b.iso, border: b, facts: data.facts[b.iso] || { name: b.name }, lon, lat } : null;
   },
   async byIso(iso) {
@@ -52,10 +49,7 @@ export const Country = {
     this.current = o; scene.requestRender();
   },
   clear() { lines.removeAll(); this.current = null; },
-  rectangle(o) {   // bounding rectangle of the largest part (islands far away do not drag the view)
-    let best = o.border.box[0], area = 0; for (const bx of o.border.box) { const a = (bx[2] - bx[0]) * (bx[3] - bx[1]); if (a > area) { area = a; best = bx; } }
-    return C.Rectangle.fromDegrees(best[0], best[1], best[2], best[3]);
-  },
+  rectangle(o) { const bx = mainBox(o.border); return C.Rectangle.fromDegrees(bx[0], bx[1], bx[2], bx[3]); },   // the biggest part: far islands do not drag the view
   fly(o) {
     const r = this.rectangle(o), pad = Math.max(0.15 * (r.east - r.west), 0.02);
     camera.flyTo({ destination: C.Rectangle.fromRadians(r.west - pad, Math.max(-1.45, r.south - pad), r.east + pad, Math.min(1.45, r.north + pad)), duration: 2.2 });

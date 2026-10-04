@@ -1,7 +1,7 @@
 # Testing
 
 ## Unit tests
-`node --test` from the repo root: the maths in `src/core/` against JPL Horizons fixtures and textbook identities
+`node --test` from the repo root: the maths in `src/core/` against JPL Horizons fixtures and textbook identities, the country lookup (`core/borders.js`: cities land in their countries, ocean is nobody's, every border has facts) and the share-link format (`core/viewlink.js`: round trip, bad links refused)
 (no dependencies). CI runs them on every push, plus a syntax check of every module and a link check of every page.
 
 ## In the browser (needs `node serve.js` on :8787)
@@ -12,6 +12,7 @@
 | `brand/tools/mobile_journey.mjs` | a first visit A to Z on a phone: landing, globe, Solar System, 2D map, with touch, screenshots and a layout audit |
 | `brand/tools/webkit_journey.mjs` | the same journey in Safari's engine (Playwright WebKit) with an iPhone 15 profile |
 | `brand/tools/wind_fixture.mjs` | a made-up wind grid the journeys serve as `data/wind.json` (and they block Open-Meteo: its per-IP hourly quota) |
+| `brand/tools/android_features.mjs` | the newer globe features on the Android emulator, by touch: tap a country, the Explore sheet and Weather panel fit, the tour starts and a touch stops it, a shared link restores the view; screenshots in `brand/perf/android-features/` |
 | `brand/tools/android_profile.mjs` | one gesture on the Android emulator with the JavaScript profiler on: `map`, `mapspace`, `mappinch`, `mapspacepinch`, `handoff`, `weather`; `OO_CSS='…'` A/B tests a style, `OO_CALLERS='regex'` prints who calls a slow native function |
 
 All of them block the live feeds that must never see automated traffic (CelesTrak above all).
@@ -94,3 +95,8 @@ new globe shader for the extra imagery layers (about 0.5 s, once), which a pre-w
 silently does not draw, which looks like a speed-up. The site build now mirrors the grid (`data/wind.json`, every 6 h, see
 `build_site.py`) and the browser reads that first; to test before a release, put a file of that shape in `data/` by hand and delete
 it afterwards. Always check "wind canvas ... lit" is non-zero when measuring.
+
+### A tap on a phone is a country, not a satellite (2026-10-04)
+A finger covers ~28 px and 18,000 satellite dots mean one is nearly always under it, so the first Android run of `android_features.mjs`
+opened a Starlink card when Japan was tapped. A tap now selects a satellite only when its dot is within 8 px of the touch; otherwise it
+is treated as a tap on the ground (the country). Mouse clicks are unchanged (3 px).

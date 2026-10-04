@@ -88,7 +88,11 @@ handler.setInputAction(m => {
 }, C.ScreenSpaceEventType.MOUSE_MOVE);
 let clickNo = 0;
 handler.setInputAction(c => {
-  const o = pickObj(c.position), n = ++clickNo; if (o) { select(o); return; }
+  let o = pickObj(c.position); const n = ++clickNo;
+  // a finger covers 28 px, and 18,000 satellite dots mean one is nearly always under it: unless the dot is really near the touch,
+  // the tap was meant for the ground (the country), not for a satellite
+  if (o && o.kind === 'sat' && touchInput && o.pt) { const w = C.SceneTransforms.worldToWindowCoordinates(scene, o.pt.position); if (!w || Math.hypot(w.x - c.position.x, w.y - c.position.y) > 8) o = null; }
+  if (o) { select(o); return; }
   // nothing under the cursor: the country under it, if the click landed on the Earth
   const p = camera.pickEllipsoid(c.position, scene.globe.ellipsoid);
   if (!p) { closeCard(); return; }
