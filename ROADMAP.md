@@ -1,7 +1,7 @@
 # Roadmap — the rebuild
 
 Work happens on the local `rebuild` branch. Nothing is pushed, tagged or deployed until the user says so (a local
-pre-push hook refuses pushes without OO_PUSH_OK=1). Published: v0.9.1 (2026-10-02), v0.9.2.1 and v0.9.2.2 (2026-10-03), v0.9.2.3 (2026-10-04); next v0.9.2.4.
+pre-push hook refuses pushes without OO_PUSH_OK=1). Published: v0.9.1 (2026-10-02), v0.9.2.1 and v0.9.2.2 (2026-10-03), v0.9.2.3 and v0.9.2.4 (2026-10-04); next v0.9.2.5.
 
 Goal: one coherent, well-engineered project that zooms from a street to the Local Group on real, open data — code a
 programmer would enjoy reading, not three big HTML files.
@@ -51,6 +51,7 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [ ] Decide how the public history looks (squash / fresh repo) — the user's call
 - [x] Publish as v0.9.1 (2026-10-02)
 - [x] Publish as v0.9.2.1 (2026-10-03): other solar systems, look up, eclipses, light delay, under the hood, phone fixes
+- [x] Publish as v0.9.2.4 (2026-10-04): About the creator page, links to Ironbound, search tags, MIT licence, citation file
 - [x] Publish as v0.9.2.3 (2026-10-04): country dossiers, big employers, volcanoes, aurora, flybys, sun and time zones, share links, the tour, 3D buildings (OpenStreetMap, no account)
 - [x] Publish as v0.9.2.2 (2026-10-03): phone dock, desktop nav pad, lighthouses, weather mode (clouds, radar, rain, wind, temperature), phone performance
 
