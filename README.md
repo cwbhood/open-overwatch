@@ -91,3 +91,10 @@ Live feeds: adsb.lol, adsb.fi, airplanes.live, OpenSky, USGS, NOAA, NASA EONET/F
 aisstream.io, SondeHub, RainViewer, TeleGeography. Basemap © Esri. Full list with terms:
 [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). These are public and volunteer services; check each one's terms before
 any commercial use.
+
+## Credit and licence
+Open Overwatch is by [Destin Jones](https://cwbhood.github.io/open-overwatch/about.html) ([GitHub](https://github.com/cwbhood)), built in public with Claude as the building partner.
+Also by me: [Ironbound](https://cwbhood.github.io/godot-open-rts/), a free open source RTS made with Godot.
+
+The code is MIT licensed ([LICENSE](LICENSE)): use it, fork it, build on it, and keep the copyright line. The data, maps, textures and models it shows belong to their sources and keep their own licences: see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
+If you write about it or build on it, please credit it: *Jones, D. (2026). Open Overwatch [Computer software]. https://github.com/cwbhood/open-overwatch* (GitHub's "Cite this repository" button reads [CITATION.cff](CITATION.cff)).

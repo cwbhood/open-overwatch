@@ -1,0 +1,7 @@
+# Open Overwatch. The archived copies of earlier versions live under /v/ and are not for search results.
+User-agent: *
+Allow: /
+Disallow: /v/
+Disallow: /data/
+
+Sitemap: https://cwbhood.github.io/open-overwatch/sitemap.xml

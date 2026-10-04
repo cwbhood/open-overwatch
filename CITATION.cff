@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use or write about Open Overwatch, please cite it like this."
+title: "Open Overwatch"
+abstract: "A free, open source live map of the planet on open data: aircraft, satellites, weather, quakes, and a seamless zoom from a street to the Local Group (a 2D map, a 3D Earth and a Solar System view that run in the browser)."
+type: software
+authors:
+  - family-names: Jones
+    given-names: Destin
+    website: "https://cwbhood.github.io/open-overwatch/about.html"
+repository-code: "https://github.com/cwbhood/open-overwatch"
+url: "https://cwbhood.github.io/open-overwatch/"
+license: MIT
+date-released: 2026-10-04
+keywords:
+  - open data
+  - situational awareness
+  - satellites
+  - CesiumJS
+  - three.js
+  - Solar System
+  - visualization
