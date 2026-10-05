@@ -120,3 +120,19 @@ test('explain: oceans for points at sea', async () => {
   assert.equal(oceanAt(30, -40), 'the Atlantic Ocean'); assert.equal(oceanAt(-20, 75), 'the Indian Ocean');
   assert.equal(oceanAt(35, 18), 'the Mediterranean'); assert.equal(oceanAt(-65, 0), 'the Southern Ocean'); assert.equal(oceanAt(25, -88), 'the Atlantic Ocean');
 });
+
+test('sky: sunrise and sunset, moonrise, full Moons and their names', async () => {
+  const { riseSet, nextFullMoon, craftAt } = await import('../src/core/sky.js');
+  // London 2024-06-21: sunrise 03:43 UTC, sunset 20:21 UTC (timeanddate: 04:43 / 21:21 BST)
+  const s = riseSet('sun', 51.5072, -0.1276, Date.parse('2024-06-21T00:00:00Z'));
+  assert.ok(Math.abs(s.rise - Date.parse('2024-06-21T03:43:00Z')) < 3 * 60e3, new Date(s.rise).toISOString());
+  assert.ok(Math.abs(s.set - Date.parse('2024-06-21T20:21:00Z')) < 3 * 60e3, new Date(s.set).toISOString());
+  assert.equal(riseSet('sun', 78.2, 15.6, Date.parse('2024-06-21T00:00:00Z')).up, true);       // midnight Sun
+  // full Moons: 2024-09-18 02:34 UTC (Harvest, a supermoon with the partial eclipse), 2024-10-17 11:26 (Hunter's, the year's closest)
+  const h = nextFullMoon(Date.parse('2024-09-05T00:00:00Z'));
+  assert.ok(Math.abs(h.at - Date.parse('2024-09-18T02:34:00Z')) < 2 * 3600e3, new Date(h.at).toISOString()); assert.equal(h.name, 'Harvest Moon'); assert.ok(h.supermoon);
+  const k = nextFullMoon(h.at + 86400e3); assert.equal(k.name, "Hunter's Moon"); assert.ok(k.km < 360000, String(k.km));
+  assert.equal(nextFullMoon(Date.parse('2025-01-01T00:00:00Z')).name, 'Wolf Moon');
+  assert.deepEqual(craftAt({ t0_jd: 10, step_days: 1, xyz: [0, 0, 0, 2, 0, 0] }, 10.5), { x: 1, y: 0, z: 0 });
+  assert.equal(craftAt({ t0_jd: 10, step_days: 1, xyz: [0, 0, 0, 2, 0, 0] }, 9), null);
+});

@@ -188,6 +188,9 @@ async function enter() {
   dateBox.value = local(Date.now());
   dateBox.onchange = () => { const ms = new Date(dateBox.value).getTime(); if (Number.isFinite(ms)) { Time.setJd(jdFromMs(ms), 0); refresh(); } };   // paused at that moment
   $('#luLive').onclick = () => { Time.goLive(); dateBox.value = local(Date.now()); refresh(); };
+  const red = on => { document.documentElement.classList.toggle('redlight', on); $('#luRed').classList.toggle('on', on); try { localStorage.setItem('oo3d.red', on ? '1' : ''); } catch (e) { /* private mode */ } };
+  red((() => { try { return localStorage.getItem('oo3d.red') === '1'; } catch (e) { return false; } })());   // dark-adapted eyes: remembered
+  $('#luRed').onclick = () => red(!document.documentElement.classList.contains('redlight'));
   $('#luCon').classList.toggle('on', CON.on);
   $('#luCon').onclick = () => { CON.on = !CON.on; $('#luCon').classList.toggle('on', CON.on); placeConstellations(); };
   refresh(); S.timer = setInterval(refresh, 1000); nextPass(); S.passTimer = setInterval(nextPass, 600e3); constellations();
@@ -200,7 +203,7 @@ function leave() {
   const cv = scene.canvas; cv.removeEventListener('pointerdown', S.onDown); removeEventListener('pointermove', S.onMove); removeEventListener('pointerup', S.onUp); cv.removeEventListener('wheel', S.onWheel);
   scene.preRender.removeEventListener(frame);
   for (const c of [S.labels, S.points, S.ring]) scene.primitives.remove(c);
-  dropConstellations();
+  dropConstellations(); document.documentElement.classList.remove('redlight');
   Earth.hidden = false; globe.baseColor = S.saved.base; ctrl.enableInputs = S.saved.inputs; camera.frustum.fov = S.saved.fov;
   camera.setView({ destination: S.saved.pos, orientation: { direction: S.saved.dir, up: S.saved.up } });
   $('#lookup').classList.remove('on'); document.body.classList.remove('lookup');

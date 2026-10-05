@@ -83,6 +83,10 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
       launches within 1,000 km in the next week ("look toward the SSE"), plus the next launch anywhere
 - [x] Embed mode (`globe.html#embed=1`, navpad "</>" or phone menu copies an iframe); landing page shows the next launch countdown
 - [x] Keyboard focus outlines, labelled globe and card regions
+- [x] Tonight: sunset / dark / sunrise, moonrise and set, the next full Moon by name (Harvest, Hunter's...; supermoons),
+      "Farthest from home" (Voyagers, New Horizons, Pioneers: distance now and signal time), and a "look up now" nudge a
+      minute before each visible ISS / Tiangong pass while the page is open
+- [x] Look up "Red": a red-light view that keeps your eyes dark-adapted (remembered)
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
 - [ ] Look up shows two fixed streaks (pink, orange) in headless Chromium's software renderer, also in v0.9.2.4: check on a real GPU
 

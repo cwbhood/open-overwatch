@@ -98,7 +98,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 #lookup .lu-top b{font:900 18px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:#7dffa6}
 #lookup .lu-top span{flex:1;font:500 11px/1.3 var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis}
 #lookup .lu-bottom{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:620px;margin:0 auto;padding:10px 14px;z-index:8;font:500 12.5px/1.5 var(--mono)}
-#lookup .lu-when{display:flex;gap:8px;align-items:center;margin:4px 0 2px;color:var(--dim)} #lookup .lu-when input{flex:1;min-width:0;padding:6px 8px;border-radius:8px;border:1px solid var(--edge-dim);background:rgba(5,8,12,.6);color:var(--ink);font:500 12.5px/1 var(--mono);color-scheme:dark} #lookup .lu-when .chipbtn{padding:6px 10px} #lookup #luCon.on{color:#8fa6c4;border-color:rgba(143,166,196,.4)}
+#lookup .lu-when{display:flex;gap:8px;align-items:center;margin:4px 0 2px;color:var(--dim)} #lookup .lu-when input{flex:1;min-width:0;padding:6px 8px;border-radius:8px;border:1px solid var(--edge-dim);background:rgba(5,8,12,.6);color:var(--ink);font:500 12.5px/1 var(--mono);color-scheme:dark} #lookup .lu-when .chipbtn{padding:6px 10px} html.redlight{filter:grayscale(1) sepia(1) saturate(8) hue-rotate(-50deg) brightness(.55)} #lookup #luRed.on{color:#ff6b6b;border-color:rgba(255,107,107,.4)}
+#lookup #luCon.on{color:#8fa6c4;border-color:rgba(143,166,196,.4)}
 #lookup #luDir{font:700 16px/1.3 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)} #lookup .ok{color:#7dffa6}
 .lu-cross{position:fixed;left:50%;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;border:1.5px solid rgba(125,255,166,.55);border-radius:50%;z-index:7;pointer-events:none}
 /* keyboard users see where they are */
@@ -238,7 +239,7 @@ body.lookup #navpad{display:none}
 <div id="lookup" aria-live="polite">
   <div class="lu-top glass"><b>Look up</b><span id="luWhere"></span><button class="chipbtn" id="luExit">Done</button></div>
   <div class="lu-cross"></div>
-  <div class="lu-bottom glass"><div id="luDir">—</div><div id="luNow"></div><div id="luPass"></div><div class="lu-when"><label for="luDate">Sky on</label><input type="datetime-local" id="luDate" min="1800-01-01T00:00" max="2049-12-31T23:59" aria-label="Show the sky at a date and time"><button class="chipbtn" id="luLive">Now</button><button class="chipbtn" id="luCon" title="Constellation figures and names">Figures</button></div><div id="luHint" class="note"></div></div>
+  <div class="lu-bottom glass"><div id="luDir">—</div><div id="luNow"></div><div id="luPass"></div><div class="lu-when"><label for="luDate">Sky on</label><input type="datetime-local" id="luDate" min="1800-01-01T00:00" max="2049-12-31T23:59" aria-label="Show the sky at a date and time"><button class="chipbtn" id="luLive">Now</button><button class="chipbtn" id="luCon" title="Constellation figures and names">Figures</button><button class="chipbtn" id="luRed" title="Red light: keeps your eyes used to the dark for stargazing">Red</button></div><div id="luHint" class="note"></div></div>
 </div>
 <a id="embedOut" class="glass" href="globe.html" target="_blank" rel="noopener">Open Overwatch ↗</a>
 <div id="hover"></div>

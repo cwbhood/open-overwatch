@@ -132,3 +132,49 @@ export function starlinkTrains(tles, { min = 5 } = {}) {
     .map(([k, g]) => { const yy = +k.slice(0, 2); return { launch: `${yy < 57 ? 2000 + yy : 1900 + yy}-${k.slice(2)}`, count: g.length, sat: g[Math.floor(g.length / 2)] }; })
     .sort((a, b) => b.launch.localeCompare(a.launch));
 }
+
+/**
+ * When a body crosses altitude h0 (deg) in the next `hours`: { rise, set } (ms, either may be null), plus up: true/false if
+ * it never crosses (always up / always down). Sun h0 -0.833 (refraction + the disc's edge), Moon +0.125 (its parallax),
+ * civil twilight -6, astronomical darkness -18.
+ */
+export function riseSet(key, lat, lon, t0, { h0 = -0.833, hours = 24, step = 10 * 60e3 } = {}) {
+  const alt = t => { const jd = jdFromMs(t); return altAz(bodyRaDec(key, jd), lat, lon, jd).alt - h0; };
+  const edge = (a, b) => { let fa = alt(a); for (let k = 0; k < 24 && b - a > 20e3; k++) { const m = (a + b) / 2, fm = alt(m); if ((fm > 0) === (fa > 0)) { a = m; fa = fm; } else b = m; } return Math.round((a + b) / 2); };
+  let rise = null, set = null, prev = alt(t0), tp = t0;
+  const up0 = prev > 0;
+  for (let t = t0 + step; t <= t0 + hours * 3600e3 && (rise == null || set == null); t += step) {
+    const cur = alt(t);
+    if (prev <= 0 && cur > 0 && rise == null) rise = edge(tp, t);
+    if (prev > 0 && cur <= 0 && set == null) set = edge(tp, t);
+    prev = cur; tp = t;
+  }
+  return { rise, set, up: rise == null && set == null ? up0 : null };
+}
+
+const SYNODIC = 29.530589 * 86400e3;
+/** Full Moon names (the one nearest the September equinox is the Harvest Moon, the next the Hunter's Moon). */
+const MONTH_MOON = ['Wolf', 'Snow', 'Worm', 'Pink', 'Flower', 'Strawberry', 'Buck', 'Sturgeon', 'Corn', "Hunter's", 'Beaver', 'Cold'];
+/** The next full Moon after ms: { at, name, km, supermoon }. */
+export function nextFullMoon(ms) {
+  const elong = t => { const jd = jdFromMs(t), m = moonGeocentric(jd), E = earthPosition(jd); return ((Math.atan2(m.y, m.x) - Math.atan2(-E.y, -E.x)) / DEG + 720) % 360; };
+  // elongation grows ~12.2 deg a day; full when it passes 180
+  let t = ms, e = elong(t);
+  for (let i = 0; i < 40 * 4 && !(e < 180 && elong(t + 6 * 3600e3) >= 180); i++) { t += 6 * 3600e3; e = elong(t); }
+  let a = t, b = t + 6 * 3600e3;
+  for (let k = 0; k < 30; k++) { const m = (a + b) / 2; if (elong(m) < 180) a = m; else b = m; }
+  const at = Math.round((a + b) / 2), d = new Date(at), y = d.getUTCFullYear(), eq = Date.UTC(y, 8, 22, 12);
+  const near = x => Math.abs(x - eq);
+  let name = MONTH_MOON[d.getUTCMonth()] + ' Moon';
+  if (near(at) < near(at - SYNODIC) && near(at) < near(at + SYNODIC)) name = 'Harvest Moon';
+  else if (near(at - SYNODIC) < near(at - 2 * SYNODIC) && near(at - SYNODIC) < near(at) && at > eq) name = "Hunter's Moon";
+  const m = moonGeocentric(jdFromMs(at)), km = Math.hypot(m.x, m.y, m.z) * 149597870.7;
+  return { at, name, km: Math.round(km), supermoon: km < 362000 };
+}
+
+/** A spacecraft from data/solar/spacecraft.json ({ t0_jd, step_days, xyz: AU heliocentric ecliptic }) at jd: { x, y, z } or null before launch. */
+export function craftAt(c, jd) {
+  const f = (jd - c.t0_jd) / c.step_days, x = c.xyz, n = x.length / 3; if (f < 0 || n < 2) return null;
+  const k = Math.min(Math.floor(f), n - 2), t = f - k;   // past the last sample it coasts on in a straight line
+  return { x: x[k * 3] + (x[k * 3 + 3] - x[k * 3]) * t, y: x[k * 3 + 1] + (x[k * 3 + 4] - x[k * 3 + 1]) * t, z: x[k * 3 + 2] + (x[k * 3 + 5] - x[k * 3 + 2]) * t };
+}
