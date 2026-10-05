@@ -96,3 +96,5 @@ any commercial use.
 Made by Destin Jones ([@cwbhood](https://github.com/cwbhood)), with Claude as the building partner. Also by Destin:
 **[Ironbound](https://github.com/cwbhood/godot-open-rts)**, a free, open source 3D real-time strategy game built in Godot
 where your city builds itself while you run the army and the trade routes.
+
+Please fork this project and build anything you like with it. If you make something, I'd love to see it.
