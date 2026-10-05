@@ -114,7 +114,7 @@ nav .links a:hover{color:var(--ink)}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);margin-right:8px;animation:blink 1.6s infinite}
 @keyframes blink{50%{opacity:.25}}
 .feed .row{padding:11px 14px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:78px 1fr;gap:4px 10px}
-.feed .row:last-child{border:0}
+.feed .row:last-child{border:0} .feed .row[hidden]{display:none}
 .feed .k{color:var(--ink-faint);letter-spacing:.1em;font-size:11px;padding-top:2px}
 .feed .v{color:var(--ink)}
 .feed .v small{display:block;color:var(--ink-dim);font-size:11.5px}
@@ -336,6 +336,7 @@ footer a{color:var(--ink-dim)}
       <header><span><span class="dot"></span>Live feed</span><b id="utc">--:--:-- UTC</b></header>
       <div class="row"><span class="k">ISS</span><span class="v sat" id="iss">acquiring…<small>wheretheiss.at</small></span></div>
       <div class="row"><span class="k">QUAKES</span><span class="v qk" id="qk">listening…<small>USGS, M2.5+, last 24 h</small></span></div>
+      <div class="row" id="lchRow" hidden><span class="k">LAUNCH</span><a class="v" id="lch" href="globe.html#go=launches" style="color:#ff9f5c;text-decoration:none"></a></div>
       <div class="row"><span class="k">IN THE APP</span><span class="v">20+ layers, 6 groups<small>all refreshing while you watch</small></span></div>
     </aside>
   </div>
@@ -624,6 +625,18 @@ async function quakes() {
   } catch (e) { $('#qk').innerHTML = 'feed unavailable<small>USGS</small>'; }
 }
 iss(); quakes(); setInterval(iss, 5000); setInterval(quakes, 120000);
+// next rocket launch: the site build's copy of Launch Library 2 (data/launches.json, every 6 h); the row stays hidden without it
+(async () => {
+  try {
+    const d = await (await fetch('data/launches.json')).json(), now = Date.now();
+    const l = (d.results || []).map(r => ({ t: Date.parse(r.net), p: r.net_precision && r.net_precision.abbrev, rocket: r.rocket && r.rocket.configuration && (r.rocket.configuration.full_name || r.rocket.configuration.name), mission: r.mission && r.mission.name, where: r.pad && r.pad.location && r.pad.location.name }))
+      .filter(x => x.t > now && ['SEC', 'MIN', 'HR'].includes(x.p)).sort((a, b) => a.t - b.t)[0];
+    if (!l) return;
+    const tick = () => { const s = Math.max(0, Math.round((l.t - Date.now()) / 1000)), dd = Math.floor(s / 86400), hms = [Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60].map(v => String(v).padStart(2, '0')).join(':');
+      $('#lch').innerHTML = esc('T-' + (dd ? dd + ' d ' : '') + hms) + '<small>' + esc((l.rocket || 'Rocket') + ' · ' + (l.mission || '') + (l.where ? ' · ' + l.where : '')) + '</small>'; };
+    tick(); setInterval(tick, 1000); $('#lchRow').hidden = false;
+  } catch (e) { /* no launch copy here (local preview): leave the row out */ }
+})();
 
 // phone demo: tabs cycle through the recorded clips
 const pv = $('#phoneVid'), tabs = [...document.querySelectorAll('.tab')];

@@ -29,3 +29,15 @@ export function explainSat(sat, orbit = {}) {
   if (alt != null && alt < 2000) return `A satellite in low orbit, ${Math.round(alt).toLocaleString('en-US')} km up, going round the Earth every ${Math.round(per || 95)} minutes at about 27,000 km/h.`;
   return 'A satellite in orbit. Its name comes from the official catalogue (US Space Force data, via CelesTrak).';
 }
+
+/** Which ocean (or sea) a point at sea is in, roughly: good enough for "the ISS is over the Pacific". */
+export function oceanAt(lat, lon) {
+  const x = ((lon + 540) % 360) - 180;
+  if (lat > 66) return 'the Arctic Ocean';
+  if (lat < -60) return 'the Southern Ocean';
+  if (lat > 30 && lat < 46 && x > -6 && x < 37) return 'the Mediterranean';
+  if (x >= 20 && x < 147 && lat < 30 && !(x > 100 && lat > -10)) return 'the Indian Ocean';
+  if (x >= -70 && x < 20) return 'the Atlantic Ocean';
+  if (x >= -100 && x < -70 && lat > 8) return 'the Atlantic Ocean';   // Gulf of Mexico and the Caribbean
+  return 'the Pacific Ocean';
+}

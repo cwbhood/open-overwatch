@@ -113,3 +113,10 @@ test('launches: Launch Library 2 records, countdowns and fuzzy dates', async () 
   assert.match(when({ net: Date.UTC(2027, 3, 1), precision: 'Q2' }), /^Q2 2027/);
   assert.deepEqual(upcoming([{ net: 5e6 }, { net: 1e6 }, { net: -9e6 }], 0).map(x => x.net), [1e6, 5e6]);
 });
+
+test('explain: oceans for points at sea', async () => {
+  const { oceanAt } = await import('../src/core/explain.js');
+  assert.equal(oceanAt(0, -150), 'the Pacific Ocean'); assert.equal(oceanAt(10, 170), 'the Pacific Ocean');
+  assert.equal(oceanAt(30, -40), 'the Atlantic Ocean'); assert.equal(oceanAt(-20, 75), 'the Indian Ocean');
+  assert.equal(oceanAt(35, 18), 'the Mediterranean'); assert.equal(oceanAt(-65, 0), 'the Southern Ocean'); assert.equal(oceanAt(25, -88), 'the Atlantic Ocean');
+});

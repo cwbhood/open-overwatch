@@ -5,6 +5,9 @@ export { esc } from '../core/format.js';
 export const fmt = n => n == null || Number.isNaN(n) ? '—' : Math.round(n).toLocaleString('en-US');
 // a narrow window, or a touch screen whose short side is phone-sized (a phone held sideways is wider than 820 px)
 export const PHONE = matchMedia('(max-width: 820px)').matches || (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600);
+/** Inside someone else's page (#embed=1): no toasts about location or reminders, just the globe. */
+export const EMBED = /[#&?]embed=1\b/.test(location.href);
+if (EMBED) document.body.classList.add('embed');
 export const ON_SITE = location.hostname === 'cwbhood.github.io';
 /** Model option: no per-model dynamic environment map. Cesium renders an atmosphere cube map for every model as it
  *  moves, and the specular term adds a shader variant per height band; on small models the reflections don't show. */

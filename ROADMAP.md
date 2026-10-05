@@ -79,7 +79,12 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] Constellation figures and names in Look up (d3-celestial, BSD: data/constellations.json via brand/tools/make_constellations.py), "Figures" toggles them
 - [x] Rocket launches (band → Launches, pads as orange markers with countdowns): Launch Library 2, copied by the site build every 6 h
       (build_site.py mirror_launches), countdown, how sure the time is, webcasts, calendar / notification reminders, fly to the pad
+- [x] "When can I see it?" on every satellite card (its passes over you, 3 days); Tonight adds where the ISS is right now and
+      launches within 1,000 km in the next week ("look toward the SSE"), plus the next launch anywhere
+- [x] Embed mode (`globe.html#embed=1`, navpad "</>" or phone menu copies an iframe); landing page shows the next launch countdown
+- [x] Keyboard focus outlines, labelled globe and card regions
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
+- [ ] Look up shows two fixed streaks (pink, orange) in headless Chromium's software renderer, also in v0.9.2.4: check on a real GPU
 
 ## Rules of thumb
 - One clear goal per session; read this file first, tick boxes as they land.

@@ -22,6 +22,12 @@ export const Share = {
       layers: LAYERS.filter(l => l.on).map(l => l.id), weather: Weather.on ? Object.entries(Weather.sets).filter(([, s]) => s.on).map(([k]) => k) : null,
       time: Time.live ? null : { jd: Time.jd(), rate: Time.rate }, country: state.selected && state.selected.kind === 'country' ? state.selected.iso : null, flight: Flight.shareId });
   },
+  /** An <iframe> for someone else's page: this view, in embed mode. */
+  embedCode() { const u = this.link().replace('#', '#embed=1&'); return `<iframe src="${u.replace(/"/g, '&quot;')}" width="100%" height="480" style="border:0;border-radius:12px" loading="lazy" allow="fullscreen" title="Open Overwatch: the Earth, live"></iframe>`; },
+  async copyEmbed() {
+    const code = this.embedCode();
+    try { await navigator.clipboard.writeText(code); toast('Embed code copied: paste it into any web page', 3500); } catch (e) { window.prompt('Copy this embed code:', code); }
+  },
   async copy() {
     const url = this.link();
     try { await navigator.clipboard.writeText(url); toast(Flight.shareId ? `Link copied: it finds ${Flight.shareId} wherever it is when opened` : 'Link to this view copied', 3000); }

@@ -1,5 +1,5 @@
 // 3D globe: wiring, the frame hooks, feeds on timers, and boot.
-import { C, $, toast, PHONE } from './env.js';
+import { C, $, toast, PHONE, EMBED } from './env.js';
 import { viewer, scene, globe, camera, satPts, airPts, airIcons, qkPts, camHeight } from './viewer.js';
 import { L, initDock } from './layers.js';
 import { hooks, state } from './state.js';
@@ -60,6 +60,7 @@ PRESETS.weather = () => Weather.toggle();
 PRESETS.tour = () => { hooks.clearPresets(); Tour.start(); };
 PRESETS.flybys = () => { hooks.clearPresets(); Flybys.openList(); };
 PRESETS.tonight = () => Tonight.open();
+hooks.satPasses = o => Tonight.forSat(o);
 PRESETS.search = () => Search.open();
 PRESETS.launches = () => { hooks.clearPresets(); Launches.openList(); };
 hooks.showLaunch = o => Launches.show(o);
@@ -117,7 +118,9 @@ updateBand(); applyVisibility();
   }
   await until(10000, () => globe.tilesLoaded);
   $('#boot').classList.add('out'); setTimeout(() => $('#boot').remove(), 900);
-  updateBand(); Share.restore().catch(e => console.warn('share link', e)); Tonight.peek().catch(e => console.warn('tonight', e)); return high;
+  updateBand(); Share.restore().catch(e => console.warn('share link', e)); if (!EMBED) Tonight.peek().catch(e => console.warn('tonight', e));
+  if (EMBED) $('#embedOut').href = Share.link();   // the way out keeps the view
+  return high;
 })();
 Sats.load().catch(e => toast('Satellites failed: ' + e.message));
 // load the Solar System view in the background once the globe has settled, so zooming out never waits on it (its

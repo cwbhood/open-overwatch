@@ -101,9 +101,14 @@ button{font:inherit;color:inherit;cursor:pointer}
 #lookup .lu-when{display:flex;gap:8px;align-items:center;margin:4px 0 2px;color:var(--dim)} #lookup .lu-when input{flex:1;min-width:0;padding:6px 8px;border-radius:8px;border:1px solid var(--edge-dim);background:rgba(5,8,12,.6);color:var(--ink);font:500 12.5px/1 var(--mono);color-scheme:dark} #lookup .lu-when .chipbtn{padding:6px 10px} #lookup #luCon.on{color:#8fa6c4;border-color:rgba(143,166,196,.4)}
 #lookup #luDir{font:700 16px/1.3 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)} #lookup .ok{color:#7dffa6}
 .lu-cross{position:fixed;left:50%;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;border:1.5px solid rgba(125,255,166,.55);border-radius:50%;z-index:7;pointer-events:none}
+/* keyboard users see where they are */
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #7dffa6;outline-offset:2px}
+/* embed mode (#embed=1, an iframe on someone else's page): just the globe, the card, the credits and a way out */
+body.embed #top,body.embed #band,body.embed #dock,body.embed #navpad,body.embed .m-dock,body.embed .m-sheet,body.embed .m-scrim,body.embed #wx{display:none!important}
+#embedOut{display:none} body.embed #embedOut{display:block;position:fixed;right:10px;top:10px;z-index:9;padding:8px 12px;font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#7dffa6;text-decoration:none}
 body.lookup #top,body.lookup #band,body.lookup #dock,body.lookup #card,body.lookup #hover,body.lookup #credits{display:none!important}
 #card .x{position:absolute;right:10px;top:10px;border:0;background:none;color:var(--faint);font-size:18px;padding:4px 8px}
-#card .acts{display:flex;gap:6px;margin-top:12px}
+#card .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 #card h3{margin:14px 0 6px;font:700 11px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)} #card h3 small{letter-spacing:0;text-transform:none;color:var(--faint)}
 .tn-head{margin:4px 0 2px;font:500 14px/1.45 var(--body)} .tn-head b,.tn-p .ok,.tn-head .ok{color:#7dffa6} .tn-p{margin:0;font:500 12.5px/1.45 var(--body)} .tn-p small{color:var(--faint)}
 .tn-list{display:flex;flex-direction:column;gap:4px;max-height:34vh;overflow:auto} .tn-row{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;justify-content:space-between;padding:7px 9px;border-radius:9px;border:1px solid var(--edge-dim);background:rgba(230,237,243,.03);font:500 12.5px/1.4 var(--body)}
@@ -188,7 +193,7 @@ body.lookup #navpad{display:none}
 </style>
 </head>
 <body>
-<div id="globe"></div>
+<div id="globe" role="application" aria-label="3D globe. Drag to turn it, scroll to zoom. Press slash to search; the buttons along the bottom fly to places and open lists."></div>
 <header id="top">
   <div class="brand glass"><img src="brand/emblem/emblem-256.png" alt=""><div><b>Open Overwatch</b><small>Orbital · prototype</small></div></div>
   <div class="timebar glass" id="timebar">
@@ -229,12 +234,13 @@ body.lookup #navpad{display:none}
   <button class="go" data-go="eclipses" title="Solar eclipses 2027-2030: watch the Moon's shadow cross the Earth">Eclipses</button>
   <button class="go" data-go="space" style="color:var(--accent)" title="Keep zooming out: the planets, the stars, the galaxy">Solar system ↗</button>
 </nav>
-<section id="card" class="glass" aria-live="polite"></section>
+<section id="card" class="glass" aria-live="polite" role="region" aria-label="Details"></section>
 <div id="lookup" aria-live="polite">
   <div class="lu-top glass"><b>Look up</b><span id="luWhere"></span><button class="chipbtn" id="luExit">Done</button></div>
   <div class="lu-cross"></div>
   <div class="lu-bottom glass"><div id="luDir">—</div><div id="luNow"></div><div id="luPass"></div><div class="lu-when"><label for="luDate">Sky on</label><input type="datetime-local" id="luDate" min="1800-01-01T00:00" max="2049-12-31T23:59" aria-label="Show the sky at a date and time"><button class="chipbtn" id="luLive">Now</button><button class="chipbtn" id="luCon" title="Constellation figures and names">Figures</button></div><div id="luHint" class="note"></div></div>
 </div>
+<a id="embedOut" class="glass" href="globe.html" target="_blank" rel="noopener">Open Overwatch ↗</a>
 <div id="hover"></div>
 <div id="credits"></div>
 <div id="toast" class="glass"></div>

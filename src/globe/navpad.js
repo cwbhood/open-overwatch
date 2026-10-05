@@ -19,6 +19,7 @@ export function initNavpad() {
     <button data-n="north" id="npNorth" title="North up and level  (N)" aria-label="North up"><svg viewBox="0 0 24 24" id="npNeedle"><path d="M12 2 17 13H7z" fill="#ff6b5e"/><path d="M12 22 7 13h10z" fill="#8b9bab"/></svg></button>
     <button data-n="down" title="Look straight down  (T)" aria-label="Top-down view">⤓</button>
     <button data-n="share" title="Copy a link to this view" aria-label="Copy link to this view">⎘</button>
+    <button data-n="embed" title="Copy code to put this view on your own web page" aria-label="Copy embed code">&lt;/&gt;</button>
     <button data-n="pic" title="Share a picture of this view  (P)" aria-label="Share a picture of this view">◫</button>
     <button data-n="reset" title="Reset view: the whole Earth  (R)" aria-label="Reset view">◎</button>`;
   document.body.append(pad);
@@ -52,6 +53,7 @@ export function initNavpad() {
     reset: () => PRESETS.earth(),
     share: () => Share.copy(),
     pic: () => hooks.snapshot(),
+    embed: () => Share.copyEmbed(),
   };
   pad.addEventListener('click', e => { const b = e.target.closest('[data-n]'); if (b) A[b.dataset.n](); });
   pad.addEventListener('pointerdown', e => e.stopPropagation());   // the buttons never start a globe drag

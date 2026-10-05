@@ -38,7 +38,7 @@ export function initMobile() {
   function exploreHtml() {
     const alt = `${$('#bandName').textContent} · ${$('#bandAlt').textContent}`;
     const items = [...band.querySelectorAll('[data-go]')].map(b => { const [name, sub] = PLACES[b.dataset.go] || [b.textContent.trim(), '']; return `<button class="m-item${b.classList.contains('on') ? ' on' : ''}" data-go="${b.dataset.go}"><b>${name}</b><span>${sub}</span></button>`; });
-    return `<div class="m-head"><b>Go to</b><span>${alt}</span></div><div class="m-grid">${items.join('')}</div><button class="m-item m-now" data-share="1"><b>Copy link to this view</b><span>Same place, layers and time</span></button><button class="m-item m-now" data-snap="1"><b>Share a picture</b><span>This view with a caption and the link</span></button>`;
+    return `<div class="m-head"><b>Go to</b><span>${alt}</span></div><div class="m-grid">${items.join('')}</div><button class="m-item m-now" data-share="1"><b>Copy link to this view</b><span>Same place, layers and time</span></button><button class="m-item m-now" data-embed="1"><b>Put it on a web page</b><span>Copy embed code for this view</span></button><button class="m-item m-now" data-snap="1"><b>Share a picture</b><span>This view with a caption and the link</span></button>`;
   }
   function timeHtml() {
     const cur = timebar.querySelector('[data-rate].on'), now = $('#tNow').textContent, mode = $('#tMode').textContent;
@@ -62,6 +62,7 @@ export function initMobile() {
   sheet.addEventListener('click', e => {
     const go = e.target.closest('[data-go]'), share = e.target.closest('[data-share]'), rate = e.target.closest('[data-rate]'), now = e.target.closest('[data-now]');
     if (share) { Share.copy(); close(); return; }
+    if (e.target.closest('[data-embed]')) { Share.copyEmbed(); close(); return; }
     if (e.target.closest('[data-snap]')) { close(); hooks.snapshot(); return; }   // the picture is the canvas only: the closing sheet isn't in it
     if (go) { band.querySelector(`[data-go="${go.dataset.go}"]`).click(); close(); }
     else if (rate) { timebar.querySelector(`[data-rate="${rate.dataset.rate}"]`).click(); setTimeout(() => open === 'time' && render(), 50); }
