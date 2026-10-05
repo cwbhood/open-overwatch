@@ -4,14 +4,14 @@
 // (#band [data-go], #btnDock, #timebar), so presets, look-up and time stay in one place.
 import { $, PHONE, toast } from './env.js';
 import { camera } from './viewer.js';
-import { state } from './state.js';
+import { state, hooks } from './state.js';
 import { Follow } from './follow.js';
 import { Share } from './share.js';
 
 const PLACES = {
   ground: ['Street', 'London at 3 km, tilted'], air: ['Airspace', 'Europe from 1,400 km'], earth: ['Earth', 'The whole planet, sunlit side'],
   geo: ['GEO belt', '36,000 km up, where TV satellites sit'], moon: ['Moon', 'Fly out and look at it'], conj: ['Near misses', 'Close approaches in orbit'],
-  tour: ['Tour', 'An 80-second guided flight'], flybys: ['Flybys', 'Asteroids passing Earth'], weather: ['Weather', 'Live clouds, rain radar, rain from space'], lookup: ['Look up', 'Your sky, with the phone as a window'], eclipses: ['Eclipses', 'Solar eclipses 2027 to 2030'], space: ['Solar System', 'Keep going: planets, stars, galaxies'],
+  tour: ['Tour', 'An 80-second guided flight'], flybys: ['Flybys', 'Asteroids passing Earth'], weather: ['Weather', 'Live clouds, rain radar, rain from space'], tonight: ['Tonight', 'What you can see above you, with reminders'], flight: ['Find a flight', 'Type a flight number, follow the plane'], lookup: ['Look up', 'Your sky, with the phone as a window'], eclipses: ['Eclipses', 'Solar eclipses 2027 to 2030'], space: ['Solar System', 'Keep going: planets, stars, galaxies'],
 };
 const RATES = [[-3600, '« 1 h/s'], [0, '❚❚ Pause'], [1, '▶ Live'], [60, '› 1 min/s'], [600, '» 10 min/s'], [3600, '⏩ 1 h/s']];
 
@@ -38,7 +38,7 @@ export function initMobile() {
   function exploreHtml() {
     const alt = `${$('#bandName').textContent} · ${$('#bandAlt').textContent}`;
     const items = [...band.querySelectorAll('[data-go]')].map(b => { const [name, sub] = PLACES[b.dataset.go] || [b.textContent.trim(), '']; return `<button class="m-item${b.classList.contains('on') ? ' on' : ''}" data-go="${b.dataset.go}"><b>${name}</b><span>${sub}</span></button>`; });
-    return `<div class="m-head"><b>Go to</b><span>${alt}</span></div><div class="m-grid">${items.join('')}</div><button class="m-item m-now" data-share="1"><b>Copy link to this view</b><span>Same place, layers and time</span></button>`;
+    return `<div class="m-head"><b>Go to</b><span>${alt}</span></div><div class="m-grid">${items.join('')}</div><button class="m-item m-now" data-share="1"><b>Copy link to this view</b><span>Same place, layers and time</span></button><button class="m-item m-now" data-snap="1"><b>Share a picture</b><span>This view with a caption and the link</span></button>`;
   }
   function timeHtml() {
     const cur = timebar.querySelector('[data-rate].on'), now = $('#tNow').textContent, mode = $('#tMode').textContent;
@@ -62,6 +62,7 @@ export function initMobile() {
   sheet.addEventListener('click', e => {
     const go = e.target.closest('[data-go]'), share = e.target.closest('[data-share]'), rate = e.target.closest('[data-rate]'), now = e.target.closest('[data-now]');
     if (share) { Share.copy(); close(); return; }
+    if (e.target.closest('[data-snap]')) { close(); hooks.snapshot(); return; }   // the picture is the canvas only: the closing sheet isn't in it
     if (go) { band.querySelector(`[data-go="${go.dataset.go}"]`).click(); close(); }
     else if (rate) { timebar.querySelector(`[data-rate="${rate.dataset.rate}"]`).click(); setTimeout(() => open === 'time' && render(), 50); }
     else if (now) { $('#tLive').click(); setTimeout(() => open === 'time' && render(), 50); }

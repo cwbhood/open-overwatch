@@ -10,11 +10,16 @@ const STOPS = [[3, [60, 255, 160]], [25, [110, 255, 110]], [55, [240, 255, 110]]
 const color = p => { let i = 1; while (i < STOPS.length - 1 && p > STOPS[i][0]) i++; const [p0, a] = STOPS[i - 1], [p1, b] = STOPS[i], f = Math.max(0, Math.min(1, (p - p0) / (p1 - p0))); return a.map((v, j) => Math.round(v + (b[j] - v) * f)); };
 
 export const Aurora = {
-  layer: null, loading: false, at: '', peak: 0, tried: 0,
+  layer: null, loading: false, at: '', peak: 0, tried: 0, raw: null, rawAt: 0,
+  /** The OVATION grid itself ({ 'Forecast Time', coordinates: [[lon, lat, %], ...] }), at most 10 minutes old (Tonight reads it). */
+  async grid() {
+    if (!this.raw || Date.now() - this.rawAt > 10 * 60e3) { const r = await fetch(URL); if (!r.ok) throw new Error('HTTP ' + r.status); this.raw = await r.json(); this.rawAt = Date.now(); }
+    return this.raw;
+  },
   async load() {
     if (this.loading) return; this.loading = true; this.tried = Date.now();
     try {
-      const d = await (await fetch(URL)).json();
+      const d = await this.grid();
       const cv = document.createElement('canvas'); cv.width = 360; cv.height = 181; const cx = cv.getContext('2d'), img = cx.createImageData(360, 181); let peak = 0;
       for (const [lon, lat, p] of d.coordinates) {
         if (p < 3) continue; const x = (lon >= 180 ? lon - 360 : lon) + 180, y = 90 - lat; if (x < 0 || x > 359 || y < 0 || y > 180) continue;

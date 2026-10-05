@@ -31,6 +31,9 @@ import { Tour } from './tour.js';
 import { Wind } from './wind.js';
 import { Country } from './country.js';
 import { toggle as toggleNerd } from './nerd.js';
+import { Tonight } from './tonight.js';
+import { Flight } from './flight.js';
+import { Snapshot } from './snapshot.js';
 
 function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
@@ -54,6 +57,10 @@ PRESETS.eclipses = () => Eclipses.openList();
 PRESETS.weather = () => Weather.toggle();
 PRESETS.tour = () => { hooks.clearPresets(); Tour.start(); };
 PRESETS.flybys = () => { hooks.clearPresets(); Flybys.openList(); };
+PRESETS.tonight = () => Tonight.open();
+PRESETS.flight = () => Flight.open();
+hooks.shareCopy = () => Share.copy();
+hooks.snapshot = () => Snapshot.share();
 hooks.toggleNerd = toggleNerd;
 initMobile();   // phones only: the bottom dock
 initNavpad();
@@ -105,7 +112,7 @@ updateBand(); applyVisibility();
   }
   await until(10000, () => globe.tilesLoaded);
   $('#boot').classList.add('out'); setTimeout(() => $('#boot').remove(), 900);
-  updateBand(); Share.restore().catch(e => console.warn('share link', e)); return high;
+  updateBand(); Share.restore().catch(e => console.warn('share link', e)); Tonight.peek().catch(e => console.warn('tonight', e)); return high;
 })();
 Sats.load().catch(e => toast('Satellites failed: ' + e.message));
 // load the Solar System view in the background once the globe has settled, so zooming out never waits on it (its
@@ -125,7 +132,7 @@ every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
 setInterval(() => Aurora.apply(), 60e3);   // refreshes itself every 10 minutes while the layer is on
 
-window.OO3D = { Conj, LookUp, Eclipses,
+window.OO3D = { Conj, LookUp, Eclipses, Tonight, Flight, Snapshot,
   viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, Lighthouses, Weather, Wind, Country, Aurora, Flybys, Companies, Volcanoes, SunLine, Buildings, Share, Tour, setIonToken: t => Buildings.setToken(t), L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {

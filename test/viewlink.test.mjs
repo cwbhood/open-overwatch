@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { encodeView, decodeView } from '../src/core/viewlink.js';
+import { encodeView, decodeView, decodeExtras } from '../src/core/viewlink.js';
 
-const view = { lon: 139.6917, lat: 35.6895, height: 4_500_000, heading: 12.5, pitch: -63.2, layers: ['stations', 'quakes', 'companies'], weather: ['ir', 'wind'], time: { jd: 2461314.12345, rate: 60 }, country: 'JP' };
+const view = { lon: 139.6917, lat: 35.6895, height: 4_500_000, heading: 12.5, pitch: -63.2, layers: ['stations', 'quakes', 'companies'], weather: ['ir', 'wind'], time: { jd: 2461314.12345, rate: 60 }, country: 'JP', flight: 'BAW123' };
 
 test('a view survives the round trip', () => {
   const back = decodeView('#' + encodeView(view));
@@ -22,4 +22,12 @@ test('bad links are refused or cleaned, never trusted', () => {
 
 test('missing heading and pitch default to a straight-down view', () => {
   const v = decodeView('#c=10,20,3000'); assert.equal(v.heading, 0); assert.equal(v.pitch, -90);
+});
+
+test('links can open a panel or find a flight, and nothing else', () => {
+  assert.deepEqual(decodeExtras('#go=tonight'), { go: 'tonight', flight: null });
+  assert.deepEqual(decodeExtras('#go=lookup&f=baw123'), { go: null, flight: 'BAW123' });   // look-up needs a tap first
+  assert.equal(decodeExtras('#f=<img src=x>').flight, null); assert.equal(decodeExtras('#f=ABCDEFGHIJ').flight, null);
+  assert.equal(decodeView('#go=tonight'), null);                                           // no camera: not a view
+  assert.equal(new URLSearchParams(encodeView({ lon: 0, lat: 0, height: 1, heading: 0, pitch: 0, flight: 'a"b' })).get('f'), null);
 });

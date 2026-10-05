@@ -134,10 +134,12 @@ export function select(o) {
   }
   const following = Follow.obj === o, card = $('#card');
   const followBtn = (o.kind === 'sat' && SatModels.classify(o)) || o.kind === 'air' ? `<button class="chipbtn" id="btnFollow">${following ? 'Stop following' : 'Follow in 3D'}</button>` : '';
-  card.innerHTML = `<button class="x" aria-label="Close">×</button>${html}<div class="acts">${following ? '' : '<button class="chipbtn" id="btnFocus">Fly to</button>'}${followBtn}</div>`;
+  const shareBtn = o.kind === 'air' ? '<button class="chipbtn" id="btnShareAir" title="Copy a link that finds this plane">Share</button>' : '';
+  card.innerHTML = `<button class="x" aria-label="Close">×</button>${html}<div class="acts">${following ? '' : '<button class="chipbtn" id="btnFocus">Fly to</button>'}${followBtn}${shareBtn}</div>`;
   card.classList.add('show');
   card.querySelector('.x').onclick = closeCard;
   if ($('#btnFocus')) $('#btnFocus').onclick = () => flyToObject(o);
+  if ($('#btnShareAir')) $('#btnShareAir').onclick = () => hooks.shareCopy();
   if (o.kind === 'country') Country.after(o);
   if ($('#btnFollow')) $('#btnFollow').onclick = () => following ? Follow.stop() : o.kind === 'air' ? AirModels.follow(o) : SatModels.follow(o);
 }

@@ -55,6 +55,21 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] Publish as v0.9.2.3 (2026-10-04): country dossiers, big employers, volcanoes, aurora, flybys, sun and time zones, share links, the tour, 3D buildings (OpenStreetMap, no account)
 - [x] Publish as v0.9.2.2 (2026-10-03): phone dock, desktop nav pad, lighthouses, weather mode (clouds, radar, rain, wind, temperature), phone performance
 
+## Stage 4 — things people asked for (2026-10-05, not yet published; would be v0.9.2.5 with the notices commit)
+- [x] Tonight above you (globe band → Tonight; `globe.html#go=tonight` from the landing page): visible ISS / Tiangong / Hubble
+      passes, Starlink trains (launches still below ~470 km), the brightest satellites when high, the five bright planets,
+      the Moon's phase, the aurora chance where you stand, all in plain words (core/sky.js, tested). Location saved on the
+      device only, rounded; a returning visitor gets a one-line "ISS at 9:42 pm, look WNW" toast
+- [x] Pass alerts: "Calendar" downloads an .ics with a 10-minute reminder (works with the site closed, no server);
+      "Remind me" = a notification while the page is open (src/globe/alerts.js + notify-sw.js, re-armed on the next visit)
+- [x] Aurora alerts: checked every 10 min while the page is open, only in the dark, once a night at most
+- [x] Share a picture (navpad ◫ or P, phone menu): the view with a caption strip and the site address, to the share sheet
+      with the link on phones, a PNG + copied link on desktops (src/globe/snapshot.js)
+- [x] Find a flight (globe band → Find flight): ticket number (BA 123 → BAW123), callsign, registration or hex
+      (core/flight.js, tested); the download version asks adsb.lol and refreshes every 15 s; the website searches what it
+      has and otherwise opens adsb.lol's own map. Aircraft cards get "Share", and links carry the flight (`&f=BAW123`)
+- [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
+
 ## Rules of thumb
 - One clear goal per session; read this file first, tick boxes as they land.
 - Core code is plain ES modules with no DOM/three.js imports, so Node can test it.

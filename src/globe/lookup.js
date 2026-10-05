@@ -28,7 +28,7 @@ const PLANETS = [['mercury', 'Mercury', '#d9c7b0'], ['venus', 'Venus', '#fff1c9'
 
 const S = { active: false, obs: null, saved: null, labels: null, points: null, ring: null, sensor: false, dir: null, up: null, heading: 180, pitch: 25, fov: 65, timer: 0, pass: null, onDown: null };
 
-function observerAt(lat, lon) {
+export function observerAt(lat, lon) {
   const pos = C.Cartesian3.fromDegrees(lon, lat, 2), m = C.Transforms.eastNorthUpToFixedFrame(pos);
   const E = new C.Cartesian3(m[0], m[1], m[2]), N = new C.Cartesian3(m[4], m[5], m[6]), U = new C.Cartesian3(m[8], m[9], m[10]);
   return { lat, lon, pos, E, N, U, km: { pos: { x: pos.x / 1000, y: pos.y / 1000, z: pos.z / 1000 }, east: E, north: N, up: U } };

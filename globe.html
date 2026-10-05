@@ -102,6 +102,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 body.lookup #top,body.lookup #band,body.lookup #dock,body.lookup #card,body.lookup #hover,body.lookup #credits{display:none!important}
 #card .x{position:absolute;right:10px;top:10px;border:0;background:none;color:var(--faint);font-size:18px;padding:4px 8px}
 #card .acts{display:flex;gap:6px;margin-top:12px}
+#card h3{margin:14px 0 6px;font:700 11px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)} #card h3 small{letter-spacing:0;text-transform:none;color:var(--faint)}
+.tn-head{margin:4px 0 2px;font:500 14px/1.45 var(--body)} .tn-head b,.tn-p .ok,.tn-head .ok{color:#7dffa6} .tn-p{margin:0;font:500 12.5px/1.45 var(--body)} .tn-p small{color:var(--faint)}
+.tn-list{display:flex;flex-direction:column;gap:4px;max-height:34vh;overflow:auto} .tn-row{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;justify-content:space-between;padding:7px 9px;border-radius:9px;border:1px solid var(--edge-dim);background:rgba(230,237,243,.03);font:500 12.5px/1.4 var(--body)}
+.tn-row.dim{opacity:.5} .tn-b{display:flex;gap:4px} .tn-b .chipbtn{padding:6px 9px;color:#7dffa6} .note.warn{color:#ffb44d}
+.fl-form{display:flex;gap:6px;margin:6px 0} .fl-form input{flex:1;min-width:0;padding:9px 11px;border-radius:9px;border:1px solid var(--edge-dim);background:rgba(5,8,12,.6);color:var(--ink);font:600 15px/1 var(--mono);text-transform:uppercase}
 
 #hover{position:fixed;pointer-events:none;z-index:6;padding:5px 9px;border-radius:7px;font:500 11.5px/1.2 var(--mono);background:var(--glass-strong);border:1px solid var(--edge-dim);display:none;white-space:nowrap}
 #credits{position:fixed;right:12px;bottom:10px;max-width:46vw;z-index:3;font:400 10px/1.3 var(--body);color:var(--faint);text-align:right}
@@ -210,7 +215,9 @@ body.lookup #navpad{display:none}
   <button class="go" data-go="geo">GEO belt</button>
   <button class="go" data-go="moon">Moon</button>
   <button class="go" data-go="conj" title="Upcoming close approaches between objects in orbit">Near misses</button>
+  <button class="go" data-go="tonight" style="color:#7dffa6" title="What you can see in your sky tonight: the space station, Starlink trains, planets, aurora, with reminders">Tonight</button>
   <button class="go" data-go="lookup" style="color:#7dffa6" title="Your sky right now: point your phone up">Look up</button>
+  <button class="go" data-go="flight" style="color:#5fd3ff" title="Type a flight number and follow that plane">Find flight</button>
   <button class="go" data-go="tour" style="color:#ff9f5c" title="A guided 80-second flight through what this globe can do">▶ Tour</button>
   <button class="go" data-go="flybys" style="color:#ffb44d" title="Asteroids and comets passing Earth in the next 60 days">Flybys</button>
   <button class="go" data-go="weather" style="color:#7fd0ff" title="Live clouds, rain radar and rain from space">Weather</button>

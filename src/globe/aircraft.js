@@ -36,6 +36,14 @@ export function aircraftAt(r, ms) {
   return { lat, lon, alt };
 }
 
+/** An adsb.lol (readsb) aircraft as one of ours; mil: true for the /mil feed, else from its database flags. */
+export function fromAdsb(a, now, mil = !!(a.dbFlags & 1)) {
+  const ground = a.alt_baro === 'ground';
+  return { hex: a.hex, flight: (a.flight || '').trim(), type: a.t, reg: a.r, lon: a.lon, lat: a.lat, alt: ground ? 0 : (a.alt_baro || 0) * 0.3048, ground,
+    gs: a.gs != null ? a.gs * 0.514444 : null, track: a.track, vr: a.baro_rate != null ? a.baro_rate * 0.00508 : 0, squawk: a.squawk, emerg: EMERGENCY.includes(a.squawk),
+    mil, ts: now - (a.seen_pos || 0) * 1000, src: 'adsb.lol' };
+}
+
 const layerOf = r => L[r.mil ? 'mil' : 'air'];
 /** Shown: its layer is on and the clock is at the live moment (aircraft feeds have no history). */
 export const airShown = r => layerOf(r).on && !Time.offLive();
@@ -75,13 +83,7 @@ export const Air = {
   },
   async military() {
     const d = await getJSON('https://api.adsb.lol/v2/mil', { relay: true }), now = Date.now(); let n = 0; this.milAt = now;
-    for (const a of d.ac || []) {
-      if (a.lat == null || a.lon == null) continue; n++;
-      const ground = a.alt_baro === 'ground';
-      this.upsert({ hex: a.hex, flight: (a.flight || '').trim(), type: a.t, reg: a.r, lon: a.lon, lat: a.lat, alt: ground ? 0 : (a.alt_baro || 0) * 0.3048, ground,
-        gs: a.gs != null ? a.gs * 0.514444 : null, track: a.track, vr: a.baro_rate != null ? a.baro_rate * 0.00508 : 0, squawk: a.squawk, emerg: EMERGENCY.includes(a.squawk),
-        mil: true, ts: now - (a.seen_pos || 0) * 1000, src: 'adsb.lol' });
-    }
+    for (const a of d.ac || []) { if (a.lat == null || a.lon == null) continue; n++; this.upsert(fromAdsb(a, now, true)); }
     setCount('mil', n); hooks.updateStats();
   },
   prune() {
