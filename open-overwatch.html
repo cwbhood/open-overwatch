@@ -350,6 +350,16 @@ details.setup[open] > summary::before{transform:rotate(90deg)}
   #hud{bottom:30px}
 }
 @media (prefers-reduced-motion:reduce){ .splash-globe{animation:none;opacity:1} .mark::before,.dot.loading,.flag.emg,.boot .cursor::after{animation:none} .item:hover{transform:none} }
+/* a warning a layer must show before it can be switched on (Layers.guard in src/map/engine.js) */
+.guard-back{position:fixed;inset:0;z-index:5000;background:rgba(2,4,8,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+.guard{max-width:520px;max-height:calc(100dvh - 32px);display:flex;flex-direction:column;overflow:hidden;background:var(--panel-solid);border:1px solid var(--bal);border-radius:6px;padding:18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.guard h3{margin:0 0 10px;font:900 20px/1.1 var(--font-display,inherit);letter-spacing:.05em;text-transform:uppercase;color:var(--bal)}
+.guard h4{margin:14px 0 4px;font:700 13px/1.2 var(--font-display,inherit);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.guard p{margin:0 0 6px;color:var(--ink);font-size:13.5px;line-height:1.5}
+.guard{max-width:600px}
+.guard-body{overflow:auto;overscroll-behavior:contain;min-height:0;padding-right:4px;margin-right:-4px}
+.guard-act{flex:none;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
+.guard-act [data-no]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 </style>
 </head>
 <body>

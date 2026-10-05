@@ -280,6 +280,19 @@ footer a{color:var(--ink-dim)}
 .maker h2{font-size:clamp(34px,5vw,60px);margin:14px 0 14px} .maker p{color:var(--ink-dim);max-width:40em;margin:0 0 10px}
 .maker .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
 @media (max-width:560px){.maker .wrap{grid-template-columns:1fr}}
+
+.notices{display:block !important;margin-top:34px;padding-top:30px;border-top:1px solid var(--line)}
+.notices-h{font:900 22px/1 var(--display) !important;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-dim);margin:0 0 18px !important}
+.notices-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 30px}
+.notices h3{font:700 15px/1.2 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);margin:0 0 6px}
+.notices p{font-size:13.5px;line-height:1.55;color:var(--ink-faint);margin:0}
+.notices .warn{border:1px solid rgba(255,242,168,.35);background:rgba(255,242,168,.04);padding:12px 14px;grid-column:span 2}
+.notices .warn h3{color:#fff2a8} .notices .warn p{color:var(--ink-dim)} .notices a{color:var(--ink-dim)}
+.licences{margin-top:26px;border:1px solid var(--line);padding:0 16px} .licences summary{cursor:pointer;padding:14px 0;font:600 13px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim)}
+.licences table{width:100%;border-collapse:collapse;margin:4px 0 12px;font-size:13px} .licences th{text-align:left;font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);padding:8px 10px 8px 0;border-bottom:1px solid var(--line-strong)}
+.licences td{padding:9px 14px 9px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-faint)} .licences td:first-child{width:52%} .licences td b{color:var(--ink-dim)} .licences .tiny{font-size:12.5px;margin:0 0 14px}
+@media (max-width:980px){.notices-grid{grid-template-columns:repeat(2,1fr)}.notices .warn{grid-column:span 2}}
+@media (max-width:620px){.notices-grid{grid-template-columns:1fr}.notices .warn{grid-column:auto}.licences td:first-child{width:auto}.licences table,.licences tbody,.licences tr,.licences td,.licences thead,.licences th{display:block}.licences thead{display:none}.licences td{border:0;padding:3px 0}.licences tr{padding:8px 0;border-bottom:1px solid var(--line)}}
 </style>
 </head>
 <body>
@@ -496,9 +509,9 @@ footer a{color:var(--ink-dim)}
     <div>
       <div class="eyebrow">Made in the open</div>
       <h2 id="maker-h">By Destin Jones</h2>
-      <p>Open Overwatch is a free, open source project, built in public with Claude as the building partner. I set the direction and make the calls; all of it ships where anyone can read it, fork it and take it further.</p>
-      <p>Also by me: <a href="https://cwbhood.github.io/godot-open-rts/">Ironbound</a>, a free open source real-time strategy game where your city builds itself.</p>
-      <div class="row"><a class="btn small primary" href="about.html">About the creator</a><a class="btn small" href="https://cwbhood.github.io/godot-open-rts/">Ironbound, the RTS</a><a class="btn small" href="https://github.com/cwbhood">GitHub</a></div>
+      <p>I vibe code this with Claude, an AI: I say what I want, Claude writes and tests the code, and I try to make good calls. It surely has bugs I haven't found. That's why it's free and open source, and why I'd love you to <b>download it, fork it and build anything you like on it</b>: a better version, something completely different, a school project. You don't need to ask me first.</p>
+      <p>If you'd like to take the whole project over, I'd be glad to hand it off. Open an issue on GitHub and say so. Also by me: <a href="https://cwbhood.github.io/godot-open-rts/">Ironbound</a>, a free open source RTS made the same way.</p>
+      <div class="row"><a class="btn small primary" href="https://github.com/cwbhood/open-overwatch/fork">Fork it on GitHub</a><a class="btn small" href="about.html">About me</a><a class="btn small" href="https://cwbhood.github.io/godot-open-rts/">Ironbound, the RTS</a><a class="btn small" href="https://github.com/cwbhood">GitHub</a></div>
     </div>
   </div>
 </section>
@@ -511,9 +524,48 @@ footer a{color:var(--ink-dim)}
     </div>
     <div>
       <p>Data: adsb.lol, adsb.fi, airplanes.live, OpenSky, CelesTrak, USGS, NOAA/NHC/NWS, NASA EONET &amp; FIRMS, GDACS, GDELT, Digitraffic, aisstream.io, SondeHub, RainViewer, TeleGeography. Basemap © Esri. Night lights: NASA Black Marble.</p>
-      <p><a href="https://github.com/cwbhood/open-overwatch">GitHub</a> · <a href="https://github.com/cwbhood/open-overwatch/releases">Releases</a> · <a href="https://github.com/cwbhood/open-overwatch/issues">Report a bug</a> · <a href="about.html">About</a></p>
-      <p>By <a href="about.html">Destin Jones</a>. Also: <a href="https://cwbhood.github.io/godot-open-rts/">Ironbound</a>, a free open source RTS.</p>
+      <p><a href="https://github.com/cwbhood/open-overwatch">GitHub</a> · <a href="https://github.com/cwbhood/open-overwatch/releases">Releases</a> · <a href="https://github.com/cwbhood/open-overwatch/issues">Report a bug</a> · <a href="about.html">About</a> · <a href="#legal">Notices</a></p>
+      <p>By <a href="about.html">Destin Jones</a>, vibe coded with Claude. Fork it, build on it, or take it over. Also: <a href="https://cwbhood.github.io/godot-open-rts/">Ironbound</a>, a free open source RTS.</p>
     </div>
+  </div>
+
+  <div class="wrap notices" id="legal">
+    <h2 class="notices-h">Notices, in plain language</h2>
+    <div class="notices-grid">
+      <div><h3>Open source: take it</h3><p>Open Overwatch is free and open source under the <a href="https://github.com/cwbhood/open-overwatch/blob/main/LICENSE">MIT licence</a>, copyright Destin Jones. You may use, copy, change, fork, sell and build anything on it, for any purpose, as long as the licence notice stays with the code. The licence covers the code only: data, maps, textures and models belong to their sources and keep their own licences (below).</p></div>
+      <div><h3>As is, no warranty</h3><p>It is provided “as is”, without warranty of any kind, express or implied, including fitness for a purpose, accuracy, availability or completeness. It is a hobby project, written with AI help, and it will have mistakes. To the fullest extent the law allows, the author and contributors are not liable for any loss, damage or harm arising from using it or from anything it shows. Nothing here limits a right or liability that the law does not allow to be limited.</p></div>
+      <div><h3>Not for safety or decisions that matter</h3><p>Use it for curiosity and awareness only. Do not use it for navigation, flying, sailing, driving, emergency response, search and rescue, evacuation, trading, or anything where a late, wrong or missing position could hurt someone or cost money. Always use official, authorised sources for those.</p></div>
+      <div><h3>Other people's data can be wrong or faked</h3><p>Everything shown comes from third parties: public agencies, volunteer networks and open datasets. It can be late, incomplete, out of date or simply wrong. Positions that are broadcast by the transmitter itself (aircraft ADS-B, ship AIS, weather balloons) can be spoofed or entered falsely by anyone. Treat every dot as unverified.</p></div>
+      <div id="balloons" class="warn"><h3>Weather balloons: a specific warning</h3><p>Balloon (radiosonde) tracks on the 2D map come from <a href="https://sondehub.org">SondeHub</a>, an open community service where anyone can upload a balloon's position, name and details, with no check. A balloon on the map can therefore be fake, misplaced, or carry text written to look official or to attack a web page (a script “injection”). The balloon layer is <b>off by default</b> and shows this warning before it can be switched on; the app displays every balloon field as plain text, never runs it as code, and links only to SondeHub. Even so: do not click links or follow instructions found in balloon details elsewhere, and never go looking for a landed balloon because of this map. Switching the layer on sends the centre of your map view to SondeHub.</p></div>
+      <div><h3>Privacy</h3><p>This project runs no accounts, ads, cookies or analytics. Your browser does, however, talk directly to the data providers, a code CDN (jsDelivr, cdnjs) and Google Fonts to load the page and the data, and those services can see your IP address under their own policies. Preferences are saved only in your browser's own storage. “Look up” and “Around me” use your device's location on your device; the app does not send it anywhere, though the map area you view is requested from the data providers.</p></div>
+      <div><h3>Links and names</h3><p>Links lead to other sites that this project does not control or endorse. Names such as NASA, NOAA, USGS, Cesium, Esri, OpenStreetMap, Wikidata and SondeHub belong to their owners; this project is not affiliated with or endorsed by any of them. If something here is wrong, or a source wants it changed or removed, please <a href="https://github.com/cwbhood/open-overwatch/issues">open an issue</a>.</p></div>
+      <div><h3>Build on it, or take it over</h3><p>Made by <a href="about.html">Destin Jones</a>, who vibe codes with Claude (an AI) and would be glad for anyone to download it, fork it and build anything they like. If you can take the whole project further than he can, a hand-off is welcome: <a href="https://github.com/cwbhood/open-overwatch/issues">say so in an issue</a>.</p></div>
+    </div>
+    <details class="licences">
+      <summary>What this is built on, and what is open source or free to use</summary>
+      <table>
+        <thead><tr><th>Part</th><th>Licence or terms</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://github.com/cwbhood/open-overwatch">Open Overwatch</a> (this project, its code)</td><td>Open source, <a href="https://github.com/cwbhood/open-overwatch/blob/main/LICENSE">MIT</a></td></tr>
+          <tr><td><a href="https://cesium.com/platform/cesiumjs/">CesiumJS</a> (the 3D Earth)</td><td>Open source, <a href="https://github.com/CesiumGS/cesium/blob/main/LICENSE.md">Apache 2.0</a></td></tr>
+          <tr><td><a href="https://threejs.org/">three.js</a> (the Solar System view)</td><td>Open source, <a href="https://github.com/mrdoob/three.js/blob/dev/LICENSE">MIT</a></td></tr>
+          <tr><td><a href="https://leafletjs.com/">Leaflet</a> (the 2D map)</td><td>Open source, <a href="https://github.com/Leaflet/Leaflet/blob/main/LICENSE">BSD 2-Clause</a></td></tr>
+          <tr><td><a href="https://github.com/shashwatak/satellite-js">satellite.js</a> (satellite orbits)</td><td>Open source, <a href="https://github.com/shashwatak/satellite-js/blob/develop/LICENSE">MIT</a></td></tr>
+          <tr><td><a href="https://modelviewer.dev/">&lt;model-viewer&gt;</a> (3D models on this page)</td><td>Open source, <a href="https://github.com/google/model-viewer/blob/master/LICENSE">Apache 2.0</a></td></tr>
+          <tr><td>Fonts: <a href="https://fonts.google.com/specimen/Big+Shoulders+Display">Big Shoulders Display</a>, <a href="https://fonts.google.com/specimen/Barlow">Barlow</a>, <a href="https://fonts.google.com/specimen/IBM+Plex+Mono">IBM Plex Mono</a></td><td>Free and open, <a href="https://openfontlicense.org/">SIL Open Font Licence 1.1</a></td></tr>
+          <tr><td>NASA, NOAA and USGS data and imagery (Blue Marble, Black Marble, GIBS, JPL Horizons and close approaches, EONET, earthquakes, aurora, storms)</td><td>US government works: free to use, credit the source (see each agency's media and data policy)</td></tr>
+          <tr><td><a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (3D buildings, place names, lighthouses)</td><td>Open data, <a href="https://opendatacommons.org/licenses/odbl/">ODbL</a>: © OpenStreetMap contributors</td></tr>
+          <tr><td><a href="https://www.wikidata.org/">Wikidata</a> (companies, volcanoes, country facts)</td><td>Open data, <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>; volunteer-edited, so it can be wrong</td></tr>
+          <tr><td><a href="https://data.worldbank.org/">World Bank</a> open data; <a href="https://open-meteo.com/">Open-Meteo</a> weather; <a href="https://digitraffic.fi/">Digitraffic</a> ships</td><td>Open data, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> (Open-Meteo is free for non-commercial use only)</td></tr>
+          <tr><td><a href="https://www.naturalearthdata.com/">Natural Earth</a> borders</td><td>Public domain</td></tr>
+          <tr><td><a href="https://www.solarsystemscope.com/textures/">Solar System Scope</a> planet maps; <a href="https://github.com/astronexus/HYG-Database">HYG</a> star database</td><td>Open, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> and <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> (credit required)</td></tr>
+          <tr><td><a href="https://www.gdeltproject.org/">GDELT</a> headlines; <a href="https://celestrak.org/">CelesTrak</a> orbits</td><td>Free to use with credit and polite rates; see their terms</td></tr>
+          <tr><td>Volunteer networks: adsb.lol, adsb.fi, airplanes.live, OpenSky, SondeHub, aisstream.io, RainViewer</td><td>Free to view; <b>each has its own terms</b> (some are non-commercial or need credit): read them before reusing the data</td></tr>
+          <tr><td>Esri basemap imagery</td><td>Free to view with Esri's credit; <b>not open source</b></td></tr>
+        </tbody>
+      </table>
+      <p class="tiny">Every source, its licence, its age and its limits are listed in <a href="https://github.com/cwbhood/open-overwatch/blob/main/docs/DATA_SOURCES.md">docs/DATA_SOURCES.md</a>. A licence listed here is a summary, not legal advice: check the source's own terms before relying on it, especially for commercial use.</p>
+    </details>
   </div>
 </footer>
 

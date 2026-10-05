@@ -92,9 +92,14 @@ aisstream.io, SondeHub, RainViewer, TeleGeography. Basemap © Esri. Full list wi
 [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). These are public and volunteer services; check each one's terms before
 any commercial use.
 
+## Fork it, build on it, or take it over
+I vibe code this with Claude (an AI): I describe what I want, Claude writes and tests it, and I try to make good calls. It surely has bugs. Please download it, fork it and build anything you like, no need to ask. If you'd like to take the whole project over, a hand-off is what I'd prefer: open an issue and say so.
+
 ## Credit and licence
 Open Overwatch is by [Destin Jones](https://cwbhood.github.io/open-overwatch/about.html) ([GitHub](https://github.com/cwbhood)), built in public with Claude as the building partner.
 Also by me: [Ironbound](https://cwbhood.github.io/godot-open-rts/), a free open source RTS made with Godot.
 
 The code is MIT licensed ([LICENSE](LICENSE)): use it, fork it, build on it, and keep the copyright line. The data, maps, textures and models it shows belong to their sources and keep their own licences: see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
 If you write about it or build on it, please credit it: *Jones, D. (2026). Open Overwatch [Computer software]. https://github.com/cwbhood/open-overwatch* (GitHub's "Cite this repository" button reads [CITATION.cff](CITATION.cff)).
+
+**Read the notices** at the bottom of [the site](https://cwbhood.github.io/open-overwatch/#legal): no warranty, not for safety use, other people's data can be wrong or faked, and a specific warning about weather-balloon data (anyone can upload it; the layer is off by default and asks first).

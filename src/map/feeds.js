@@ -1,4 +1,5 @@
 // Point and vector layers: quakes, events, disasters, storms, news, weather, space weather, radar, clouds, terminator, cables, cameras, ships, balloons, fires, OSM scan.
+import { num, idArg } from '../core/format.js';
 import { COUNTRY, COUNTRY_ALIAS } from './countries.js';
 import { $, C, debounce, deg, esc, fmt, haversine, isHttp, late, Log, Net, rad, Relay, safeHost, toast } from './util.js';
 import { map, terminatorRing, vecRenderer } from './mapview.js';
@@ -20,7 +21,7 @@ export const lyQuakes = Layers.add({ id: 'quakes', group: 'Ground', name: 'Earth
 Points.define('quakes', 'quakes');
 Detail.renderers.quake = p => `<div class="det">${Detail.head(C.qk, 'Earthquake · USGS', `M${(p.mag ?? 0).toFixed(1)} ${p.place || ''}`, esc(fmt.date(p.time)), [p.tsunami ? { t: 'Tsunami flag', cls: 'emg' } : null, p.alert ? { t: 'PAGER ' + p.alert, cls: p.alert === 'red' ? 'emg' : 'warn' } : null].filter(Boolean))}
 ${Detail.kv([['Magnitude', `${(p.mag ?? 0).toFixed(1)} ${p.magType || ''}`], ['Depth', `${fmt.n(p.depth, 1)} km`], ['Position', fmt.ll(p.lat, p.lon)], ['Felt reports', p.felt], ['Status', p.status], ['Age', fmt.ago(p.time) + ' ago']])}
-<div class="actions"><button class="btn small" onclick="flyTo(${p.lat},${p.lon},7)">Center</button></div><hr class="sep">${Detail.links([{ text: 'USGS event page', url: p.url }])}</div>`;
+<div class="actions"><button class="btn small" onclick="flyTo(${num(p.lat)},${num(p.lon)},7)">Center</button></div><hr class="sep">${Detail.links([{ text: 'USGS event page', url: p.url }])}</div>`;
 feed(lyQuakes, { interval: 300, fetch: async () => {
   const d = await Net.json(`https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/${Layers.opt('quake_feed') || '2.5_day'}.geojson`); const items = []; World.quakes = [];
   for (const f of d.features || []) {
@@ -38,7 +39,7 @@ export const gEvents = lineLayer(lyEvents); Points.define('events', 'events');
 export const EONET_COL = { wildfires: '#ff8c42', severeStorms: '#7fd0ff', volcanoes: '#ff5c5c', seaLakeIce: '#bfe8ff', floods: '#4fa3ff', drought: '#e0c068', dustHaze: '#d9b38c', earthquakes: C.qk, landslides: '#b08968', manmade: '#e3e3e3', snow: '#ffffff', tempExtremes: '#ff7b00', waterColor: '#4fd1c5' };
 Detail.renderers.event = e => `<div class="det">${Detail.head(e.color, 'Natural event · NASA EONET', e.title, esc(e.cats.join(' · ')), e.closed ? [{ t: 'Closed ' + e.closed.slice(0, 10) }] : [{ t: 'Open', cls: 'good' }])}
 ${Detail.kv([['Latest position', fmt.ll(e.lat, e.lon)], ['Latest fix', fmt.date(e.date)], ['First reported', e.first ? fmt.date(e.first) : null], ['Fixes', e.n], ['Magnitude', e.mag]])}
-<div class="actions"><button class="btn small" onclick="flyTo(${e.lat},${e.lon},7)">Center</button></div><hr class="sep">${Detail.links([{ text: 'EONET event', url: e.link }, ...e.sources.map(s => ({ text: `Source: ${s.id}`, url: s.url }))])}</div>`;
+<div class="actions"><button class="btn small" onclick="flyTo(${num(e.lat)},${num(e.lon)},7)">Center</button></div><hr class="sep">${Detail.links([{ text: 'EONET event', url: e.link }, ...e.sources.map(s => ({ text: `Source: ${s.id}`, url: s.url }))])}</div>`;
 feed(lyEvents, { interval: 900, fetch: async () => {
   const d = await Net.json('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=20'); gEvents.clearLayers(); const items = []; World.events = [];
   for (const ev of d.events || []) {
@@ -57,7 +58,7 @@ Points.define('gdacs', 'gdacs');
 export const GDACS_LVL = { Red: C.emg, Orange: C.warn, Green: C.accent };
 Detail.renderers.gdacs = p => `<div class="det">${Detail.head(GDACS_LVL[p.alertlevel] || C.warn, 'Disaster alert · GDACS', p.name || p.eventname || p.eventtype, esc(p.description || ''), [{ t: `${p.alertlevel || ''} alert`, cls: p.alertlevel === 'Red' ? 'emg' : p.alertlevel === 'Orange' ? 'warn' : 'good' }, { t: p.eventtype }])}
 ${Detail.kv([['Country', p.country], ['From', p.fromdate ? fmt.date(p.fromdate) : null], ['To', p.todate ? fmt.date(p.todate) : null], ['Severity', p.severitydata?.severitytext], ['Episode', p.episodeid], ['Position', fmt.ll(p.lat, p.lon)]])}
-<div class="actions"><button class="btn small" onclick="flyTo(${p.lat},${p.lon},6)">Center</button></div><hr class="sep">${Detail.links([p.url?.report ? { text: 'GDACS report', url: p.url.report } : null, p.url?.details ? { text: 'Details (JSON)', url: p.url.details } : null].filter(Boolean))}</div>`;
+<div class="actions"><button class="btn small" onclick="flyTo(${num(p.lat)},${num(p.lon)},6)">Center</button></div><hr class="sep">${Detail.links([p.url?.report ? { text: 'GDACS report', url: p.url.report } : null, p.url?.details ? { text: 'Details (JSON)', url: p.url.details } : null].filter(Boolean))}</div>`;
 feed(lyGdacs, { interval: 900, fetch: async () => {
   const day = t => new Date(t).toISOString().slice(0, 10);
   const features = []; // the API answers 100 events per page, newest-modified first: page through the whole 14 days
@@ -81,7 +82,7 @@ export const lyStorms = Layers.add({ id: 'storms', group: 'Weather & space weath
 export const gStorms = lineLayer(lyStorms); Points.define('storms', 'storms');
 Detail.renderers.storm = s => `<div class="det">${Detail.head('#7fd0ff', 'Tropical cyclone · ' + s.src, s.title, esc(s.sub || ''), s.kt ? [{ t: `${s.kt} kt`, cls: s.kt >= 64 ? 'emg' : 'warn' }] : [])}
 ${Detail.kv([['Max winds', s.kt ? `${s.kt} kt · ${fmt.n(s.kt * 1.852)} km/h` : null], ['Pressure', s.pressure ? `${s.pressure} mb` : null], ['Movement', s.movement], ['Position', fmt.ll(s.lat, s.lon)], ['Latest fix', s.date ? fmt.date(s.date) : null], ['Track points', s.n], ['Advisory', s.advisory]])}
-<div class="actions"><button class="btn small" onclick="flyTo(${s.lat},${s.lon},6)">Center</button></div><hr class="sep">${Detail.links(s.links)}</div>`;
+<div class="actions"><button class="btn small" onclick="flyTo(${num(s.lat)},${num(s.lon)},6)">Center</button></div><hr class="sep">${Detail.links(s.links)}</div>`;
 feed(lyStorms, { interval: 1200, errorInterval: 1800, fetch: async () => {
   const d = await Net.json('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&category=severeStorms&days=10'); gStorms.clearLayers(); const items = []; World.storms = [];
   for (const ev of d.events || []) {
@@ -119,7 +120,7 @@ export function countryIso(name) {
 export function gdeltQuery(q) { q = q.trim(); if (/\bOR\b/i.test(q) && !/^\(.*\)$/.test(q)) q = '(' + q + ')'; return q; }
 Detail.renderers.news = p => `<div class="det">${Detail.head(C.news, 'World news · GDELT', p.name, `${fmt.n(p.count)} article${p.count === 1 ? '' : 's'} from ${esc(p.name)} outlets in the last 24 h matching <span class="mono">${esc(p.q || Layers.opt('news_q'))}</span>`)}
 ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}
-<div class="actions"><button class="btn small" onclick="flyTo(${p.lat},${p.lon},5)">Center</button></div><hr class="sep">${Detail.links(p.articles)}</div>`;
+<div class="actions"><button class="btn small" onclick="flyTo(${num(p.lat)},${num(p.lon)},5)">Center</button></div><hr class="sep">${Detail.links(p.articles)}</div>`;
 feed(lyNews, { interval: 900, errorInterval: 900, fetch: async () => {
   const q = gdeltQuery(Layers.opt('news_q') || 'military');
   let txt; // GDELT sends CORS itself now (no helper needed), but its rate-limit replies don't, so they surface as a CORS error
@@ -254,7 +255,7 @@ Detail.renderers.cam = c => {
   const media = c.video ? `<video src="${esc(bust(c.video))}" controls autoplay muted loop playsinline></video><div class="cap">Video clip · ${esc(c.src)}</div>` : c.image ? `<img src="${esc(bust(c.image))}" alt="${esc(c.name)}" referrerpolicy="no-referrer"><div class="cap">Still image · ${esc(c.src)} · <a href="#" onclick="Detail.render();return false">refresh</a></div>` : '';
   return `<div class="det">${Detail.head(C.cam, 'Camera · ' + c.src, c.name, esc(c.sub || ''), c.online === false ? [{ t: 'Offline', cls: 'warn' }] : [])}${media}
   ${Detail.kv([['Position', fmt.ll(c.lat, c.lon)], ['Direction', c.dir], ['Route', c.route]])}
-  <div class="actions"><button class="btn small" onclick="flyTo(${c.lat},${c.lon},13)">Center</button></div><hr class="sep">${Detail.links([c.stream ? { text: 'Live stream (HLS)', url: c.stream } : null, c.link ? { text: 'Open at source', url: c.link } : null, c.image ? { text: 'Image URL', url: c.image } : null].filter(Boolean))}</div>`;
+  <div class="actions"><button class="btn small" onclick="flyTo(${num(c.lat)},${num(c.lon)},13)">Center</button></div><hr class="sep">${Detail.links([c.stream ? { text: 'Live stream (HLS)', url: c.stream } : null, c.link ? { text: 'Open at source', url: c.link } : null, c.image ? { text: 'Image URL', url: c.image } : null].filter(Boolean))}</div>`;
 };
 export const CALTRANS_DISTRICTS = { '01': [39.5, -124.5, 42.0, -122.9], '02': [39.4, -123.3, 42.0, -119.99], '03': [38.0, -122.4, 40.5, -119.9], '04': [36.9, -123.1, 38.9, -121.2], '05': [34.3, -122.2, 37.0, -119.4], '06': [34.8, -121.0, 37.7, -118.0], '07': [33.6, -119.5, 34.9, -117.6], '08': [33.4, -117.8, 35.8, -114.1], '09': [35.7, -119.0, 38.4, -116.9], '10': [36.9, -121.6, 38.6, -118.9], '11': [32.5, -117.4, 33.5, -114.4], '12': [33.35, -118.2, 33.95, -117.4] };
 export const ctCache = {};
@@ -298,7 +299,7 @@ feed(lyCams, { interval: 120, viewDependent: true, minZoom: 8, fetch: async () =
 /* ---------- Ships: Baltic AIS (Digitraffic) + global AIS (aisstream.io key) */
 Detail.renderers.ship = s => `<div class="det">${Detail.head(C.ship, 'Vessel · AIS via ' + s.src, s.name || `MMSI ${s.id}`, [s.typeName, s.callsign ? 'call ' + s.callsign : null, s.dest ? '→ ' + s.dest : null].filter(Boolean).map(esc).join(' · '))}
 ${Detail.kv([['MMSI', s.id], ['IMO', s.imo], ['Speed', s.sog != null ? `${s.sog} kt` : null], ['Course', s.cog != null ? `${s.cog}°` : null], ['Heading', (s.heading != null && s.heading < 360) ? `${s.heading}°` : null], ['Nav status', s.navText || s.navStat], ['Draught', s.draught ? `${s.draught} m` : null], ['Size', s.length ? `${s.length} × ${s.width} m` : null], ['Position', fmt.ll(s.lat, s.lon)], ['Fix age', fmt.ago(s.ts)]])}
-<div class="actions"><button class="btn small" onclick="flyTo(${s.lat},${s.lon},11)">Center</button></div><hr class="sep">${Detail.links([{ text: 'VesselFinder', url: `https://www.vesselfinder.com/vessels/details/${s.id}` }, { text: 'MarineTraffic search', url: `https://www.marinetraffic.com/en/ais/index/search/all?keyword=${s.id}` }])}</div>`;
+<div class="actions"><button class="btn small" onclick="flyTo(${num(s.lat)},${num(s.lon)},11)">Center</button></div><hr class="sep">${Detail.links([{ text: 'VesselFinder', url: `https://www.vesselfinder.com/vessels/details/${s.id}` }, { text: 'MarineTraffic search', url: `https://www.marinetraffic.com/en/ais/index/search/all?keyword=${s.id}` }])}</div>`;
 export const NAV = { 0: 'Under way (engine)', 1: 'At anchor', 2: 'Not under command', 3: 'Restricted manoeuvrability', 4: 'Constrained by draught', 5: 'Moored', 6: 'Aground', 7: 'Fishing', 8: 'Under way (sailing)', 15: 'Not defined' };
 export const lyShipsFi = Layers.add({ id: 'ships_fi', group: 'Sea & sky', name: 'Ships · Baltic AIS', desc: 'Fintraffic Digitraffic · open AIS around Finland · zoom in past level 5 to see individual ships', color: C.ship, default: false,
   sub(el) { const b = document.createElement('button'); b.type = 'button'; b.className = 'pill'; b.textContent = 'go to Baltic'; b.addEventListener('click', () => map.flyTo([60.0, 24.5], 7)); el.appendChild(b); },
@@ -334,10 +335,11 @@ feed(lyShipsWs, { interval: 30, fetch: async () => { if (!AisWs.ws || AisWs.ws.r
 map.on('moveend', debounce(() => AisWs.subscribe(), 1200));
 
 /* ---------- Weather balloons / radiosondes (SondeHub) */
-export const lyBalloons = Layers.add({ id: 'balloons', group: 'Sea & sky', name: 'Weather balloons', desc: 'SondeHub · radiosondes heard in the last 3 h within 3000 km of view', color: C.bal, shape: 'round', default: false, disable() { Dyn.balloons.clear(); } });
+export const lyBalloons = Layers.add({ id: 'balloons', group: 'Sea & sky', name: 'Weather balloons', desc: 'SondeHub · community-uploaded, unverified: asks first', color: C.bal, shape: 'round', default: false, disable() { Dyn.balloons.clear(); },
+  guard: { title: 'Weather balloons: read this first', accept: 'I understand, show balloons', body: [{"h": "Where balloon data comes from", "p": "A weather balloon carries a small radio transmitter, a radiosonde, that sends out its position every second or so. Hobbyists with cheap radio receivers pick those signals up and upload them to SondeHub, a free, open database. Open Overwatch asks SondeHub for the balloons near the middle of your map and draws whatever comes back."}, {"h": "Why anyone can add to it", "p": "SondeHub is open on purpose: that is how a worldwide network of volunteers works. Its uploads are open to volunteers and are not individually checked, so the list is part genuine balloons and part whatever people chose to submit. Nobody has to own a balloon, or even a radio, to add an entry that looks like one."}, {"h": "Why that could be a threat", "p": "A made-up balloon can put false information on the map, in the wrong place or with an official-sounding name. Its text fields (name, type, notes) could also hold web code instead of words: if a site displayed that carelessly, the code would run in your browser and could change the page or try to take your information (a script, or “injection”, attack). A balloon's details could carry a tempting link or instructions. And a reported landing spot could lure someone to a place that is private or unsafe."}, {"h": "What Open Overwatch does about it", "p": "Every balloon field is shown as plain text and never run as code; numbers are checked to be numbers before they go anywhere near a button; and the only link offered goes to SondeHub itself. This is covered by automated tests. It lowers the risk; it does not make the data true."}, {"h": "What you should do", "p": "Treat every balloon as unverified. Don't click links or follow instructions that you find in balloon details anywhere else. Never go looking for a landed balloon because of this map, and don't use it for safety, navigation or recovery. Switch the layer off when you're done."}, {"h": "What gets sent", "p": "Turning this on sends the centre of your map view to SondeHub (api.v2.sondehub.org) to ask which balloons are nearby."}] } });
 Detail.renderers.balloon = b => `<div class="det">${Detail.head(C.bal, 'Radiosonde · SondeHub', b.id, [b.type, b.subtype].filter(Boolean).map(esc).join(' · '))}
 ${Detail.kv([['Altitude', `${fmt.n(b.alt)} m`], ['Climb', b.vel_v != null ? `${b.vel_v > 0 ? '▲' : '▼'} ${Math.abs(b.vel_v).toFixed(1)} m/s` : null], ['Ground speed', b.vel_h != null ? `${fmt.n(b.vel_h * 3.6)} km/h` : null], ['Heading', b.heading != null ? `${fmt.n(b.heading)}°` : null], ['Temp', b.temp != null ? `${b.temp} °C` : null], ['Humidity', b.humidity != null ? `${b.humidity} %` : null], ['Pressure', b.pressure != null ? `${b.pressure} hPa` : null], ['Frequency', b.frequency ? `${b.frequency} MHz` : null], ['Heard by', b.uploader], ['Last frame', b.datetime ? fmt.date(b.datetime) : null], ['Position', fmt.ll(b.lat, b.lon)]])}
-<div class="actions"><button class="btn small" onclick="flyTo(${b.lat},${b.lon},9)">Center</button></div><hr class="sep">${Detail.links([{ text: 'Track on SondeHub', url: `https://sondehub.org/${encodeURIComponent(b.id)}` }])}</div>`;
+<div class="actions"><button class="btn small" onclick="flyTo(${num(b.lat)},${num(b.lon)},9)">Center</button></div><hr class="sep">${Detail.links([{ text: 'Track on SondeHub', url: `https://sondehub.org/${encodeURIComponent(b.id)}` }])}</div>`;
 feed(lyBalloons, { interval: 120, viewDependent: true, fetch: async () => {
   const c = map.getCenter(); const d = await Net.json(`https://api.v2.sondehub.org/sondes?lat=${c.lat.toFixed(2)}&lon=${(((c.lng + 540) % 360) - 180).toFixed(2)}&distance=3000000&last=10800`, { timeout: 40000 }); if (!lyBalloons.on) return; Dyn.balloons.clear(); let n = 0; // off while loading: stay off
   for (const [serial, t] of Object.entries(d || {})) { if (!t || t.lat == null) continue; Dyn.balloons.set(serial, { id: serial, lat: t.lat, lon: t.lon, alt: t.alt, vel_h: t.vel_h, vel_v: t.vel_v, heading: t.heading, temp: t.temp, humidity: t.humidity, pressure: t.pressure, frequency: t.frequency, type: t.type, subtype: t.subtype, uploader: t.uploader_callsign, datetime: t.datetime, ts: Date.parse(t.datetime) || Date.now() }); n++; }
@@ -361,7 +363,7 @@ feed(lyFires, { interval: 900, viewDependent: true, minZoom: 5, fetch: async () 
 export const lyScan = Layers.add({ id: 'osm_scan', group: 'Infrastructure', name: 'Area scan results', desc: 'Military areas, airfields, nuclear sites, harbours from OpenStreetMap · run from a map probe', color: C.infra, default: true, points: 'scan' });
 Points.define('scan', 'osm_scan'); lyScan.enable = () => { if (lyScan.last) Points.set('scan', lyScan.last); }; // turning the layer off clears the points; bring the last scan back
 Detail.renderers.osm = o => `<div class="det">${Detail.head(C.infra, 'OpenStreetMap · ' + o.kind, o.name, esc(o.sub || ''))}${Detail.kv(Object.entries(o.tags).filter(([k]) => !/^(name|source|created_by)/.test(k)).slice(0, 24).map(([k, v]) => [k, v]))}
-<div class="actions"><button class="btn small" onclick="flyTo(${o.lat},${o.lon},13)">Center</button></div><hr class="sep">${Detail.links([{ text: `OSM ${o.type} ${o.id}`, url: `https://www.openstreetmap.org/${o.type}/${o.id}` }])}</div>`;
+<div class="actions"><button class="btn small" onclick="flyTo(${num(o.lat)},${num(o.lon)},13)">Center</button></div><hr class="sep">${Detail.links([{ text: `OSM ${o.type} ${o.id}`, url: `https://www.openstreetmap.org/${o.type}/${o.id}` }])}</div>`;
 export async function scanArea(lat, lon, radius = 30000) {
   const around = `(around:${radius},${lat},${lon})`;
   const q = `[out:json][timeout:30];(nwr["landuse"="military"]${around};nwr["military"]${around};nwr["aeroway"="aerodrome"]${around};nwr["generator:source"="nuclear"]${around};nwr["plant:source"="nuclear"]${around};nwr["harbour"="yes"]${around};nwr["seamark:type"="harbour"]${around};nwr["man_made"="radar_station"]${around};nwr["telecom"="data_center"]${around};);out center tags 300;`;

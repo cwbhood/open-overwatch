@@ -154,14 +154,32 @@ export const Layers = {
   defs: [], byId: {}, state: Store.get('layers', {}),
   opts: Object.assign({ air_labels: true, sat_groups: ['stations', 'visual'], sat_tracks: true, air_src: 'adsb.lol', cam_src: ['tfl', 'nyc', 'caltrans', 'singapore', 'finland'], news_q: 'military OR missile OR airstrike OR protest OR explosion', quake_feed: '2.5_day', ships_src: ['fi'] }, Store.get('opts', {})),
   migrate() { if (!this.opts.cam_v2) { this.opts.cam_src = [...new Set([...(this.opts.cam_src || []), 'singapore', 'finland'])]; this.opts.cam_v2 = true; Store.set('opts', this.opts); } },
-  add(def) { if (!this._migrated) { this._migrated = true; this.migrate(); } this.defs.push(def); this.byId[def.id] = def; def.on = (def.id in this.state) ? !!this.state[def.id] : !!def.default; return def; },
+  add(def) { if (!this._migrated) { this._migrated = true; this.migrate(); } this.defs.push(def); this.byId[def.id] = def; def.on = (def.id in this.state) ? !!this.state[def.id] : !!def.default; if (def.guard && def.on && !this.acked(def)) { def.on = false; this.state[def.id] = false; } return def; },
+  /** A layer with a `guard` (a warning to read first) can only be switched on after the reader has accepted it, once per browser session. */
+  acked(d) { try { return sessionStorage.getItem('oo.ack.' + d.id) === '1'; } catch (e) { return false; } },
+  ack(d) { try { sessionStorage.setItem('oo.ack.' + d.id, '1'); } catch (e) { /* private mode: asked again next time */ } },
   on(id) { const d = this.byId[id]; return !!(d && d.on); },
   opt(k) { return this.opts[k]; },
   setOpt(k, v) { this.opts[k] = v; Store.set('opts', this.opts); },
-  set(id, on) { const d = this.byId[id]; if (!d || d.on === on) return; d.on = on; this.state[id] = on; Store.set('layers', this.state); if (on) { d.enable && d.enable(); if (d.feed) { d.feed.nextAt = 0; d.feed.fails = 0; } } else { d.disable && d.disable(); if (d.points) Points.clear(d.points); if (d.feed) { d.feed.status = 'idle'; d.feed.count = 0; } } UI.refreshLayer(d); glyphs.draw(); },
-  apply(onIds) { for (const d of this.defs) this.set(d.id, onIds.includes(d.id)); },
+  set(id, on, opts = {}) { const d = this.byId[id]; if (!d || d.on === on) return;
+    if (on && d.guard && !this.acked(d)) {   // not before the warning has been read; presets and saved states never skip it
+      UI.refreshLayer(d); if (!opts.silent) UI.guard(d).then(ok => { if (ok) { this.ack(d); this.set(id, true); } else UI.refreshLayer(d); }); return;
+    }
+    d.on = on; this.state[id] = on; Store.set('layers', this.state); if (on) { d.enable && d.enable(); if (d.feed) { d.feed.nextAt = 0; d.feed.fails = 0; } } else { d.disable && d.disable(); if (d.points) Points.clear(d.points); if (d.feed) { d.feed.status = 'idle'; d.feed.count = 0; } } UI.refreshLayer(d); glyphs.draw(); },
+  apply(onIds) { for (const d of this.defs) this.set(d.id, onIds.includes(d.id), { silent: true }); },
 };
 export const UI = {
+  /** The warning a guarded layer shows before it can be switched on: resolves true on "accept", false on cancel, Esc or a click outside. */
+  guard(d) {
+    return new Promise(resolve => {
+      const g = d.guard, prev = document.activeElement, root = document.createElement('div'); root.className = 'guard-back';
+      root.innerHTML = `<div class="guard" role="alertdialog" aria-modal="true" aria-labelledby="guardT"><h3 id="guardT">${esc(g.title)}</h3><div class="guard-body" tabindex="0">${g.body.map(x => `<h4>${esc(x.h)}</h4><p>${esc(x.p)}</p>`).join('')}</div><div class="guard-act"><button type="button" class="btn" data-no>Keep them off</button><button type="button" class="btn small" data-yes>${esc(g.accept)}</button></div></div>`;
+      const done = ok => { document.removeEventListener('keydown', key, true); root.remove(); if (prev && prev.focus) prev.focus(); resolve(ok); };
+      const key = e => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } else if (e.key === 'Tab') { const b = [...root.querySelectorAll('button')]; const i = b.indexOf(document.activeElement); e.preventDefault(); b[(i + (e.shiftKey ? b.length - 1 : 1)) % b.length].focus(); } };
+      root.addEventListener('click', e => { if (e.target === root || e.target.closest('[data-no]')) done(false); else if (e.target.closest('[data-yes]')) done(true); });
+      document.addEventListener('keydown', key, true); document.body.appendChild(root); root.querySelector('[data-no]').focus();   // the safe choice has the focus
+    });
+  },
   groups: ['Air', 'Space', 'Sea & sky', 'Ground', 'Weather & space weather', 'Infrastructure'],
   build() {
     const root = $('#layers'); root.innerHTML = '';

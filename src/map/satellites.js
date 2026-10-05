@@ -1,4 +1,5 @@
 // Satellites: CelesTrak groups, SGP4 in a worker, ground tracks, passes.
+import { num, idArg } from '../core/format.js';
 import { createTleSource } from '../core/tle.js';
 import { $, C, deg, fmt, haversine, late, Log, Net, rad, Store } from './util.js';
 import { sunElevation, vecRenderer } from './mapview.js';
@@ -160,7 +161,7 @@ Detail.renderers.sat = o => {
     { text: 'Heavens-Above', url: `https://www.heavens-above.com/satinfo.aspx?satid=${o.id}` },
   ];
   return `<div class="det">${Detail.head(C.sat, 'Satellite · CelesTrak GP data', o.name, '', flags)}${Detail.kv(rows)}
-  <div class="actions"><button class="btn small" onclick="flyTo(${o.lat ?? 0},${o.lon ?? 0},3)">Center</button><button class="btn small" onclick="Sats.drawTrack(Sats.byId.get(${o.id}))">Ground track</button><button class="btn small" onclick="Tracks.clear()">Clear track</button></div>
+  <div class="actions"><button class="btn small" onclick="flyTo(${num(o.lat)},${num(o.lon)},3)">Center</button><button class="btn small" onclick="Sats.drawTrack(Sats.byId.get(${num(o.id)}))">Ground track</button><button class="btn small" onclick="Tracks.clear()">Clear track</button></div>
   <hr class="sep">${Detail.links(links)}</div>`;
 };
 export const lySats = Layers.add({

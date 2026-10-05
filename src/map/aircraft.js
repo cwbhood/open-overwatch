@@ -1,4 +1,5 @@
 // Aircraft: ADS-B sources swept tile by tile, OpenSky, emergencies, photos.
+import { num, idArg } from '../core/format.js';
 import { $, C, Log, Net, Store, debounce, destination, esc, fmt, haversine, rad, regionOf, toast } from './util.js';
 import { map, vecRenderer } from './mapview.js';
 import { Dyn, Layers, Sel, UI, feed, requestDraw } from './engine.js';
@@ -139,7 +140,7 @@ Detail.renderers.air = a => {
   if (a.flight) links.push({ text: `FlightAware · ${a.flight}`, url: `https://flightaware.com/live/flight/${encodeURIComponent(a.flight)}` });
   if (a.r) links.push({ text: `Registration ${a.r} on Planespotters`, url: `https://www.planespotters.net/search?q=${encodeURIComponent(a.r)}` });
   return `<div class="det">${Detail.head(a.emerg ? C.emg : a.mil ? C.mil : C.civ, `Aircraft · ADS-B via ${a.src}`, title, sub, flags)}${Photos.html(a.hex)}${Detail.kv(rows)}
-  <div class="actions"><button class="btn small" onclick="flyTo(${a.lat},${a.lon},8)">Center</button><button class="btn small" onclick="Air.trail('${a.hex}')">Trail</button><button class="btn small" onclick="Air.follow('${a.hex}')">${Air.following === a.hex ? 'Unfollow' : 'Follow'}</button></div>
+  <div class="actions"><button class="btn small" onclick="flyTo(${num(a.lat)},${num(a.lon)},8)">Center</button><button class="btn small" onclick="Air.trail('${idArg(a.hex)}')">Trail</button><button class="btn small" onclick="Air.follow('${idArg(a.hex)}')">${Air.following === a.hex ? 'Unfollow' : 'Follow'}</button></div>
   <hr class="sep">${Detail.links(links)}</div>`;
 };
 
