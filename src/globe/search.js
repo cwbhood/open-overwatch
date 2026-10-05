@@ -32,7 +32,7 @@ async function find(q) {
     const b = $(`#band [data-go="${go}"]`); if (b) out.push({ kind: 'view', go, label: b.textContent.trim(), sub: b.title || 'View' });
   }
   // flights: a ticket number, callsign, registration or hex
-  const fq = /\d/.test(s) ? parseFlightQuery(q) : null;
+  const fq = /\d/.test(s) && /[a-z]/.test(s) ? parseFlightQuery(q) : null;   // a bare number is a NORAD id, not a flight
   if (fq) {
     const here = [...Air.map.values()].filter(r => matchesFlight(r, fq)).slice(0, 3);
     for (const r of here) out.push({ kind: 'obj', obj: r, label: `✈ ${r.flight || r.hex}`, sub: `${r.reg ? r.reg + ' · ' : ''}${r.ground ? 'on the ground' : fmt((r.alt || 0) / 0.3048) + ' ft'}` });
@@ -42,7 +42,7 @@ async function find(q) {
   const sats = [], alias = ALIAS[s], push = o => { if (o && !sats.includes(o)) sats.push(o); };
   if (alias) push(Sats.byId.get(alias));
   if (/^\d{1,6}$/.test(s)) push(Sats.byId.get(String(+s)));
-  const rank = o => (o.layer === 'stations' ? 0 : o.layer === 'visual' ? 1 : o.layer === 'starlink' || o.layer === 'debris' ? 3 : 2) + (o.name.toLowerCase().startsWith(s) ? 0 : 0.5);
+  const rank = o => (o.layer === 'stations' ? 0 : o.layer === 'visual' ? 1 : o.layer === 'debris' ? 3 : 2) + (o.name.toLowerCase().startsWith(s) ? 0 : 0.5);
   if (s.length >= 3 || !alias) for (const o of Sats.list.filter(o => o.name.toLowerCase().includes(s)).sort((a, b) => rank(a) - rank(b)).slice(0, 8)) push(o);
   for (const o of sats.slice(0, 8)) out.push({ kind: 'obj', obj: o, label: `🛰 ${o.name}`, sub: `NORAD ${o.id} · ${L[o.layer].name.split(' (')[0]}` });
   const starlinks = s.startsWith('starl') ? Sats.list.filter(o => o.layer === 'starlink').length : 0;
