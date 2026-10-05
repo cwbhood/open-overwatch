@@ -19,6 +19,9 @@ import { jdFromMs } from '../core/time.js';
 import { deviceVectors, alphaFromCompass, azEl } from '../core/orientation.js';
 import { activeShowers } from '../core/meteors.js';
 import { fetchAsset } from '../core/assets.js';
+import { bodyFact, starFact } from '../core/skyfacts.js';
+import { explainSat } from '../core/explain.js';
+import { moonGeocentric } from '../core/planets.js';
 
 const D = Math.PI / 180, FAR = 1.0e9;   // planets and stars are drawn 1 million km out: beyond every satellite
 const FALLBACK = { lat: 51.4769, lon: -0.0005, name: 'Greenwich (allow location to see your own sky)' };
@@ -94,18 +97,21 @@ function refresh() {
   if (!S.active) return;
   const time = viewer.clock.currentTime, M = icrfToFixed(time), jd = jdFromMs(Time.nowMs()), o = S.obs, labs = S.labels, pts = S.points;
   labs.removeAll(); pts.removeAll();
-  const add = (pos, text, color, size = 7, font = '600 14px system-ui') => {
-    pts.add({ position: pos, pixelSize: size, color: C.Color.fromCssColorString(color) });
-    labs.add({ position: pos, text, font, fillColor: C.Color.fromCssColorString(color), pixelOffset: new C.Cartesian2(10, -8), showBackground: true, backgroundColor: C.Color.fromCssColorString('#05080caa'), horizontalOrigin: C.HorizontalOrigin.LEFT });
+  const add = (pos, text, color, size = 7, font = '600 14px system-ui', id) => {
+    pts.add({ position: pos, pixelSize: size, color: C.Color.fromCssColorString(color), id });
+    labs.add({ position: pos, text, font, id, fillColor: C.Color.fromCssColorString(color), pixelOffset: new C.Cartesian2(10, -8), showBackground: true, backgroundColor: C.Color.fromCssColorString('#05080caa'), horizontalOrigin: C.HorizontalOrigin.LEFT });
   };
   placeConstellations();
   const E = earthPosition(jd, {});
   for (const [key, name, col] of PLANETS) {
     const p = planetPosition(key, jd, {}), q = eclToEq(p.x - E.x, p.y - E.y, p.z - E.z), v = C.Cartesian3.normalize(new C.Cartesian3(q.x, q.y, q.z), new C.Cartesian3());
-    add(far(C.Matrix3.multiplyByVector(M, v, new C.Cartesian3())), name, col, 8);
+    add(far(C.Matrix3.multiplyByVector(M, v, new C.Cartesian3())), name, col, 8, undefined, { sky: 'body', key });
   }
+  { const m = moonGeocentric(jd), q = eclToEq(m.x, m.y, m.z), v = C.Cartesian3.normalize(new C.Cartesian3(q.x, q.y, q.z), new C.Cartesian3());   // Cesium draws the Moon; this names it
+    labs.add({ position: pts.add({ position: far(C.Matrix3.multiplyByVector(M, v, new C.Cartesian3())), pixelSize: 22, color: C.Color.WHITE.withAlpha(0.01), id: { sky: 'body', key: 'moon' } }).position, text: 'Moon', font: '600 13px system-ui', fillColor: C.Color.fromCssColorString('#e6edf3'), pixelOffset: new C.Cartesian2(18, -14), horizontalOrigin: C.HorizontalOrigin.LEFT, id: { sky: 'body', key: 'moon' } }); }
   for (const m of activeShowers(Time.nowMs())) add(far(C.Matrix3.multiplyByVector(M, radec(m.ra, m.dec), new C.Cartesian3())), `☄ ${m.name} radiant`, '#ffb44d', 6, '600 12px system-ui');   // meteors seem to fly out of here
-  for (const [name, ra, dec] of STARS) labs.add({ position: far(C.Matrix3.multiplyByVector(M, radec(ra, dec), new C.Cartesian3())), text: name, font: '500 12px system-ui', fillColor: C.Color.fromCssColorString('#cfd8e3'), pixelOffset: new C.Cartesian2(8, -6), horizontalOrigin: C.HorizontalOrigin.LEFT });
+  const tapDot = C.Color.fromCssColorString('#cfd8e3').withAlpha(0.3);   // labels alone can't be tapped at their anchor: a faint dot can
+  for (const [name, ra, dec] of STARS) labs.add({ position: pts.add({ position: far(C.Matrix3.multiplyByVector(M, radec(ra, dec), new C.Cartesian3())), pixelSize: 7, color: tapDot, id: { sky: 'star', name } }).position, text: name, font: '500 12px system-ui', fillColor: C.Color.fromCssColorString('#cfd8e3'), pixelOffset: new C.Cartesian2(8, -6), horizontalOrigin: C.HorizontalOrigin.LEFT, id: { sky: 'star', name } });
   // satellites above the horizon: count all, label the brightest ones. Not far from today: orbits from this week's
   // elements drift by kilometres a day, and nothing tells us what was up in 1990
   const away = Math.abs(Time.nowMs() - Date.now()) / 86400e3;
@@ -118,7 +124,7 @@ function refresh() {
     above++; if ((s.layer === 'stations' || s.layer === 'visual') && a.el > 8) bright.push([a.el, s, p]);
   }
   bright.sort((x, y) => y[0] - x[0]);
-  for (const [, s, p] of bright.slice(0, 10)) add(p, s.name, s.layer === 'stations' ? '#7dffa6' : '#e6edf3', s.layer === 'stations' ? 8 : 5, '600 12px system-ui');
+  for (const [, s, p] of bright.slice(0, 10)) add(p, s.name, s.layer === 'stations' ? '#7dffa6' : '#e6edf3', s.layer === 'stations' ? 8 : 5, '600 12px system-ui', { sky: 'sat', s });
   // aircraft within ~120 km and above the horizon
   let planes = 0;
   for (const r of Time.offLive() ? [] : Air.map.values()) {   // aircraft are live only
@@ -175,12 +181,18 @@ async function enter() {
     S.ring.add({ position: p, text: compass(az), font: az % 90 ? '600 13px system-ui' : '800 17px system-ui', fillColor: C.Color.fromCssColorString(az === 0 ? '#ff6b6b' : '#e6edf3'), horizontalOrigin: C.HorizontalOrigin.CENTER });
   }
   if (motionOk) { addEventListener('deviceorientationabsolute', onOrientation); addEventListener('deviceorientation', onOrientation); }
-  $('#luHint').textContent = PHONE && motionOk ? 'Hold your phone up to the sky. (No movement? Drag to look around.)' : 'Drag to look around · scroll or pinch to zoom';
+  $('#luHint').textContent = PHONE && motionOk ? 'Hold your phone up to the sky. (No movement? Drag to look around.) Tap anything to find out what it is.' : 'Drag to look around · scroll or pinch to zoom · tap a planet, star or satellite to find out what it is';
+  $('#luInfo').textContent = '';
   // drag / zoom when there are no sensors (or as an override)
   const cv = scene.canvas; let last = null;
-  S.onDown = e => { last = [e.clientX, e.clientY]; S.sensor = false; };
+  let down = null;
+  S.onDown = e => { last = [e.clientX, e.clientY]; down = [e.clientX, e.clientY]; S.sensor = false; };
   S.onMove = e => { if (!last) return; S.heading = (S.heading - (e.clientX - last[0]) * S.fov / innerHeight + 360) % 360; S.pitch = Math.max(-80, Math.min(89, S.pitch + (e.clientY - last[1]) * S.fov / innerHeight)); last = [e.clientX, e.clientY]; };
-  S.onUp = () => { last = null; };
+  S.onUp = e => {   // a tap (not a drag): what is that?
+    last = null; if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return; down = null;
+    const r = cv.getBoundingClientRect(), hits = scene.drillPick(new C.Cartesian2(e.clientX - r.left, e.clientY - r.top), 6, 24, 24), hit = hits.find(h => h.id && (h.id.sky || h.id.kind)), id = hit && hit.id;   // under constellation lines and names
+    $('#luInfo').textContent = id && id.kind === 'sat' ? `${id.name}: ${explainSat(id)}` : id && id.kind === 'air' ? `✈ ${id.flight || id.hex}: an aircraft${id.type ? ' (' + id.type + ')' : ''} at ${fmt((id.alt || 0) / 0.3048)} ft.` : !id || !id.sky ? '' : id.sky === 'star' ? starFact(id.name) : id.sky === 'body' ? bodyFact(id.key, jdFromMs(Time.nowMs())) : `${id.s.name}: ${explainSat(id.s)}`;
+  };
   S.onWheel = e => { S.fov = Math.max(10, Math.min(100, S.fov * (e.deltaY > 0 ? 1.08 : 0.93))); camera.frustum.fov = S.fov * D; };
   cv.addEventListener('pointerdown', S.onDown); addEventListener('pointermove', S.onMove); addEventListener('pointerup', S.onUp); cv.addEventListener('wheel', S.onWheel, { passive: true });
   scene.preRender.addEventListener(frame);

@@ -90,6 +90,7 @@ handler.setInputAction(m => {
 }, C.ScreenSpaceEventType.MOUSE_MOVE);
 let clickNo = 0;
 handler.setInputAction(c => {
+  if (state.lookup) return;   // look-up mode names what you tap itself
   let o = pickObj(c.position); const n = ++clickNo;
   // a finger covers 28 px, and 18,000 satellite dots mean one is nearly always under it: unless the dot is really near the touch,
   // the tap was meant for the ground (the country), not for a satellite

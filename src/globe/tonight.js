@@ -154,6 +154,8 @@ function render(initial = false) {
     cl ? (/all night/.test(cl.text) && cl.clear.length ? '<b>Clear skies tonight.</b>' : cl.clear.length ? `<b>Clear from ${esc(time(cl.clear[0].from))} to ${esc(time(cl.clear[0].to))}.</b>` : `<b class="cl">${cl.mean >= 75 ? 'Cloudy tonight.' : 'Patchy cloud tonight.'}</b>`) : '',
     S.aurora && S.aurora.level >= 2 ? `<b class="ok">${esc(S.aurora.text)}</b>` : ''].filter(Boolean).join(' ');
   const watching = !!store.get('auroraWatch', null);
+  S.summary = [`Tonight's sky${demo ? ' over Greenwich' : ''}:`, first ? `${first.short} at ${time(first.rise)}, look ${compass(first.azRise)}` : '', cl ? (cl.clear.length ? `clear ${time(cl.clear[0].from)} to ${time(cl.clear[0].to)}` : `cloudy (${cl.mean}%)`) : '',
+    up.length ? `${up.map(p => p.name).join(', ')} up` : '', `Moon ${Math.round(moon.lit * 100)}% lit`, S.aurora && S.aurora.level >= 2 ? S.aurora.text : ''].filter(Boolean).join(' · ');
   const c = card(`<div class="k" style="--c:#7dffa6">${demo ? 'Greenwich, London (example)' : `Your sky · ${lat.toFixed(2)}, ${lon.toFixed(2)} · saved on this device`}</div><h2>Tonight above you</h2>
     <p class="tn-head">${head}</p>
     ${S.iss ? `<p class="tn-p" style="margin-top:6px">${esc(S.iss)}</p>` : ''}
@@ -169,7 +171,7 @@ function render(initial = false) {
     <div class="acts"><button class="chipbtn" id="tnAur">${watching ? 'Stop aurora alerts' : 'Alert me if aurora gets likely'}</button></div>
     ${soon.length ? `<h3>Coming up in the sky</h3><div class="tn-list">${soon.map(t => `<div class="tn-row"><span>${esc(t)}</span></div>`).join('')}</div>` : ''}
     ${S.far.length ? `<h3>Farthest from home</h3><div class="tn-list">${S.far.map(f => `<div class="tn-row"><span>${esc(f.text)}</span></div>`).join('')}</div>` : ''}
-    <div class="acts"><button class="chipbtn" id="tnLook" style="color:#7dffa6">Look up</button>${demo ? '<button class="chipbtn" id="tnLoc">Use my location</button>' : '<button class="chipbtn" id="tnForget">Forget my location</button>'}</div>
+    <div class="acts"><button class="chipbtn" id="tnLook" style="color:#7dffa6">Look up</button><button class="chipbtn" id="tnShare">Share tonight</button>${demo ? '<button class="chipbtn" id="tnLoc">Use my location</button>' : '<button class="chipbtn" id="tnForget">Forget my location</button>'}</div>
     <p class="note">Times are yours (${esc(Intl.DateTimeFormat().resolvedOptions().timeZone || 'local')}). "Calendar" adds an event that reminds you 10 minutes before, even with this site closed. "Remind me" and aurora alerts work while this page is open in a tab.</p>`);
   bindPasses(c);
   c.querySelectorAll('[data-lch]').forEach(b => { b.onclick = () => { S.open = false; Launches.show(S.launches[+b.dataset.lch].l); }; });
@@ -181,6 +183,11 @@ function render(initial = false) {
     if (watching) { try { localStorage.removeItem('oo3d.auroraWatch'); } catch (e) { /* private mode */ } toast('Aurora alerts off'); return render(); }
     if (!(await Alerts.permission())) return toast('Notifications are blocked or not supported in this browser', 4000);
     store.set('auroraWatch', { lat, lon }); toast('Aurora alerts on: checked every 10 minutes while this page is open, once a night at most', 5000); render(); Tonight.watchAurora();
+  };
+  c.querySelector('#tnShare').onclick = async () => {
+    const url = 'https://cwbhood.github.io/open-overwatch/globe.html#go=tonight', text = S.summary + '\nSee yours:';
+    if (navigator.share) { try { await navigator.share({ title: "Tonight's sky", text, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+    try { await navigator.clipboard.writeText(text + ' ' + url); toast('Copied: paste it into a message', 3000); } catch (e) { window.prompt('Copy this:', text + ' ' + url); }
   };
   c.querySelector('#tnLook').onclick = () => { Tonight.close(); LookUp.enter(); };
   if (c.querySelector('#tnForget')) c.querySelector('#tnForget').onclick = () => { home.forget(); toast('Location forgotten'); intro(); };

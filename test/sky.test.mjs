@@ -160,3 +160,13 @@ test('sky: meetings of the Moon and planets (the 2020 great conjunction, a Moon-
   const v = meetings(Date.parse('2023-03-20T00:00:00Z'), { days: 8 }).find(m => m.ka === 'moon' && m.kb === 'venus');
   assert.ok(v && v.sep < 3 && v.elong > 20, JSON.stringify(v));
 });
+
+test('skyfacts: planets, the Moon and bright stars in a sentence', async () => {
+  const { bodyFact, starFact } = await import('../src/core/skyfacts.js');
+  const { jdFromMs } = await import('../src/core/time.js');
+  assert.match(bodyFact('jupiter', jdFromMs(Date.parse('2026-10-05T00:00:00Z'))), /^Jupiter: [\d,]+ million km away right now\. The light you see left it \d+ minutes ago/);
+  assert.match(bodyFact('moon', jdFromMs(Date.parse('2026-10-05T00:00:00Z'))), /^The Moon: 3\d\d,\d{3} km away, its light takes 1\.\d seconds/);
+  assert.ok(starFact('Vega', 2026).startsWith('Vega: 25 light-years away. The light reaching your eyes left it in 2001.'));
+  assert.match(starFact('Deneb', 2026), /left it around 600 BC/);
+  assert.match(starFact('Rigel', 2026), /left it in about 1166\./);
+});

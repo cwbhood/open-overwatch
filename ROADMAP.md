@@ -90,6 +90,9 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] Clouds tonight (Open-Meteo, CC BY 4.0; location rounded to ~10 km): clear spells in words, the next clear night, and each
       pass marked clear / cloudy (core/clouds.js, tested)
 - [x] "Coming up in the sky": the Moon within 5° of a bright planet, planets within 3° of each other, next 30 days (core/sky.js meetings)
+- [x] Look up: tap a planet, the Moon, a bright star or a satellite to find out what it is (distance, light travel time,
+      "the light reaching your eyes left Vega in 2001"; core/skyfacts.js)
+- [x] Tonight "Share tonight": a one-line summary of your sky with a link, to the share sheet or the clipboard
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
 - [ ] Look up shows two fixed streaks (pink, orange) in headless Chromium's software renderer, also in v0.9.2.4: check on a real GPU
 
