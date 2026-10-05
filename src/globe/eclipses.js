@@ -74,11 +74,26 @@ async function fromHere(rows) {
   }
   for (const [i, e] of rows.entries()) {
     const el = $('#eh' + i); if (!el) continue; el.textContent = 'working…';
-    await prepare(e);
-    let best = { covered: 0 };
-    for (let m = 0; m < e.sun.length - 1; m += 1) { const { sun, moon } = e.at(m), w = seenFrom(sun, moon, Ecl.here); if (w.sunUp && w.covered > best.covered) best = { ...w, m }; }
+    const best = await bestFrom(e, Ecl.here);
     el.textContent = best.covered > 0.005 ? `From you: ${best.kind === 'total' ? 'TOTAL' : best.kind === 'annular' ? 'ring of fire' : Math.round(best.covered * 100) + '% covered'} · ${new Date(msFromJd(e.jd0 + best.m / 1440)).toLocaleString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}` : 'From you: not visible';
   }
+}
+
+/** The most of the Sun covered at an Earth-fixed point (km), with the minute it happens: { covered, kind, m, at (ms) }. */
+async function bestFrom(e, here) {
+  await prepare(e);
+  let best = { covered: 0 };
+  for (let m = 0; m < e.sun.length - 1; m += 1) { const { sun, moon } = e.at(m), w = seenFrom(sun, moon, here); if (w.sunUp && w.covered > best.covered) best = { ...w, m }; }
+  best.at = best.m != null ? msFromJd(e.jd0 + best.m / 1440) : null;
+  return best;
+}
+/** The next eclipse (2027-2030) that can be seen from lat/lon: { e, covered, kind, at } or null. */
+async function nextFrom(lat, lon) {
+  const c = C.Cartesian3.fromDegrees(lon, lat, 0), here = { x: c.x / 1000, y: c.y / 1000, z: c.z / 1000 }, now = Date.now();
+  for (const e of (await load()).filter(e => msFromJd(e.jd0 + e.sun.length / 1440) > now)) {
+    const b = await bestFrom(e, here); if (b.covered > 0.005) return { e, ...b };
+  }
+  return null;
 }
 
 async function watch(e) {
@@ -121,4 +136,4 @@ function hud(first) {
 function stop(live = true) { clearInterval(Ecl.timer); clear(); Ecl.active = null; if (live) Time.goLive(); }
 function close() { stop(true); $('#card').classList.remove('show'); }
 
-export const Eclipses = { openList, watch, prepare, load, close, state: Ecl };
+export const Eclipses = { openList, watch, prepare, load, close, nextFrom, state: Ecl };

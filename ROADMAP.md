@@ -97,6 +97,8 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
       (core/orientation.js guide, tested)
 - [x] Look up hides things on the ground (employer towers, volcanoes, lighthouses, pads, quakes, buildings): from eye height
       they were the "streaks" seen across the sky
+- [x] Tonight: the next solar eclipse you can see from home (how much of the Sun, when; "Watch the shadow"); sections fold
+      (remembered)
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
 
 ## Rules of thumb

@@ -13,6 +13,7 @@ import { LookUp, observerAt } from './lookup.js';
 import { findPasses, compass } from '../core/passes.js';
 import { showersFor } from '../core/meteors.js';
 import { Launches } from './launches.js';
+import { Eclipses } from './eclipses.js';
 import { Country } from './country.js';
 import { oceanAt } from '../core/explain.js';
 import { haversine } from '../core/geo.js';
@@ -120,7 +121,19 @@ async function launchesNear(loc) {
   return out;
 }
 
-function card(html) { const c = $('#card'); state.selected = null; c.innerHTML = `<button class="x" aria-label="Close">×</button>${html}`; c.classList.add('show'); c.querySelector('.x').onclick = () => Tonight.close(); return c; }
+function card(html) { const c = $('#card'); state.selected = null; c.innerHTML = `<button class="x" aria-label="Close">×</button>${html}`; c.classList.add('show'); c.querySelector('.x').onclick = () => Tonight.close(); fold(c); return c; }
+// sections fold: tap a heading to hide what's under it (remembered on this device)
+const SHUT = new Set(store.get('tnShut', ['Farthest from home']));
+function fold(c) {
+  for (const h of c.querySelectorAll('h3')) {
+    const name = h.firstChild ? h.firstChild.textContent.trim() : '', body = [];
+    for (let n = h.nextElementSibling; n && n.tagName !== 'H3' && !n.classList.contains('acts') && !(n.tagName === 'P' && n.classList.contains('note')); n = n.nextElementSibling) body.push(n);
+    if (!body.length) continue;
+    const set = shut => { h.classList.toggle('shut', shut); h.setAttribute('aria-expanded', String(!shut)); for (const n of body) n.hidden = shut; };
+    h.tabIndex = 0; h.setAttribute('role', 'button'); h.classList.add('fold'); set(SHUT.has(name));
+    h.onclick = h.onkeydown = e => { if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return; e.preventDefault(); const shut = !h.classList.contains('shut'); set(shut); shut ? SHUT.add(name) : SHUT.delete(name); store.set('tnShut', [...SHUT]); };
+  }
+}
 
 function intro(msg = '') {
   const c = card(`<div class="k" style="--c:#7dffa6">Your sky</div><h2>Tonight above you</h2>
@@ -170,10 +183,12 @@ function render(initial = false) {
     <h3>Aurora</h3><p class="tn-p">${S.aurora ? esc(S.aurora.text) + ` <small>(NOAA OVATION: ${S.aurora.overhead}% overhead)</small>` : 'Checking NOAA\'s aurora forecast…'}</p>
     <div class="acts"><button class="chipbtn" id="tnAur">${watching ? 'Stop aurora alerts' : 'Alert me if aurora gets likely'}</button></div>
     ${soon.length ? `<h3>Coming up in the sky</h3><div class="tn-list">${soon.map(t => `<div class="tn-row"><span>${esc(t)}</span></div>`).join('')}</div>` : ''}
+    ${S.ecl ? `<h3>Next solar eclipse you can see</h3><div class="tn-list"><div class="tn-row"><span>${esc(new Date(S.ecl.at).toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))}, ${esc(new Date(S.ecl.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }))}: ${S.ecl.kind === 'total' ? '<b class="ok">TOTAL</b> from here' : S.ecl.kind === 'annular' ? 'a ring of fire from here' : `the Moon covers ${Math.round(S.ecl.covered * 100)}% of the Sun from here`}${S.ecl.e.type === 'total' && S.ecl.kind !== 'total' ? ' (totality elsewhere)' : ''}. Never look at the Sun without eclipse glasses.</span><span class="tn-b"><button class="chipbtn" id="tnEcl">Watch the shadow</button></span></div></div>` : S.ecl === false ? '<h3>Solar eclipses</h3><p class="tn-p">None visible from here in 2027–2030.</p>' : ''}
     ${S.far.length ? `<h3>Farthest from home</h3><div class="tn-list">${S.far.map(f => `<div class="tn-row"><span>${esc(f.text)}</span></div>`).join('')}</div>` : ''}
     <div class="acts"><button class="chipbtn" id="tnLook" style="color:#7dffa6">Look up</button><button class="chipbtn" id="tnShare">Share tonight</button>${demo ? '<button class="chipbtn" id="tnLoc">Use my location</button>' : '<button class="chipbtn" id="tnForget">Forget my location</button>'}</div>
     <p class="note">Times are yours (${esc(Intl.DateTimeFormat().resolvedOptions().timeZone || 'local')}). "Calendar" adds an event that reminds you 10 minutes before, even with this site closed. "Remind me" and aurora alerts work while this page is open in a tab.</p>`);
   bindPasses(c);
+  if (c.querySelector('#tnEcl')) c.querySelector('#tnEcl').onclick = () => { S.open = false; Eclipses.watch(S.ecl.e); };
   c.querySelectorAll('[data-lch]').forEach(b => { b.onclick = () => { S.open = false; Launches.show(S.launches[+b.dataset.lch].l); }; });
   c.querySelectorAll('[data-met]').forEach(b => { b.onclick = () => {
     const m = showers[+b.dataset.met], night = showersFor(lat, lon, m.peakMs - 12 * HOUR, { time }).find(x => x.name === m.name), at = (night && night.bestMs) || m.peakMs;
@@ -197,6 +212,8 @@ function render(initial = false) {
 async function show(loc) {
   const run = ++S.run; S.open = true; S.loc = loc; S.passes = []; S.aurora = null; S.computing = true; render(true);
   const obs = observerAt(loc.lat, loc.lon), t0 = Date.now(), t1 = t0 + DAY;
+  S.ecl = null;
+  Eclipses.nextFrom(loc.lat, loc.lon).then(x => { if (run === S.run) { S.ecl = x || false; render(); } }, e => console.warn('eclipse', e));
   S.iss = ''; S.launches = []; S.far = []; S.hours = null; S.cloudErr = '';
   forecast(loc.lat, loc.lon).then(h => { if (run === S.run) { S.hours = h; render(); } }, e => { console.warn('clouds', e); if (run === S.run) { S.cloudErr = 'The cloud forecast is unreachable right now.'; render(); } });
   farthest(Date.now()).then(x => { if (run === S.run) { S.far = x; render(); } }, e => console.warn('farthest', e));
