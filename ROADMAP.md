@@ -99,6 +99,8 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
       they were the "streaks" seen across the sky
 - [x] Tonight: the next solar eclipse you can see from home (how much of the Sun, when; "Watch the shadow"); sections fold
       (remembered)
+- [x] People in space right now (Launch Library 2 astronauts, build copy in data/astronauts.json, core/crew.js tested): a card
+      with names, flags, agencies, days in space; "Aboard now: 11 people" on the ISS and Tiangong cards; in Tonight and search
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
 
 ## Rules of thumb

@@ -11,6 +11,7 @@ import { Country } from './country.js';
 import { sunlitView, moonPosition, showPlaceNames } from './earth.js';
 import { Time } from './time.js';
 import { explainSat } from '../core/explain.js';
+import { Crew } from './crew.js';
 
 // ---- stats + altitude band
 export function updateStats() {
@@ -116,7 +117,7 @@ export function select(o) {
   if (o.kind !== 'country') Country.clear(); else Country.highlight(o);
   if (o.kind === 'sat') {
     const i = Sats.info(o), l = L[o.layer];
-    html = `<div class="k" style="--c:${l.color}">${esc(l.name)}</div><h2>${esc(o.name)}</h2><p class="note" style="margin:0 0 8px">${esc(explainSat(o, i))}</p><dl>${row('NORAD', o.id)}${row('Altitude', fmt(i.alt) + ' km')}${row('Speed', fmt(i.speed) + ' km/h')}${row('Orbit period', i.period.toFixed(1) + ' min')}${row('Inclination', i.incl.toFixed(1) + '°')}${row('Over', i.lat.toFixed(2) + ', ' + i.lon.toFixed(2))}</dl>`;
+    html = `<div class="k" style="--c:${l.color}">${esc(l.name)}</div><h2>${esc(o.name)}</h2><p class="note" style="margin:0 0 8px">${esc(explainSat(o, i))}</p>${o.id === '25544' || o.id === '48274' ? '<p class="note" id="crewLine" style="margin:0 0 8px;color:#7dffa6">Aboard now: …</p>' : ''}<dl>${row('NORAD', o.id)}${row('Altitude', fmt(i.alt) + ' km')}${row('Speed', fmt(i.speed) + ' km/h')}${row('Orbit period', i.period.toFixed(1) + ' min')}${row('Inclination', i.incl.toFixed(1) + '°')}${row('Over', i.lat.toFixed(2) + ', ' + i.lon.toFixed(2))}</dl>`;
     Sats.orbit(o);
   } else if (o.kind === 'air') {
     html = `<div class="k" style="--c:${o.mil ? '#ffb44d' : '#5fd3ff'}">${o.mil ? 'Military aircraft' : 'Aircraft'} · ${esc(o.src)}</div><h2>${esc(o.flight || o.hex)}</h2><dl>${row('ICAO hex', o.hex)}${o.type ? row('Type', o.type) : ''}${o.reg ? row('Registration', o.reg) : ''}${o.country ? row('Country', o.country) : ''}${row('Altitude', o.ground ? 'on ground' : fmt((o.alt || 0) / 0.3048) + ' ft')}${row('Speed', o.gs != null ? fmt(o.gs / 0.514444) + ' kt' : '—')}${row('Track', o.track != null ? Math.round(o.track) + '°' : '—')}${row('Squawk', o.squawk || '—')}${row('Last fix', Math.round((Date.now() - o.ts) / 1000) + ' s ago')}</dl>`;
@@ -146,6 +147,8 @@ export function select(o) {
   if ($('#btnFocus')) $('#btnFocus').onclick = () => flyToObject(o);
   if ($('#btnShareAir')) $('#btnShareAir').onclick = () => hooks.shareCopy();
   if ($('#btnSee')) $('#btnSee').onclick = () => hooks.satPasses(o);
+  if ($('#crewLine')) Crew.load().then(() => { const el = $('#crewLine'); if (!el || state.selected !== o) return; const n = Crew.aboard(o.id === '25544' ? 'ISS' : 'Tiangong').length;
+    el.innerHTML = `Aboard now: ${n} ${n === 1 ? 'person' : 'people'} · <a href="#" id="crewWho">who?</a>`; $('#crewWho').onclick = e => { e.preventDefault(); Crew.open(); }; }, () => { const el = $('#crewLine'); if (el) el.remove(); });
   if (o.kind === 'country') Country.after(o);
   if ($('#btnFollow')) $('#btnFollow').onclick = () => following ? Follow.stop() : o.kind === 'air' ? AirModels.follow(o) : SatModels.follow(o);
 }

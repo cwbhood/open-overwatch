@@ -170,3 +170,15 @@ test('skyfacts: planets, the Moon and bright stars in a sentence', async () => {
   assert.match(starFact('Deneb', 2026), /left it around 600 BC/);
   assert.match(starFact('Rigel', 2026), /left it in about 1166\./);
 });
+
+test('crew: who is in space, from Launch Library 2 astronauts', async () => {
+  const { durationDays, fromLL2Astronaut, whoIsUp, crewSentence } = await import('../src/core/crew.js');
+  const { readFileSync } = await import('node:fs');
+  assert.ok(Math.abs(durationDays('P438DT5H49M19S') - 438.2426) < 1e-3); assert.equal(durationDays('nope'), null);
+  const list = JSON.parse(readFileSync(new URL('./fixtures/ll2_astronauts.json', import.meta.url), 'utf8')).results.map(fromLL2Astronaut);
+  const w = whoIsUp(list);
+  assert.equal(w.total, 14); assert.equal(w.other.length, 1); assert.equal(w.other[0].name, 'Starman');   // the mannequin isn't a person
+  assert.equal(w.stations.find(s => s.short === 'Tiangong').crew.length, 3);
+  assert.equal(crewSentence(w), '14 people are in space right now: 11 on the ISS and 3 on Tiangong.');
+  assert.equal(list[0].flag, '🇺🇸'); assert.equal(fromLL2Astronaut({ name: 'x', wiki: 'javascript:alert(1)' }).wiki, null);
+});

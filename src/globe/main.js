@@ -36,6 +36,7 @@ import { Flight } from './flight.js';
 import { Snapshot } from './snapshot.js';
 import { Search } from './search.js';
 import { Launches } from './launches.js';
+import { Crew } from './crew.js';
 
 // things on the ground: from look-up mode's eye height they become huge streaks across the sky, so they hide there
 const GROUND = ['companies', 'volcanoes', 'lighthouses', 'launches', 'quakes', 'sun', 'buildings'];
@@ -69,6 +70,7 @@ PRESETS.flybys = () => { hooks.clearPresets(); Flybys.openList(); };
 PRESETS.tonight = () => Tonight.open();
 hooks.satPasses = o => Tonight.forSat(o);
 PRESETS.search = () => Search.open();
+PRESETS.crew = () => Crew.open();
 PRESETS.launches = () => { hooks.clearPresets(); Launches.openList(); };
 hooks.showLaunch = o => Launches.show(o);
 PRESETS.flight = () => Flight.open();
@@ -147,7 +149,7 @@ every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
 setInterval(() => Aurora.apply(), 60e3);   // refreshes itself every 10 minutes while the layer is on
 
-window.OO3D = { Conj, LookUp, Eclipses, Tonight, Flight, Snapshot, Search, Launches,
+window.OO3D = { Conj, LookUp, Eclipses, Tonight, Flight, Snapshot, Search, Launches, Crew,
   viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, Lighthouses, Weather, Wind, Country, Aurora, Flybys, Companies, Volcanoes, SunLine, Buildings, Share, Tour, setIonToken: t => Buildings.setToken(t), L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {

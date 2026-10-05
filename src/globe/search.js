@@ -13,13 +13,15 @@ import { Lighthouses } from './lighthouses.js';
 import { Flight } from './flight.js';
 import { Launches } from './launches.js';
 import { LookUp } from './lookup.js';
-import { select, flyToObject } from './ui.js';
+import { select, flyToObject, PRESETS } from './ui.js';
 import { parseFlightQuery, matchesFlight } from '../core/flight.js';
 
 // everyday names for famous objects -> NORAD numbers
 const ALIAS = { iss: '25544', 'space station': '25544', 'international space station': '25544', zarya: '25544', hubble: '20580', hst: '20580',
   tiangong: '48274', css: '48274', 'chinese space station': '48274', 'landsat 9': '49260', 'landsat 8': '39084', 'sentinel-2a': '40697', 'goes-16': '41866', 'goes 16': '41866', 'goes-18': '51850' };
-const VIEW_WORDS = { tonight: 'tonight sky stars above me passes meteor', lookup: 'look up sky', moon: 'moon lunar', eclipses: 'eclipse eclipses', flybys: 'asteroid comet flyby flybys',
+// views without a band button: [label, sub]
+const EXTRA = { crew: ['People in space', 'Who is aboard the ISS and Tiangong right now'] };
+const VIEW_WORDS = { crew: 'astronaut astronauts crew people cosmonaut taikonaut who', tonight: 'tonight sky stars above me passes meteor', lookup: 'look up sky', moon: 'moon lunar', eclipses: 'eclipse eclipses', flybys: 'asteroid comet flyby flybys',
   weather: 'weather clouds rain radar wind storm', conj: 'near miss collision conjunction', space: 'solar system planets mars jupiter saturn venus mercury uranus neptune pluto stars galaxy',
   geo: 'geostationary geo belt tv satellites', tour: 'tour guide', launches: 'launch launches rocket spacex nasa artemis falcon starship countdown', flight: 'flight plane aircraft' };
 
@@ -30,7 +32,7 @@ async function find(q) {
   if (s.length < 2) return out;
   // views in the band
   for (const [go, words] of Object.entries(VIEW_WORDS)) if (words.split(' ').some(w => w.startsWith(s)) || go.startsWith(s)) {
-    const b = $(`#band [data-go="${go}"]`); if (b) out.push({ kind: 'view', go, label: b.textContent.trim(), sub: b.title || 'View' });
+    const b = $(`#band [data-go="${go}"]`); if (b) out.push({ kind: 'view', go, label: b.textContent.trim(), sub: b.title || 'View' }); else if (EXTRA[go]) out.push({ kind: 'view', go, label: EXTRA[go][0], sub: EXTRA[go][1] });
   }
   // flights: a ticket number, callsign, registration or hex
   const fq = /\d/.test(s) && /[a-z]/.test(s) ? parseFlightQuery(q) : null;   // a bare number is a NORAD id, not a flight
@@ -70,7 +72,7 @@ function draw(list, q) {
 }
 
 async function pick(r) {
-  if (r.kind === 'view') { $(`#band [data-go="${r.go}"]`).click(); return; }
+  if (r.kind === 'view') { const b = $(`#band [data-go="${r.go}"]`); if (b) b.click(); else PRESETS[r.go](); return; }
   if (r.kind === 'flight') { Flight.find(r.q); return; }
   if (r.kind === 'country') { const o = await Country.byIso(r.iso); if (o) { select(o); Country.fly(o); } return; }
   if (r.kind === 'obj') { const o = r.obj, lay = L[o.layer || (o.kind === 'air' ? (o.mil ? 'mil' : 'air') : o.kind === 'volcano' ? 'volcanoes' : o.kind === 'company' ? 'companies' : o.kind === 'launch' ? 'launches' : 'lighthouses')]; if (lay && !lay.on) { lay.on = true; syncDock(); hooks.applyVisibility(); } select(o); flyToObject(o); }

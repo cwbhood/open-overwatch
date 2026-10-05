@@ -14,6 +14,7 @@ import { findPasses, compass } from '../core/passes.js';
 import { showersFor } from '../core/meteors.js';
 import { Launches } from './launches.js';
 import { Eclipses } from './eclipses.js';
+import { Crew } from './crew.js';
 import { Country } from './country.js';
 import { oceanAt } from '../core/explain.js';
 import { haversine } from '../core/geo.js';
@@ -171,7 +172,7 @@ function render(initial = false) {
     up.length ? `${up.map(p => p.name).join(', ')} up` : '', `Moon ${Math.round(moon.lit * 100)}% lit`, S.aurora && S.aurora.level >= 2 ? S.aurora.text : ''].filter(Boolean).join(' · ');
   const c = card(`<div class="k" style="--c:#7dffa6">${demo ? 'Greenwich, London (example)' : `Your sky · ${lat.toFixed(2)}, ${lon.toFixed(2)} · saved on this device`}</div><h2>Tonight above you</h2>
     <p class="tn-head">${head}</p>
-    ${S.iss ? `<p class="tn-p" style="margin-top:6px">${esc(S.iss)}</p>` : ''}
+    ${S.iss ? `<p class="tn-p" style="margin-top:6px">${esc(S.iss)}${S.crew ? ` ${esc(S.crew)} <a href="#" id="tnCrew">Who?</a>` : ''}</p>` : ''}
     <h3>Clouds tonight</h3><p class="tn-p">${cl ? esc(cl.text) + (cl.next ? ' ' + esc(cl.next) : '') : S.cloudErr ? esc(S.cloudErr) : S.hours ? 'No dark sky to forecast.' : 'Checking the cloud forecast…'} <small>Forecast: Open-Meteo.com (CC BY 4.0)</small></p>
     <h3>Satellites you can see${S.computing ? ' <small>· still searching…</small>' : ''}</h3>
     <div class="tn-list">${list.filter(p => p.visible).map(p => passRow(p, S.passes.indexOf(p))).join('') || '<p class="note">None in sunlight against a dark sky in the next 24 hours. Passes in daylight happen, but you can\'t see them.</p>'}</div>
@@ -188,6 +189,7 @@ function render(initial = false) {
     <div class="acts"><button class="chipbtn" id="tnLook" style="color:#7dffa6">Look up</button><button class="chipbtn" id="tnShare">Share tonight</button>${demo ? '<button class="chipbtn" id="tnLoc">Use my location</button>' : '<button class="chipbtn" id="tnForget">Forget my location</button>'}</div>
     <p class="note">Times are yours (${esc(Intl.DateTimeFormat().resolvedOptions().timeZone || 'local')}). "Calendar" adds an event that reminds you 10 minutes before, even with this site closed. "Remind me" and aurora alerts work while this page is open in a tab.</p>`);
   bindPasses(c);
+  if (c.querySelector('#tnCrew')) c.querySelector('#tnCrew').onclick = e => { e.preventDefault(); S.open = false; Crew.open(); };
   if (c.querySelector('#tnEcl')) c.querySelector('#tnEcl').onclick = () => { S.open = false; Eclipses.watch(S.ecl.e); };
   c.querySelectorAll('[data-lch]').forEach(b => { b.onclick = () => { S.open = false; Launches.show(S.launches[+b.dataset.lch].l); }; });
   c.querySelectorAll('[data-met]').forEach(b => { b.onclick = () => {
@@ -212,6 +214,8 @@ function render(initial = false) {
 async function show(loc) {
   const run = ++S.run; S.open = true; S.loc = loc; S.passes = []; S.aurora = null; S.computing = true; render(true);
   const obs = observerAt(loc.lat, loc.lon), t0 = Date.now(), t1 = t0 + DAY;
+  S.crew = '';
+  Crew.load().then(() => { if (run === S.run) { S.crew = Crew.sentence(); render(); } }, () => {});
   S.ecl = null;
   Eclipses.nextFrom(loc.lat, loc.lon).then(x => { if (run === S.run) { S.ecl = x || false; render(); } }, e => console.warn('eclipse', e));
   S.iss = ''; S.launches = []; S.far = []; S.hours = null; S.cloudErr = '';

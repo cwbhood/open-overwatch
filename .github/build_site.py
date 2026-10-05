@@ -223,6 +223,23 @@ def mirror_launches(path):
         print(f'launches: FAILED {e}')
 
 
+
+def mirror_astronauts(path):
+    """Best effort: who is in space right now (Launch Library 2 astronauts with in_space=true; the same free API and limits as
+    the launches) -> data/astronauts.json: {t, source, results: [trimmed LL2 astronauts]} (src/core/crew.js reads them)."""
+    try:
+        url = 'https://ll.thespacedevs.com/2.3.0/astronauts/?in_space=true&mode=normal&limit=60'
+        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'}), timeout=90))
+        rows = [{'name': r.get('name'), 'type': {'name': (r.get('type') or {}).get('name')}, 'agency': {'abbrev': (r.get('agency') or {}).get('abbrev'), 'name': (r.get('agency') or {}).get('name')},
+                 'nationality': [{'alpha_2_code': n.get('alpha_2_code')} for n in (r.get('nationality') or [])], 'time_in_space': r.get('time_in_space'),
+                 'last_flight': r.get('last_flight'), 'wiki': r.get('wiki')} for r in d.get('results', [])]
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as fh:
+            json.dump({'t': int(time.time() * 1000), 'source': 'The Space Devs, Launch Library 2 (thespacedevs.com)', 'results': rows}, fh, separators=(',', ':'))
+        print(f'astronauts: {len(rows)} in space')
+    except Exception as e:
+        print(f'astronauts: FAILED {e}')
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     n = extract('HEAD', ['.'], OUT, SKIP_ROOT)
@@ -253,6 +270,7 @@ def main():
     mirror_wind(os.path.join(OUT, 'data', 'wind.json'))
     mirror_flybys(os.path.join(OUT, 'data', 'flybys.json'))
     mirror_launches(os.path.join(OUT, 'data', 'launches.json'))
+    mirror_astronauts(os.path.join(OUT, 'data', 'astronauts.json'))
     mirror_news(os.path.join(OUT, 'data', 'news.json'), os.path.join(OUT, 'data', 'countries.json'))
 
 

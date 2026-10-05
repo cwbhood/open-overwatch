@@ -1,0 +1,259 @@
+{
+"results": [
+{
+"name": "Jessica Meir",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "NASA"
+},
+"nationality": [
+{
+"alpha_2_code": "US"
+}
+],
+"time_in_space": "P438DT5H49M19S",
+"last_flight": "2026-02-13T10:15:56Z",
+"wiki": "https://en.wikipedia.org/wiki/Jessica_Meir"
+},
+{
+"name": "Jessica Watkins",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "NASA"
+},
+"nationality": [
+{
+"alpha_2_code": "US"
+}
+],
+"time_in_space": "P173DT22H38M18S",
+"last_flight": "2026-10-01T15:10:06Z",
+"wiki": "https://en.wikipedia.org/wiki/Jessica_Watkins"
+},
+{
+"name": "Starman",
+"type": {
+"name": "Non-Human"
+},
+"agency": {
+"abbrev": "SpX"
+},
+"nationality": [
+{
+"alpha_2_code": "??"
+}
+],
+"time_in_space": "P3162DT4H1M29S",
+"last_flight": "2018-02-06T20:45:00Z",
+"wiki": "https://en.wikipedia.org/wiki/Elon_Musk%27s_Tesla_Roadster"
+},
+{
+"name": "Joshua Kutryk",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "CSA"
+},
+"nationality": [
+{
+"alpha_2_code": "CA"
+}
+],
+"time_in_space": "P3DT9H36M24S",
+"last_flight": "2026-10-01T15:10:06Z",
+"wiki": "https://en.wikipedia.org/wiki/Joshua_Kutryk"
+},
+{
+"name": "Anna Kikina",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "RFSA"
+},
+"nationality": [
+{
+"alpha_2_code": "RU"
+}
+],
+"time_in_space": "P239DT19H59M52S",
+"last_flight": "2026-07-14T14:47:43Z",
+"wiki": "https://en.wikipedia.org/wiki/Anna_Kikina"
+},
+{
+"name": "Pyotr Dubrov",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "RFSA"
+},
+"nationality": [
+{
+"alpha_2_code": "RU"
+}
+],
+"time_in_space": "P437DT13H44M8S",
+"last_flight": "2026-07-14T14:47:43Z",
+"wiki": "https://en.wikipedia.org/wiki/Pyotr_Dubrov"
+},
+{
+"name": "Luke Delaney",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "NASA"
+},
+"nationality": [
+{
+"alpha_2_code": "US"
+}
+],
+"time_in_space": "P3DT9H36M43S",
+"last_flight": "2026-10-01T15:10:06Z",
+"wiki": "https://en.wikipedia.org/wiki/Luke_Delaney_(astronaut)"
+},
+{
+"name": "Jack Hathaway",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "NASA"
+},
+"nationality": [
+{
+"alpha_2_code": "US"
+}
+],
+"time_in_space": "P233DT14H30M53S",
+"last_flight": "2026-02-13T10:15:56Z",
+"wiki": "https://en.wikipedia.org/wiki/Jack_Hathaway"
+},
+{
+"name": "Anil Menon",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "NASA"
+},
+"nationality": [
+{
+"alpha_2_code": "US"
+}
+],
+"time_in_space": "P82DT9H59M7S",
+"last_flight": "2026-07-14T14:47:43Z",
+"wiki": "https://en.wikipedia.org/wiki/Anil_Menon_(astronaut)"
+},
+{
+"name": "Andrei Fedyaev",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "RFSA"
+},
+"nationality": [
+{
+"alpha_2_code": "RU"
+}
+],
+"time_in_space": "P419DT13H14M7S",
+"last_flight": "2026-02-13T10:15:56Z",
+"wiki": "https://en.wikipedia.org/wiki/Andrey_Fedyaev"
+},
+{
+"name": "Sophie Adenot",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "ESA"
+},
+"nationality": [
+{
+"alpha_2_code": "FR"
+}
+],
+"time_in_space": "P233DT14H31M2S",
+"last_flight": "2026-02-13T10:15:56Z",
+"wiki": "https://en.wikipedia.org/wiki/Sophie_Adenot"
+},
+{
+"name": "Zhu Yangzhu",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "CNSA"
+},
+"nationality": [
+{
+"alpha_2_code": "CN"
+}
+],
+"time_in_space": "P287DT8H19M16S",
+"last_flight": "2026-05-24T15:08:36Z",
+"wiki": "https://en.wikipedia.org/wiki/Zhu_Yangzhu"
+},
+{
+"name": "Sergey Teteryatnikov",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "RFSA"
+},
+"nationality": [
+{
+"alpha_2_code": "RU"
+}
+],
+"time_in_space": "P3DT9H37M24S",
+"last_flight": "2026-10-01T15:10:06Z",
+"wiki": null
+},
+{
+"name": "Zhang Zhiyuan",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "CNSA"
+},
+"nationality": [
+{
+"alpha_2_code": "CN"
+}
+],
+"time_in_space": "P133DT9H38M54S",
+"last_flight": "2026-05-24T15:08:36Z",
+"wiki": null
+},
+{
+"name": "Lai Ka-ying",
+"type": {
+"name": "Government"
+},
+"agency": {
+"abbrev": "CNSA"
+},
+"nationality": [
+{
+"alpha_2_code": "CN"
+}
+],
+"time_in_space": "P133DT9H38M54S",
+"last_flight": "2026-05-24T15:08:36Z",
+"wiki": null
+}
+]
+}
