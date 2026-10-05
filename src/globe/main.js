@@ -136,7 +136,7 @@ updateBand(); applyVisibility();
   if (EMBED) $('#embedOut').href = Share.link();   // the way out keeps the view
   return high;
 })();
-Sats.load().catch(e => toast('Satellites failed: ' + e.message));
+Sats.ready = Sats.load().catch(e => toast('Satellites failed: ' + e.message));   // Tonight waits for every group, not just the first
 // load the Solar System view in the background once the globe has settled, so zooming out never waits on it (its
 // start-up was 6 s of main-thread work on a phone, landing in the middle of the pinch); phones a little later
 { // ...and on phones only while nobody is touching it (the work would otherwise land in the middle of a gesture)

@@ -190,3 +190,10 @@ test('observer: WGS84 position and axes, and the Sun in the Earth-fixed frame', 
   // equinox 2024-03-20 03:06 UTC: the Sun on the equator; at 12:00 UTC it is near overhead at longitude ~ -2 (equation of time)
   const s = sunEcef(Date.parse('2024-03-20T12:00:00Z')); assert.ok(Math.abs(s.z) < 0.01 && s.x > 0.99, JSON.stringify(s));
 });
+
+test('clouds: gaps in the forecast are unknown, not clear sky', async () => {
+  const { hoursOf, night } = await import('../src/core/clouds.js');
+  const t0 = Date.parse('2026-10-05T18:00:00Z') / 1000, rows = hoursOf({ hourly: { time: [0, 1, 2, 3, 4, 5].map(i => t0 + i * 3600), cloud_cover: [90, null, null, null, 95, 92] } });
+  assert.equal(rows.length, 3);
+  const n = night(rows, (t0 + 0) * 1000, (t0 + 6 * 3600) * 1000); assert.ok(!n || !n.clear.length, JSON.stringify(n));
+});

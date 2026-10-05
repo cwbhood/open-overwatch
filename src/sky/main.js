@@ -30,7 +30,7 @@ const auroraGrid = async () => {
 };
 let borders = null;
 const countryName = async (lon, lat) => {
-  if (!borders) borders = Promise.all([fetchAsset('data/borders.json', 'json'), fetchAsset('data/countries.json', 'json')]).then(([b, c]) => ({ b: prepare(b), facts: c.countries }));
+  if (!borders) borders = Promise.all([fetchAsset('data/borders.json', 'json'), fetchAsset('data/countries.json', 'json')]).then(([b, c]) => ({ b: prepare(b), facts: c.countries })).catch(e => { borders = null; throw e; });   // retried next time
   const { b, facts } = await borders, k = countryAt(b, lon, lat);
   return k ? (facts[k.iso] && facts[k.iso].name) || k.name : null;
 };

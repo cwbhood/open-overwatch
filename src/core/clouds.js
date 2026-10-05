@@ -6,7 +6,8 @@ const HOUR = 3600e3;
 /** Hourly rows [{ t (ms), cloud, rain }] from an Open-Meteo response (timeformat=unixtime). */
 export function hoursOf(d) {
   const h = d && d.hourly; if (!h || !Array.isArray(h.time)) return [];
-  return h.time.map((t, i) => ({ t: t * 1000, cloud: +h.cloud_cover?.[i], rain: +(h.precipitation_probability?.[i] ?? 0) })).filter(r => Number.isFinite(r.cloud));
+  const num = v => v == null || v === '' ? NaN : +v;   // a gap in the forecast is unknown, not clear sky
+  return h.time.map((t, i) => ({ t: t * 1000, cloud: num(h.cloud_cover?.[i]), rain: +(h.precipitation_probability?.[i] ?? 0) || 0 })).filter(r => Number.isFinite(r.cloud));
 }
 
 /** Cloud cover (%) at ms: the hour it falls in (null outside the forecast). */

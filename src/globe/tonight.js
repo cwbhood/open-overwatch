@@ -30,7 +30,7 @@ const breathe = () => new Promise(r => setTimeout(r, 0));
 
 const home = {
   get: () => store.get('home', null),
-  set: (lat, lon) => store.set('home', { lat: +lat.toFixed(2), lon: +lon.toFixed(2) }),
+  set: (lat, lon) => { const h = { lat: +lat.toFixed(2), lon: +lon.toFixed(2) }; store.set('home', h); return h; },   // works even when storage is blocked
   forget: () => { try { localStorage.removeItem('oo3d.home'); localStorage.removeItem('oo3d.auroraWatch'); } catch (e) { /* private mode */ } },
 };
 const locate = () => new Promise(res => {
@@ -140,7 +140,7 @@ function intro(msg = '') {
   c.querySelector('#tnLoc').onclick = async () => {
     c.querySelector('#tnLoc').textContent = 'Finding you…';
     const p = await locate(); if (!p) return intro('Location was refused or unavailable. You can try Greenwich instead, or allow location for this site.');
-    home.set(p.latitude, p.longitude); show(home.get());
+    show(home.set(p.latitude, p.longitude));
   };
   c.querySelector('#tnGreen').onclick = () => show({ lat: 51.48, lon: 0, demo: true });
 }
@@ -184,7 +184,7 @@ function render(initial = false) {
     <div class="acts">${D.lookUp ? '<button class="chipbtn" id="tnLook" style="color:#7dffa6">Look up</button>' : ''}<button class="chipbtn" id="tnShare">Share tonight</button>${demo ? '<button class="chipbtn" id="tnLoc">Use my location</button>' : '<button class="chipbtn" id="tnForget">Forget my location</button>'}</div>
     <p class="note">Times are yours (${esc(Intl.DateTimeFormat().resolvedOptions().timeZone || 'local')}). "Calendar" adds an event that reminds you 10 minutes before, even with this site closed. "Remind me" and aurora alerts work while this page is open in a tab.</p>`);
   bindPasses(c);
-  if (c.querySelector('#tnCrew')) c.querySelector('#tnCrew').onclick = e => { e.preventDefault(); S.open = false; Crew.open(); };
+  if (c.querySelector('#tnCrew')) c.querySelector('#tnCrew').onclick = e => { e.preventDefault(); S.open = false; Crew.open({ back: () => Tonight.open() }); };
   if (c.querySelector('#tnEcl')) c.querySelector('#tnEcl').onclick = () => { S.open = false; D.watchEclipse(S.ecl.e); };
   c.querySelectorAll('[data-lch]').forEach(b => { b.onclick = () => { S.open = false; D.showLaunch(S.launches[+b.dataset.lch].l); }; });
   c.querySelectorAll('[data-met]').forEach(b => { b.onclick = () => {
@@ -194,7 +194,7 @@ function render(initial = false) {
   c.querySelector('#tnAur').onclick = async () => {
     if (watching) { try { localStorage.removeItem('oo3d.auroraWatch'); } catch (e) { /* private mode */ } toast('Aurora alerts off'); return render(); }
     if (!(await Alerts.permission())) return toast('Notifications are blocked or not supported in this browser', 4000);
-    store.set('auroraWatch', { lat, lon }); toast('Aurora alerts on: checked every 10 minutes while this page is open, once a night at most', 5000); render(); Tonight.watchAurora();
+    store.set('auroraWatch', { lat, lon }); toast('Aurora alerts on: checked every 10 minutes while this page is open, once a night at most', 5000); render(); Tonight.watchAurora(); Tonight.checkAurora();
   };
   c.querySelector('#tnShare').onclick = async () => {
     const url = 'https://cwbhood.github.io/open-overwatch/globe.html#go=tonight', text = S.summary + '\nSee yours:';
@@ -203,7 +203,7 @@ function render(initial = false) {
   };
   if (c.querySelector('#tnLook')) c.querySelector('#tnLook').onclick = () => { Tonight.close(); D.lookUp(); };
   if (c.querySelector('#tnForget')) c.querySelector('#tnForget').onclick = () => { home.forget(); toast('Location forgotten'); intro(); };
-  if (c.querySelector('#tnLoc')) c.querySelector('#tnLoc').onclick = async () => { const p = await locate(); if (p) { home.set(p.latitude, p.longitude); show(home.get()); } else toast('Location refused or unavailable', 4000); };
+  if (c.querySelector('#tnLoc')) c.querySelector('#tnLoc').onclick = async () => { const p = await locate(); if (p) show(home.set(p.latitude, p.longitude)); else toast('Location refused or unavailable', 4000); };
 }
 
 async function show(loc) {
@@ -218,13 +218,14 @@ async function show(loc) {
   farthest(Date.now()).then(x => { if (run === S.run) { S.far = x; render(); } }, e => console.warn('farthest', e));
   launchesNear(loc).then(x => { if (run === S.run) { S.launches = x; render(); } }, () => {});
   D.auroraGrid().then(g => { if (run === S.run) { S.aurora = auroraAt(g.coordinates, loc.lat, loc.lon); render(); } }, () => { if (run === S.run) { S.aurora = { level: 0, overhead: 0, text: 'NOAA\'s aurora forecast is unreachable right now.' }; render(); } });
-  if (!(await satsReady())) { S.computing = false; render(); return; }
+  const ok = await satsReady(); if (run !== S.run) return;   // a newer show() (another place) took over while satellites loaded
+  if (!ok) { S.computing = false; render(); return; }
   issNow().then(t => { if (run === S.run) { S.iss = t; render(); } }, () => {});
   const add = (s, name, short, ps) => { for (const p of ps) S.passes.push({ ...p, id: s.id, name, short }); };
   for (const [id, name, short] of MAIN) { const s = D.sats.byId.get(id); if (s) add(s, name, short, passesOf(s, obs, t0, t1)); }
   if (run !== S.run) return; render(); await breathe();
   for (const t of starlinkTrains(D.sats.list.filter(s => s.layer === 'starlink')).slice(0, 3)) {
-    const s = D.sats.byId.get(t.sat.id) || t.sat; add(s, `Starlink train (launched ${t.launch}, ${t.count} satellites in a line)`, 'Starlink train', passesOf(s, obs, t0, t1)); await breathe();
+    const s = D.sats.byId.get(t.sat.id) || t.sat; add(s, `Starlink train (launched ${t.launch}, ${t.count} satellites in a line)`, 'Starlink train', passesOf(s, obs, t0, t1)); await breathe(); if (run !== S.run) return;
   }
   if (run !== S.run) return; render();
   // the brightest other satellites, only when they climb high in a dark sky (a coarser search: there are ~150 of them)
@@ -253,7 +254,10 @@ async function forSat(s, loc) {
   bindPasses(c);
 }
 function bindPasses(c) {
-  c.querySelectorAll('[data-rem]').forEach(b => { b.onclick = () => { const p = S.passes[+b.dataset.rem]; Alerts.remind({ tag: `pass-${p.id}-${Math.round(p.rise / 60e3)}`, at: p.rise - 10 * 60e3, title: `${p.short} in 10 minutes`, body: describePass(p.short, p, { time }) }); }; });
+  c.querySelectorAll('[data-rem]').forEach(b => { b.onclick = () => { const p = S.passes[+b.dataset.rem], now = Date.now();
+    if (p.rise - 60e3 <= now) { toast(p.set > now ? `${p.short} is up now: look ${compass(p.azRise)} to ${compass(p.azSet)}!` : `${p.short} has already passed`, 6000); return; }
+    if (p.rise - 10 * 60e3 <= now) { Alerts.remind({ tag: `pass-${p.id}-${Math.round(p.rise / 60e3)}`, at: p.rise - 60e3, title: `${p.short} in 1 minute`, body: describePass(p.short, p, { time }) }); return; }   // closer than 10 minutes: a minute's warning
+    Alerts.remind({ tag: `pass-${p.id}-${Math.round(p.rise / 60e3)}`, at: p.rise - 10 * 60e3, title: `${p.short} in 10 minutes`, body: describePass(p.short, p, { time }) }); }; });
   c.querySelectorAll('[data-cal]').forEach(b => { b.onclick = () => { const p = S.passes[+b.dataset.cal]; Alerts.calendar([{ uid: `oo-${p.id}-${Math.round(p.rise / 60e3)}@open-overwatch`, start: p.rise, end: p.set, title: `${p.short} passes over: look ${compass(p.azRise)}`, details: describePass(p.name, p, { time }) + '\nhttps://cwbhood.github.io/open-overwatch/globe.html#go=tonight', alarmMin: 10 }], `${p.short.toLowerCase().replace(/\W+/g, '-')}-pass.ics`); }; });
 }
 
@@ -272,10 +276,14 @@ export const Tonight = {
   /** Passes of one satellite over the saved location (asks for it first if there isn't one). */
   async forSat(s) {
     S.open = false; S.run++;
+    const c = card(`<div class="k" style="--c:#7dffa6">Passes over you</div><h2>${esc(s.name)}</h2><p class="note" data-wait="see">Finding where you are…</p>`);
+    const mine = () => !!c.querySelector('[data-wait="see"]');   // the user opened something else meanwhile: leave it be
     let h = home.get();
-    if (!h) { toast('Finding where you are…'); const p = await locate(); if (p) { home.set(p.latitude, p.longitude); h = home.get(); } else { h = { lat: 51.48, lon: 0, demo: true }; toast('Location unavailable: showing passes over Greenwich', 4000); } }
-    if (!(await satsReady())) return;
-    forSat(s, h);
+    if (!h) { const p = await locate(); if (p) h = home.set(p.latitude, p.longitude); else { h = { lat: 51.48, lon: 0, demo: true }; toast('Location unavailable: showing passes over Greenwich', 4000); } }
+    if (!mine()) return;
+    c.querySelector('[data-wait="see"]').textContent = 'Working it out…';
+    if (!(await satsReady())) { if (mine()) c.querySelector('[data-wait="see"]').textContent = "The satellite orbits aren't loaded yet: try again in a moment."; return; }
+    if (mine()) forSat(s, h);
   },
   close() { S.open = false; S.run++; $('#card').classList.remove('show'); },
   /** After boot: if this device has a saved location, say the next thing worth seeing in one line. */
@@ -306,6 +314,7 @@ export const Tonight = {
       const a = auroraAt((await D.auroraGrid()).coordinates, w.lat, w.lon);
       if (a.level >= 2) { store.set('auroraSaid', now); Alerts.now('Aurora likely now', a.text, 'aurora'); }
     };
-    this._aw = setInterval(() => check().catch(e => console.warn('aurora watch', e)), 10 * 60e3); check().catch(() => {});
+    this.checkAurora = () => check().catch(e => console.warn('aurora watch', e));
+    this._aw = setInterval(this.checkAurora, 10 * 60e3); this.checkAurora();
   },
 };

@@ -46,7 +46,7 @@ export const Alerts = {
   calendar(events, name = 'sky-alert.ics') {
     const url = URL.createObjectURL(new Blob([makeIcs(events)], { type: 'text/calendar' })), a = document.createElement('a');
     a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 10e3);
-    toast('Calendar file saved: open it to add the reminder (10 minutes before)', 5000);
+    const m = events[0] && events[0].alarmMin; toast(`Calendar file saved: open it to add the event${m != null ? ` (reminder ${m} minutes before)` : ''}`, 5000);
   },
   /** Re-arm saved reminders (page load). */
   init() { const l = this.list; store.set('alerts', l); for (const a of l) arm(a); if (l.length && 'Notification' in window && Notification.permission === 'granted') permission(); },
