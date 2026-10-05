@@ -628,11 +628,13 @@ iss(); quakes(); setInterval(iss, 5000); setInterval(quakes, 120000);
 // next rocket launch: the site build's copy of Launch Library 2 (data/launches.json, every 6 h); the row stays hidden without it
 (async () => {
   try {
-    const d = await (await fetch('data/launches.json')).json(), now = Date.now();
-    const l = (d.results || []).map(r => ({ t: Date.parse(r.net), p: r.net_precision && r.net_precision.abbrev, rocket: r.rocket && r.rocket.configuration && (r.rocket.configuration.full_name || r.rocket.configuration.name), mission: r.mission && r.mission.name, where: r.pad && r.pad.location && r.pad.location.name }))
-      .filter(x => x.t > now && ['SEC', 'MIN', 'HR'].includes(x.p)).sort((a, b) => a.t - b.t)[0];
-    if (!l) return;
-    const tick = () => { const s = Math.max(0, Math.round((l.t - Date.now()) / 1000)), dd = Math.floor(s / 86400), hms = [Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60].map(v => String(v).padStart(2, '0')).join(':');
+    const d = await (await fetch('data/launches.json')).json();
+    const list = (Array.isArray(d.results) ? d.results : []).filter(r => r && typeof r === 'object').map(r => ({ t: Date.parse(r.net), p: r.net_precision && r.net_precision.abbrev, rocket: r.rocket && r.rocket.configuration && (r.rocket.configuration.full_name || r.rocket.configuration.name), mission: r.mission && r.mission.name, where: r.pad && r.pad.location && r.pad.location.name }))
+      .filter(x => Number.isFinite(x.t) && ['SEC', 'MIN', 'HR'].includes(x.p)).sort((a, b) => a.t - b.t);
+    if (!list.some(x => x.t > Date.now())) return;
+    const tick = () => {   // after lift-off (or a scrub the 6-hourly copy hasn't caught yet) move on to the next one
+      const l = list.find(x => x.t > Date.now()); if (!l) { $('#lchRow').hidden = true; return; }
+      const s = Math.round((l.t - Date.now()) / 1000), dd = Math.floor(s / 86400), hms = [Math.floor(s / 3600) % 24, Math.floor(s / 60) % 60, s % 60].map(v => String(v).padStart(2, '0')).join(':');
       $('#lch').innerHTML = esc('T-' + (dd ? dd + ' d ' : '') + hms) + '<small>' + esc((l.rocket || 'Rocket') + ' · ' + (l.mission || '') + (l.where ? ' · ' + l.where : '')) + '</small>'; };
     tick(); setInterval(tick, 1000); $('#lchRow').hidden = false;
   } catch (e) { /* no launch copy here (local preview): leave the row out */ }

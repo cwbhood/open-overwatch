@@ -36,7 +36,7 @@ const PLANETS = [['mercury', 'Mercury', '#d9c7b0'], ['venus', 'Venus', '#fff1c9'
 // ICRF axes around the origin; each second their modelMatrix turns them with the Earth and centres them on you.
 const CON = { data: null, lines: null, names: null, on: true };
 async function constellations() {
-  if (!CON.data) CON.data = await fetchAsset('data/constellations.json', 'json').catch(e => { console.warn('constellations', e); return { figures: [] }; });
+  if (!CON.data) { try { CON.data = await fetchAsset('data/constellations.json', 'json'); } catch (e) { console.warn('constellations', e); return; } }   // not cached: the next visit to look-up tries again
   if (!S.active || CON.lines) return;
   const col = C.Color.fromCssColorString('#6f8fb8').withAlpha(0.55), mat = C.Material.fromType('Color', { color: col });
   CON.lines = scene.primitives.add(new C.PolylineCollection()); CON.names = scene.primitives.add(new C.LabelCollection());

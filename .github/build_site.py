@@ -196,11 +196,15 @@ LL2_KEEP = {'id': 1, 'name': 1, 'net': 1, 'window_start': 1, 'window_end': 1, 'n
 
 
 def _keep(o, spec):
+    """Trim o to the keys in spec. Tolerant of odd shapes (a dict where a list was expected...): they become {} / [].
+    Lists keep 3 items, highest 'priority' first (webcasts: the official stream must not be the one cut)."""
     if isinstance(spec, dict):
-        return {k: _keep(o[k], v) for k, v in spec.items() if isinstance(o, dict) and o.get(k) is not None}
+        return {k: _keep(o[k], v) for k, v in spec.items() if o.get(k) is not None} if isinstance(o, dict) else {}
     if isinstance(spec, list):
-        return [_keep(x, spec[0]) for x in (o or [])[:3]]
-    return o
+        items = [x for x in o if isinstance(x, dict)] if isinstance(o, list) else []
+        items.sort(key=lambda x: -(x.get('priority') if isinstance(x.get('priority'), (int, float)) else 0))
+        return [_keep(x, spec[0]) for x in items[:3]]
+    return o if isinstance(o, (str, int, float, bool)) else None
 
 
 def mirror_launches(path):
@@ -211,10 +215,10 @@ def mirror_launches(path):
         d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'}), timeout=90))
         rows = []
         for r in d.get('results', []):
-            k = _keep(r, LL2_KEEP)
+            k = _keep(r, LL2_KEEP)   # one odd record is dropped or trimmed, never the whole file
             m = k.get('mission') or {}
-            if m.get('description'): m['description'] = m['description'][:600]
-            rows.append(k)
+            if isinstance(m.get('description'), str): m['description'] = m['description'][:600]
+            if k.get('pad'): rows.append(k)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w', encoding='utf-8') as fh:
             json.dump({'t': int(time.time() * 1000), 'source': 'The Space Devs, Launch Library 2 (thespacedevs.com)', 'results': rows}, fh, separators=(',', ':'))
@@ -230,9 +234,8 @@ def mirror_astronauts(path):
     try:
         url = 'https://ll.thespacedevs.com/2.3.0/astronauts/?in_space=true&mode=normal&limit=60'
         d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'}), timeout=90))
-        rows = [{'name': r.get('name'), 'type': {'name': (r.get('type') or {}).get('name')}, 'agency': {'abbrev': (r.get('agency') or {}).get('abbrev'), 'name': (r.get('agency') or {}).get('name')},
-                 'nationality': [{'alpha_2_code': n.get('alpha_2_code')} for n in (r.get('nationality') or [])], 'time_in_space': r.get('time_in_space'),
-                 'last_flight': r.get('last_flight'), 'wiki': r.get('wiki')} for r in d.get('results', [])]
+        keep = {'name': 1, 'type': {'name': 1}, 'agency': {'abbrev': 1, 'name': 1}, 'nationality': [{'alpha_2_code': 1}], 'time_in_space': 1, 'last_flight': 1, 'wiki': 1}
+        rows = [k for k in (_keep(r, keep) for r in d.get('results', [])) if k.get('name')]   # odd shapes become {} / [], never an exception
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w', encoding='utf-8') as fh:
             json.dump({'t': int(time.time() * 1000), 'source': 'The Space Devs, Launch Library 2 (thespacedevs.com)', 'results': rows}, fh, separators=(',', ':'))
