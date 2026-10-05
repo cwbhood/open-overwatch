@@ -5,6 +5,7 @@
 import { C, toast } from './env.js';
 import { viewer, scene, camera, camHeight } from './viewer.js';
 import { L } from './layers.js';
+import { state } from './state.js';
 
 const CELL = 0.01, MAX_H = 2500, MAX_CELLS = 40, MAX_PER_CELL = 2500, GAP_MS = 6000;
 const ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
@@ -39,7 +40,7 @@ function build(els) {
 }
 
 async function tick() {
-  const on = L.buildings.on, low = camHeight() < MAX_H;
+  const on = L.buildings.on && !state.lookup, low = camHeight() < MAX_H;   // from look-up's eye height they'd tower over the sky
   for (const c of cells.values()) if (c.prim) c.prim.show = on && low;
   if (!on || !low || busy || performance.now() - last < GAP_MS) return;
   const p = camera.pickEllipsoid(new C.Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight / 2), scene.globe.ellipsoid) || camera.positionWC;

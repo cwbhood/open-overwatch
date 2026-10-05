@@ -169,13 +169,14 @@ function nextPass() {
 
 // ---- enter / leave
 async function enter() {
-  if (S.active) return;
+  if (S.active || S.starting) return;   // a second call while the first waits on permissions would double everything
+  S.starting = true; S.cancel = false;
   // iOS asks for motion permission, and only from inside a tap: ask first, before anything awaits
   let motionOk = true;
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     try { motionOk = (await DeviceOrientationEvent.requestPermission()) === 'granted'; } catch (e) { motionOk = false; }
   }
-  release(); Time.goLive();
+  release(); Time.goLive(); hooks.closeCard?.();   // a selected satellite would keep its model and orbit line in the sky
   S.saved = { pos: C.Cartesian3.clone(camera.positionWC), dir: C.Cartesian3.clone(camera.directionWC), up: C.Cartesian3.clone(camera.upWC), fov: camera.frustum.fov,
     inputs: ctrl.enableInputs, base: C.Color.clone(globe.baseColor), dock: $('#dock').classList.contains('open') };
   $('#lookup').classList.add('on'); document.body.classList.add('lookup'); $('#luWhere').textContent = 'Finding where you are…';
@@ -183,6 +184,8 @@ async function enter() {
     if (!navigator.geolocation) return res(null);
     navigator.geolocation.getCurrentPosition(p => res(p.coords), () => res(null), { timeout: 9000, maximumAge: 600e3 });
   });
+  S.starting = false;
+  if (S.cancel) { $('#lookup').classList.remove('on'); document.body.classList.remove('lookup'); return; }   // "Done" (or Esc) while it was starting
   S.obs = loc ? observerAt(loc.latitude, loc.longitude) : observerAt(FALLBACK.lat, FALLBACK.lon);
   $('#luWhere').textContent = loc ? `Your sky · ${loc.latitude.toFixed(2)}, ${loc.longitude.toFixed(2)} (stays on this device)` : FALLBACK.name;
   S.active = true; state.lookup = true; hooks.applyVisibility(); S.sensor = false; S.dir = S.up = null;
@@ -225,6 +228,7 @@ async function enter() {
 }
 
 function leave() {
+  if (S.starting) { S.cancel = true; $('#lookup').classList.remove('on'); document.body.classList.remove('lookup'); return; }
   if (!S.active) return;
   S.active = false; state.lookup = false; clearInterval(S.timer); clearInterval(S.passTimer); if (!Time.live) Time.goLive(); else hooks.applyVisibility();
   removeEventListener('deviceorientationabsolute', onOrientation); removeEventListener('deviceorientation', onOrientation);

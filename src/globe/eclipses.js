@@ -51,9 +51,10 @@ function clear() { for (const x of Ecl.ents) viewer.entities.remove(x); Ecl.ents
 
 async function openList() {
   const card = $('#card'); state.selected = null;
-  card.innerHTML = '<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ffd27a">Solar eclipses · 2027–2030</div><h2>Eclipses</h2><p class="note">Loading…</p>';
+  card.innerHTML = '<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ffd27a">Solar eclipses · 2027–2030</div><h2>Eclipses</h2><p class="note" data-wait="ecl">Loading…</p>';
   card.classList.add('show'); card.querySelector('.x').onclick = close;
-  let list; try { list = await load(); } catch (e) { card.querySelector('.note').textContent = 'The eclipse data could not be loaded.'; return; }
+  let list; try { list = await load(); } catch (e) { const n = card.querySelector('[data-wait="ecl"]'); if (n) n.textContent = 'The eclipse data could not be loaded.'; return; }
+  if (!card.querySelector('[data-wait="ecl"]')) return;   // another card opened while this loaded
   const now = Date.now(), rows = list.filter(e => msFromJd(e.jd0 + e.sun.length / 1440) > now);
   card.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ffd27a">Solar eclipses · 2027–2030</div><h2>Eclipses</h2>
     <p class="note">Sun and Moon from NASA JPL, every minute. Pick one to watch the Moon's shadow cross the Earth.</p>
@@ -124,7 +125,8 @@ function hud(first) {
   let where = 'The Moon\'s shadow is off the Earth right now';
   if (inWin) { const { sun, moon } = e.at(m), s = shadowCenter(sun, moon); if (s.center) where = `Shadow centre over ${latlon(s.center)} · ${Math.round(2 * Math.abs(s.umbra))} km wide`; else where = 'Partial eclipse only (the shadow axis misses the Earth)'; }
   const g = e.greatest, card = $('#card');
-  card.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ffd27a">${esc(KIND[e.type])} solar eclipse</div><h2>${esc(new Date(e.date + 'T12:00:00Z').toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }))}</h2><dl>
+  if (!first && !card.querySelector('[data-ecl]')) return;   // another card took over: the shadow keeps running, the card is theirs
+  card.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" data-ecl style="--c:#ffd27a">${esc(KIND[e.type])} solar eclipse</div><h2>${esc(new Date(e.date + 'T12:00:00Z').toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }))}</h2><dl>
     <dt>Now</dt><dd>${esc(fmtUtc(Time.nowMs()))}</dd><dt>Shadow</dt><dd>${esc(where)}</dd>
     ${g.s.center ? `<dt>Greatest</dt><dd>${esc(latlon(g.s.center))} · ${esc(fmtUtc(msFromJd(e.jd0 + g.m / 1440)))}</dd><dt>${e.type === 'annular' ? 'Ring of fire' : 'Totality'}</dt><dd>${Math.floor(e.duration / 60)} min ${e.duration % 60} s at greatest · shadow ~${Math.round(e.width)} km across</dd>` : ''}</dl>
     <p class="note">Sun and Moon from NASA JPL Horizons, minute by minute; the shadow is computed live. Black: where the Sun is fully covered; dashed: the edge of the partial eclipse.</p>

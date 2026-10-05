@@ -5,6 +5,7 @@
 import { C } from './env.js';
 import { scene } from './viewer.js';
 import { L, setCount } from './layers.js';
+import { state } from './state.js';
 import { fetchAsset } from '../core/assets.js';
 
 const dots = scene.primitives.add(new C.PointPrimitiveCollection());
@@ -34,7 +35,7 @@ export const Companies = {
         o.pt = dots.add({ position: p1, pixelSize: 7, color: col, outlineColor: col.withAlpha(0.35), outlineWidth: 5, distanceDisplayCondition: ddc, show: L.companies.on, id: o });
         this.list.push(o);
       }
-      towers = scene.primitives.add(new C.Primitive({ geometryInstances: shafts, appearance: new C.PolylineColorAppearance({ translucent: true }), show: L.companies.on }));
+      towers = scene.primitives.add(new C.Primitive({ geometryInstances: shafts, appearance: new C.PolylineColorAppearance({ translucent: true }), show: L.companies.on && !state.lookup }));
       setCount('companies', this.list.length);
     }).catch(e => { this.loading = null; console.warn('companies', e); });
     return this.loading;

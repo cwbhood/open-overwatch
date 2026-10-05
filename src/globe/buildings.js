@@ -6,6 +6,7 @@
 import { C, store, toast } from './env.js';
 import { viewer, camHeight } from './viewer.js';
 import { L } from './layers.js';
+import { state } from './state.js';
 import { ION_TOKEN } from './config.js';
 import { OsmBuildings } from './osmbuildings.js';
 
@@ -26,5 +27,5 @@ export const Buildings = {
     }
     this.tick();
   },
-  tick() { if (this.tileset) { this.tileset.show = L.buildings.on && camHeight() < 1.5e5; viewer.scene.requestRender(); } },
+  tick() { if (this.tileset) { this.tileset.show = L.buildings.on && !state.lookup && camHeight() < 1.5e5; viewer.scene.requestRender(); } },
 };

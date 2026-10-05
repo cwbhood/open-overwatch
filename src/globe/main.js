@@ -86,7 +86,7 @@ initMobile();   // phones only: the bottom dock
 initNavpad();
 initWeather();   // everything else: zoom, north and reset buttons
 $('#luExit').onclick = () => LookUp.leave();
-addEventListener('keydown', e => { if (e.key === 'Escape' && LookUp.active) LookUp.leave(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && (LookUp.active || LookUp.state.starting)) LookUp.leave(); });
 setInterval(() => SatModels.refresh(), 400);
 setInterval(() => AirModels.refresh(), 500);
 // aircraft dead reckoning: 4 times a second close in, once a second from high up (a quarter-second of flight is invisible

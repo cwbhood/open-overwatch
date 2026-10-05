@@ -28,9 +28,10 @@ export const Crew = {
   },
   async open() {
     const c = $('#card'); state.selected = null;
-    c.innerHTML = '<button class="x" aria-label="Close">×</button><div class="k" style="--c:#7dffa6">Launch Library 2</div><h2>People in space</h2><p class="note">Loading…</p>'; c.classList.add('show');
+    c.innerHTML = '<button class="x" aria-label="Close">×</button><div class="k" style="--c:#7dffa6">Launch Library 2</div><h2>People in space</h2><p class="note" data-wait="crew">Loading…</p>'; c.classList.add('show');
     c.querySelector('.x').onclick = () => c.classList.remove('show');
-    let w; try { w = await this.load(); } catch (e) { c.querySelector('.note').textContent = "The crew list isn't reachable right now."; return; }
+    let w; try { w = await this.load(); } catch (e) { const n = c.querySelector('[data-wait="crew"]'); if (n) n.textContent = "The crew list isn't reachable right now."; return; }
+    if (!c.querySelector('[data-wait="crew"]')) return;   // another card opened while this loaded
     c.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" style="--c:#7dffa6">Right now · Launch Library 2</div><h2>People in space</h2>
       <p class="tn-head">${esc(crewSentence(w))}</p>
       ${w.stations.map(s => `<h3>${esc(s.name)} · ${s.crew.length}</h3><div class="tn-list">${s.crew.map(p => this.row(p)).join('')}</div>`).join('')}

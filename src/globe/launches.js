@@ -25,7 +25,7 @@ export const Launches = {
       let d = await fetchAsset('data/launches.json', 'json').catch(() => null), src = 'site copy';
       if (!d || !d.results) { const r = await fetch(API); if (!r.ok) throw new Error('HTTP ' + r.status); d = await r.json(); src = 'live'; }
       this.list = upcoming((d.results || []).map(fromLL2).filter(Boolean).map(l => ({ ...l, kind: 'launch' })), Date.now());
-      this.at = d.t || Date.now(); this.src = src;
+      this.at = d.t || Date.now(); this.src = src; this.error = '';
       viewer.creditDisplay.addStaticCredit(new C.Credit('Launch data: The Space Devs, Launch Library 2'));
       this.draw(); setCount('launches', this.list.length);
     })().catch(e => { console.warn('launches', e); this.error = "The launch schedule isn't reachable right now."; this.loading = null; });
@@ -45,15 +45,16 @@ export const Launches = {
   },
   relabel() { const now = Date.now(); for (const l of this.list) if (l.label) l.label.text = `🚀 ${l.rocket}${precise(l) ? ' · ' + countdown(l.net, now).replace(/:\d\d$/, '') : ''}`; },
   apply() {
-    pts.show = labels.show = L.launches.on;
+    pts.show = labels.show = L.launches.on && !state.lookup;   // look-up mode hides things on the ground
     if (L.launches.on && !this.loading) this.load();
     clearInterval(this.labelTimer); if (L.launches.on) this.labelTimer = setInterval(() => this.relabel(), 30e3);
     scene.requestRender();
   },
   async openList() {
     const card = $('#card'); state.selected = null; clearInterval(this.tick);
-    card.innerHTML = '<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ff9f5c">Launch Library 2</div><h2>Launches</h2><p class="note">Loading…</p>'; card.classList.add('show');
+    card.innerHTML = '<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ff9f5c">Launch Library 2</div><h2>Launches</h2><p class="note" data-wait="lc">Loading…</p>'; card.classList.add('show');
     card.querySelector('.x').onclick = () => this.close(); await this.load();
+    if (!card.querySelector('[data-wait="lc"]')) return;   // another card opened while the schedule loaded
     const rows = upcoming(this.list, Date.now());
     const row = (l, i) => { const [st, col] = STATUS[l.status] || [l.statusName || l.status, '#8b9bab']; return `<button class="cj lc" data-i="${i}"><b style="color:#ff9f5c" data-cd="${i}">${precise(l) ? esc(countdown(l.net, Date.now()).replace(/^T-(\d+) d .*/, 'T-$1 d')) : '—'}</b><span>${esc(l.mission)}</span><small>${esc(l.rocket)} · ${esc(l.provider)} · ${esc(l.place || l.pad)}<br><i style="color:${col};font-style:normal">${esc(st)}</i> · ${esc(precise(l) ? local(l.net) : when(l))}</small></button>`; };
     card.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ff9f5c">Next ${rows.length} launches · ${this.src === 'live' ? 'live' : 'updated every 6 hours'}</div><h2>Launches</h2>

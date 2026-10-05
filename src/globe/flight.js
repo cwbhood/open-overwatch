@@ -51,11 +51,12 @@ export const Flight = {
   async find(text) {
     const q = parseFlightQuery(text);
     if (!q) return this.open('That doesn\'t look like a flight number, callsign, registration or hex code.');
-    this.query = q; this.stop();
+    this.query = q; this.stop(); const run = this.run = (this.run || 0) + 1;
     if ($('#flMsg')) $('#flMsg').textContent = 'Looking…';
     Time.goLive();
     let r = [...Air.map.values()].find(x => matchesFlight(x, q));
     if (RELAY) r = (await lookup(q).catch(() => null)) || r;
+    if (run !== this.run) return;   // a newer search took over
     if (!r) {
       const map = `<a class="chipbtn" href="${esc(liveMap(q))}" target="_blank" rel="noopener" style="color:#5fd3ff">Open on adsb.lol's live map ↗</a>`;
       const why = RELAY ? `${esc(q.label)} isn't in the air right now, or no volunteer receiver can hear it (oceans and remote areas have gaps).`
@@ -65,10 +66,10 @@ export const Flight = {
     const lay = L[r.mil ? 'mil' : 'air']; if (!lay.on) { lay.on = true; syncDock(); hooks.applyVisibility(); }
     this.rec = r; select(r); AirModels.follow(r);
     toast(`Found ${r.flight || r.hex}${r.reg ? ' · ' + r.reg : ''} · following it`, 4000);
-    if (RELAY) this.timer = setInterval(() => {   // keep it fresh while you are following or looking at it
-      if (Follow.obj !== r && state.selected !== r) return this.stop();
+    if (RELAY) { const id = this.timer = setInterval(() => {   // keep it fresh while you are following or looking at it
+      if (Follow.obj !== r && state.selected !== r) { clearInterval(id); if (this.timer === id) this.timer = 0; return; }
       lookup({ hex: r.hex, reg: '', callsigns: [] }).then(x => { if (x && state.selected === x) hooks.reselect(x); }).catch(() => {});
-    }, 15e3);
+    }, 15e3); }
   },
   stop() { clearInterval(this.timer); this.timer = 0; },
 };

@@ -106,6 +106,7 @@ handler.setInputAction(c => {
 // double-click a satellite or aircraft to follow it (replaces Cesium's default entity tracking)
 viewer.screenSpaceEventHandler.removeInputAction(C.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 handler.setInputAction(c => {
+  if (state.lookup) return;   // following would fight look-up's camera
   const o = pickObj(c.position); if (!o) return;
   if (o.kind === 'sat') { select(o); SatModels.follow(o); } else if (o.kind === 'air') { select(o); AirModels.follow(o); }
 }, C.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
@@ -153,6 +154,7 @@ export function select(o) {
   if ($('#btnFollow')) $('#btnFollow').onclick = () => following ? Follow.stop() : o.kind === 'air' ? AirModels.follow(o) : SatModels.follow(o);
 }
 hooks.reselect = select;
+hooks.closeCard = () => closeCard();
 export function closeCard() { state.selected = null; orbitLines.removeAll(); Country.clear(); $('#card').classList.remove('show'); }
 export function flyToObject(o) {
   release();
