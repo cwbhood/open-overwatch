@@ -32,11 +32,11 @@ function subject() {
 
 async function compose() {
   const shot = await frame(), W = Math.min(shot.width, 1600), k = W / shot.width, H0 = Math.round(shot.height * k);
-  const portrait = H0 > W, bar = Math.round(W * (portrait ? 0.2 : 0.09)), out = document.createElement('canvas');
+  const portrait = H0 > W, bar = Math.round(W * (portrait ? 0.2 : 0.105)), out = document.createElement('canvas');
   out.width = W; out.height = H0 + bar;
   const g = out.getContext('2d'); g.drawImage(shot, 0, 0, W, H0);
   g.fillStyle = '#05080c'; g.fillRect(0, H0, W, bar); g.fillStyle = '#7dffa6'; g.fillRect(0, H0, W, Math.max(2, Math.round(bar * 0.03)));
-  const pad = Math.round(bar * 0.22), big = Math.round(bar * (portrait ? 0.2 : 0.27)), small = Math.round(big * 0.62);
+  const pad = Math.round(bar * 0.16), big = Math.round(bar * (portrait ? 0.2 : 0.24)), small = Math.round(big * 0.62);   // three lines fit: pad + big + 2.9 small + descenders
   const when = new Date(Time.nowMs()).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const counts = [['#sSat', 'satellites'], ['#sAir', 'aircraft']].map(([id, w]) => { const t = $(id) && $(id).textContent; return t && t !== '—' ? `${t} ${w}` : ''; }).filter(Boolean).join(' · ');
   const emblem = await EMBLEM, e = Math.round(bar * 0.5);

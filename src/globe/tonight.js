@@ -19,6 +19,8 @@ const time = ms => {
   const d = new Date(ms), t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString([], { weekday: 'short' }) + ' ' + t;
 };
+// catalogue names, made readable: "SL-16 R/B" is the spent upper stage of a Zenit rocket, bright because it is big
+const friendly = n => / R\/B$/.test(n) ? `${n.replace(/ R\/B$/, '')} rocket stage` : / DEB$/.test(n) ? `${n.replace(/ DEB$/, '')} debris` : n;
 const breathe = () => new Promise(r => setTimeout(r, 0));
 
 const home = {
@@ -115,7 +117,7 @@ async function show(loc) {
     await breathe(); if (run !== S.run) return;
   }
   bright.sort((a, b) => b[0].maxEl - a[0].maxEl);
-  const seen = new Set(); for (const [p, s] of bright) { if (seen.has(s.id) || seen.size >= 4) continue; seen.add(s.id); add(s, `${s.name} (bright satellite)`, s.name, [p]); }
+  const seen = new Set(); for (const [p, s] of bright) { if (seen.has(s.id) || seen.size >= 4) continue; seen.add(s.id); add(s, `${friendly(s.name)} (bright satellite)`, friendly(s.name), [p]); }
   S.computing = false; render();
 }
 
