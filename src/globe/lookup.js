@@ -4,7 +4,8 @@
 // brightest star names, a compass ring, labels for what is overhead and the next ISS pass. The ground is a plain dark
 // sphere (no map tiles), and your location never leaves the page.
 import { C, $, esc, fmt, toast, PHONE } from './env.js';
-import { viewer, scene, camera, globe, ctrl } from './viewer.js';
+import { viewer, scene, camera, globe, ctrl, satPts } from './viewer.js';
+import { state, hooks } from './state.js';
 import { Earth, sunDirection } from './earth.js';
 import { Sats } from './satellites.js';
 import { Air } from './aircraft.js';
@@ -108,6 +109,7 @@ function refresh() {
   // satellites above the horizon: count all, label the brightest ones. Not far from today: orbits from this week's
   // elements drift by kilometres a day, and nothing tells us what was up in 1990
   const away = Math.abs(Time.nowMs() - Date.now()) / 86400e3;
+  satPts.show = away < 3;
   let above = 0; const bright = [];
   if (away < 3) for (const s of Sats.list) {
     if (!s.pt || !s.pt.position || s.docked) continue;
@@ -162,7 +164,7 @@ async function enter() {
   });
   S.obs = loc ? observerAt(loc.latitude, loc.longitude) : observerAt(FALLBACK.lat, FALLBACK.lon);
   $('#luWhere').textContent = loc ? `Your sky · ${loc.latitude.toFixed(2)}, ${loc.longitude.toFixed(2)} (stays on this device)` : FALLBACK.name;
-  S.active = true; S.sensor = false; S.dir = S.up = null;
+  S.active = true; state.lookup = true; S.sensor = false; S.dir = S.up = null;
   Earth.hidden = true; Earth.apply(); globe.baseColor = C.Color.fromCssColorString('#0b0f14');
   ctrl.enableInputs = false; camera.frustum.fov = S.fov * D;
   S.labels = scene.primitives.add(new C.LabelCollection()); S.points = scene.primitives.add(new C.PointPrimitiveCollection());
@@ -193,7 +195,7 @@ async function enter() {
 
 function leave() {
   if (!S.active) return;
-  S.active = false; clearInterval(S.timer); clearInterval(S.passTimer); if (!Time.live) Time.goLive();
+  S.active = false; state.lookup = false; clearInterval(S.timer); clearInterval(S.passTimer); if (!Time.live) Time.goLive(); else hooks.applyVisibility();
   removeEventListener('deviceorientationabsolute', onOrientation); removeEventListener('deviceorientation', onOrientation);
   const cv = scene.canvas; cv.removeEventListener('pointerdown', S.onDown); removeEventListener('pointermove', S.onMove); removeEventListener('pointerup', S.onUp); cv.removeEventListener('wheel', S.onWheel);
   scene.preRender.removeEventListener(frame);

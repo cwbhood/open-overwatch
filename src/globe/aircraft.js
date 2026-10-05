@@ -151,6 +151,7 @@ export const AirModels = {
     const on = airShown(r); r.pt.show = on; r.icon.show = on;
   },
   refresh() {
+    if (state.lookup) { for (const r of [...this.pool.values()]) this.drop(r); return; }   // look-up mode labels aircraft instead
     const want = new Set();
     if (camHeight() < this.ceiling) {
       const cam = camera.positionWC, near = [];

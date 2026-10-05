@@ -39,6 +39,8 @@ async function find(q) {
     for (const r of here) out.push({ kind: 'obj', obj: r, label: `✈ ${r.flight || r.hex}`, sub: `${r.reg ? r.reg + ' · ' : ''}${r.ground ? 'on the ground' : fmt((r.alt || 0) / 0.3048) + ' ft'}` });
     if (!here.length && fq.callsigns.length) out.push({ kind: 'flight', q: q.trim(), label: `✈ Find flight ${fq.callsigns[0]}`, sub: 'Look it up and follow it' });
   }
+  // launches (by rocket or mission name)
+  for (const o of Launches.list.filter(o => o.name.toLowerCase().includes(s)).slice(0, 4)) out.push({ kind: 'obj', obj: o, label: `🚀 ${o.mission}`, sub: `${o.rocket} · ${o.place || o.pad}` });
   // satellites
   const sats = [], alias = ALIAS[s], push = o => { if (o && !sats.includes(o)) sats.push(o); };
   if (alias) push(Sats.byId.get(alias));
@@ -53,8 +55,8 @@ async function find(q) {
   const countries = await Country.search(s).catch(() => []); if (seqNow !== seq) return null;
   for (const c of countries) out.push({ kind: 'country', iso: c.iso, label: `🏳 ${c.name}`, sub: 'Country dossier' });
   // whatever else has loaded
-  for (const [list, icon, what] of [[Volcanoes.list, '🌋', 'Volcano'], [Companies.list, '🏢', 'Employer'], [Lighthouses.list, '🗼', 'Lighthouse'], [Launches.list, '🚀', 'Launch']]) {
-    for (const o of list.filter(o => o.name && o.name.toLowerCase().includes(s)).slice(0, 4)) out.push({ kind: 'obj', obj: o, label: `${icon} ${o.name}`, sub: [what, o.kind === 'launch' ? o.place : o.country].filter(Boolean).join(' · ') });
+  for (const [list, icon, what] of [[Volcanoes.list, '🌋', 'Volcano'], [Companies.list, '🏢', 'Employer'], [Lighthouses.list, '🗼', 'Lighthouse']]) {
+    for (const o of list.filter(o => o.name && o.name.toLowerCase().includes(s)).slice(0, 4)) out.push({ kind: 'obj', obj: o, label: `${icon} ${o.name}`, sub: [what, o.country].filter(Boolean).join(' · ') });
   }
   return out;
 }

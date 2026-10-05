@@ -206,6 +206,7 @@ export const SatModels = {
     s.pt.show = L[s.layer].on && !s.docked;
   },
   refresh() { // which satellites get a model: the nearest within range, plus the selected and followed ones
+    if (state.lookup) { for (const s of [...this.pool.values()]) this.drop(s); return; }   // from the ground, a model is a giant streak
     const st = Sats.state; if (!st) return;
     const cam = camera.positionWC, b = st.buf, dt = (Date.now() - st.t) / 1000, near = [];
     for (const s of Sats.list) {
