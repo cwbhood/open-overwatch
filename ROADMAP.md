@@ -87,6 +87,9 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
       "Farthest from home" (Voyagers, New Horizons, Pioneers: distance now and signal time), and a "look up now" nudge a
       minute before each visible ISS / Tiangong pass while the page is open
 - [x] Look up "Red": a red-light view that keeps your eyes dark-adapted (remembered)
+- [x] Clouds tonight (Open-Meteo, CC BY 4.0; location rounded to ~10 km): clear spells in words, the next clear night, and each
+      pass marked clear / cloudy (core/clouds.js, tested)
+- [x] "Coming up in the sky": the Moon within 5° of a bright planet, planets within 3° of each other, next 30 days (core/sky.js meetings)
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
 - [ ] Look up shows two fixed streaks (pink, orange) in headless Chromium's software renderer, also in v0.9.2.4: check on a real GPU
 

@@ -136,3 +136,27 @@ test('sky: sunrise and sunset, moonrise, full Moons and their names', async () =
   assert.deepEqual(craftAt({ t0_jd: 10, step_days: 1, xyz: [0, 0, 0, 2, 0, 0] }, 10.5), { x: 1, y: 0, z: 0 });
   assert.equal(craftAt({ t0_jd: 10, step_days: 1, xyz: [0, 0, 0, 2, 0, 0] }, 9), null);
 });
+
+test('clouds: an Open-Meteo forecast as a night in words', async () => {
+  const { hoursOf, cloudAt, night, sky } = await import('../src/core/clouds.js');
+  const t0 = Date.parse('2026-10-05T00:00:00Z') / 1000, H = 3600e3;
+  const mk = f => ({ hourly: { time: [...Array(48)].map((_, i) => t0 + i * 3600), cloud_cover: [...Array(48)].map((_, i) => f(i)), precipitation_probability: [...Array(48)].map(() => 10) } });
+  const s = Date.parse('2026-10-05T19:00:00Z'), e = Date.parse('2026-10-06T06:00:00Z');
+  assert.match(night(hoursOf(mk(() => 5)), s, e).text, /Clear all night/);
+  assert.match(night(hoursOf(mk(() => 95)), s, e).text, /Cloudy all night \(95% cloud\)/);
+  const gap = night(hoursOf(mk(i => (i >= 21 && i < 25 ? 10 : 90))), s, e);   // clear 21:00-01:00
+  assert.equal(gap.clear.length, 1); assert.match(gap.text, /^Clear 21:00 to 01:00, overcast the rest/);
+  assert.equal(cloudAt(hoursOf(mk(i => i)), Date.parse('2026-10-05T07:30:00Z')), 7);
+  assert.equal(night(hoursOf(mk(() => 5)), s + 5 * 86400e3, e + 5 * 86400e3), null);   // past the forecast
+  assert.equal(sky(10), 'clear'); assert.equal(sky(95), 'overcast'); assert.deepEqual(hoursOf({}), []);
+});
+
+test('sky: meetings of the Moon and planets (the 2020 great conjunction, a Moon-Venus pass)', async () => {
+  const { meetings } = await import('../src/core/sky.js');
+  // Jupiter and Saturn, 0.1 deg apart on 2020-12-21
+  const g = meetings(Date.parse('2020-12-10T00:00:00Z'), { days: 20 }).find(m => m.ka === 'jupiter' && m.kb === 'saturn');
+  assert.ok(g && g.sep < 0.3 && Math.abs(g.at - Date.parse('2020-12-21T18:00:00Z')) < 1.5 * 86400e3, JSON.stringify(g));
+  // the crescent Moon passed ~1 deg from Venus on 2023-03-24 (in the evening twilight, so elongation is large enough)
+  const v = meetings(Date.parse('2023-03-20T00:00:00Z'), { days: 8 }).find(m => m.ka === 'moon' && m.kb === 'venus');
+  assert.ok(v && v.sep < 3 && v.elong > 20, JSON.stringify(v));
+});

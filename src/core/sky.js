@@ -178,3 +178,30 @@ export function craftAt(c, jd) {
   const k = Math.min(Math.floor(f), n - 2), t = f - k;   // past the last sample it coasts on in a straight line
   return { x: x[k * 3] + (x[k * 3 + 3] - x[k * 3]) * t, y: x[k * 3 + 1] + (x[k * 3 + 4] - x[k * 3 + 1]) * t, z: x[k * 3 + 2] + (x[k * 3 + 5] - x[k * 3 + 2]) * t };
 }
+
+/** Angle (deg) between two RA/Dec directions. */
+export function separation(a, b) {
+  const r = DEG, c = Math.sin(a.dec * r) * Math.sin(b.dec * r) + Math.cos(a.dec * r) * Math.cos(b.dec * r) * Math.cos((a.ra - b.ra) * r);
+  return Math.acos(Math.max(-1, Math.min(1, c))) / r;
+}
+
+const BRIGHT = [['venus', 'Venus'], ['jupiter', 'Jupiter'], ['mars', 'Mars'], ['saturn', 'Saturn'], ['mercury', 'Mercury']];
+/**
+ * Close meetings in the sky over the next `days`: the Moon within 5 deg of a bright planet, two planets within 3 deg.
+ * Each: { at (ms, closest), a, b, sep (deg), elong (deg from the Sun: under ~15 it's lost in the glare) }, by time.
+ */
+export function meetings(ms, { days = 30 } = {}) {
+  const out = [], bodies = [['moon', 'the Moon'], ...BRIGHT];
+  const pos = t => { const jd = jdFromMs(t); return Object.fromEntries([...bodies.map(([k]) => [k, bodyRaDec(k, jd)]), ['sun', bodyRaDec('sun', jd)]]); };
+  const step = 2 * 3600e3, n = Math.ceil(days * 86400e3 / step), P = [];
+  for (let i = 0; i <= n; i++) P.push(pos(ms + i * step));
+  for (let x = 0; x < bodies.length; x++) for (let y = x + 1; y < bodies.length; y++) {
+    const [ka, na] = bodies[x], [kb, nb] = bodies[y], lim = ka === 'moon' ? 5 : 3;
+    const sep = P.map(p => separation(p[ka], p[kb]));
+    for (let i = 1; i < n; i++) if (sep[i] < lim && sep[i] <= sep[i - 1] && sep[i] < sep[i + 1]) {
+      const p = P[i], elong = Math.min(separation(p.sun, p[ka]), separation(p.sun, p[kb]));
+      out.push({ at: ms + i * step, a: na, b: nb, ka, kb, sep: sep[i], elong });
+    }
+  }
+  return out.sort((a, b) => a.at - b.at);
+}
