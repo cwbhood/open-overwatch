@@ -65,12 +65,13 @@ function sunMoon(lat, lon, now) {
   const fm = nextFullMoon(now);
   return { sunText, moonText, full: `Next full Moon: ${day(fm.at)}, ${new Date(fm.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} · the ${fm.name}${fm.supermoon ? ' (a supermoon: ' + Math.round(fm.km).toLocaleString('en-US') + ' km away, extra big and bright)' : ''}` };
 }
+const SILENT = { 'Pioneer 10': 2003, 'Pioneer 11': 1995 };   // last contact
 /** The farthest things we built: distance from Earth now, and how long their radio signals take to arrive. */
 async function farthest(now) {
   const all = await fetchAsset('data/solar/spacecraft.json', 'json'), jd = jdFromMs(now), E = earthPosition(jd), AU = 149597870.7;
   return all.map(c => { const p = craftAt(c, jd); if (!p) return null; const au = Math.hypot(p.x - E.x, p.y - E.y, p.z - E.z), s = au * 499.004784;
     const h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60), km = au * AU;
-    return { name: c.name, au, text: `${c.name}: ${km > 1e9 ? (km / 1e9).toFixed(1) + ' billion' : Math.round(km / 1e6) + ' million'} km away (${au.toFixed(au < 10 ? 2 : 0)} AU). Its radio signal takes ${h ? h + ' h ' : ''}${m} min to reach us.` }; })
+    return { name: c.name, au, text: `${c.name}: ${km > 1e9 ? (km / 1e9).toFixed(1) + ' billion' : Math.round(km / 1e6) + ' million'} km away (${au.toFixed(au < 10 ? 2 : 0)} AU). ${SILENT[c.name] ? `Silent since ${SILENT[c.name]}; a signal from there would take ${h ? h + ' h ' : ''}${m} min.` : `Its radio signal takes ${h ? h + ' h ' : ''}${m} min to reach us.`}` }; })
     .filter(Boolean).sort((a, b) => b.au - a.au).slice(0, 4);
 }
 const bearing = (la1, lo1, la2, lo2) => { const r = Math.PI / 180, y = Math.sin((lo2 - lo1) * r) * Math.cos(la2 * r), x = Math.cos(la1 * r) * Math.sin(la2 * r) - Math.sin(la1 * r) * Math.cos(la2 * r) * Math.cos((lo2 - lo1) * r); return (Math.atan2(y, x) / r + 360) % 360; };
