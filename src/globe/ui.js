@@ -72,6 +72,7 @@ function pickObj(pos, r = touchInput ? 28 : 3) { const p = scene.pick(pos, r, r)
 function tipFor(o) {
   if (o.kind === 'sat') return `${o.name} · ${L[o.layer].name.split(' (')[0]}`;
   if (o.kind === 'air') return `${o.flight || o.hex} · ${o.ground ? 'on ground' : fmt((o.alt || 0) / 0.3048) + ' ft'}${o.mil ? ' · military' : ''}`;
+  if (o.kind === 'launch') return `🚀 ${o.rocket} · ${o.mission}`;
   if (o.kind === 'quake') return `M${o.mag.toFixed(1)} · ${o.place}`;
   if (o.kind === 'volcano') return `${o.name}${o.elevationM ? ' · ' + fmt(o.elevationM) + ' m' : ''}`;
   if (o.kind === 'company') return `${o.name} · ${fmt(o.employees)} employees`;
@@ -109,6 +110,7 @@ handler.setInputAction(c => {
 
 const row = (k, v) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`;
 export function select(o) {
+  if (o.kind === 'launch' && hooks.showLaunch) { hooks.showLaunch(o); return; }   // its own card, with a live countdown
   state.selected = o; orbitLines.removeAll(); let html = '';
   if (o.kind !== 'country') Country.clear(); else Country.highlight(o);
   if (o.kind === 'sat') {

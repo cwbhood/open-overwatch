@@ -98,7 +98,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 #lookup .lu-top b{font:900 18px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:#7dffa6}
 #lookup .lu-top span{flex:1;font:500 11px/1.3 var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis}
 #lookup .lu-bottom{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:620px;margin:0 auto;padding:10px 14px;z-index:8;font:500 12.5px/1.5 var(--mono)}
-#lookup .lu-when{display:flex;gap:8px;align-items:center;margin:4px 0 2px;color:var(--dim)} #lookup .lu-when input{flex:1;min-width:0;padding:6px 8px;border-radius:8px;border:1px solid var(--edge-dim);background:rgba(5,8,12,.6);color:var(--ink);font:500 12.5px/1 var(--mono);color-scheme:dark} #lookup .lu-when .chipbtn{padding:6px 10px}
+#lookup .lu-when{display:flex;gap:8px;align-items:center;margin:4px 0 2px;color:var(--dim)} #lookup .lu-when input{flex:1;min-width:0;padding:6px 8px;border-radius:8px;border:1px solid var(--edge-dim);background:rgba(5,8,12,.6);color:var(--ink);font:500 12.5px/1 var(--mono);color-scheme:dark} #lookup .lu-when .chipbtn{padding:6px 10px} #lookup #luCon.on{color:#8fa6c4;border-color:rgba(143,166,196,.4)}
 #lookup #luDir{font:700 16px/1.3 var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)} #lookup .ok{color:#7dffa6}
 .lu-cross{position:fixed;left:50%;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;border:1.5px solid rgba(125,255,166,.55);border-radius:50%;z-index:7;pointer-events:none}
 body.lookup #top,body.lookup #band,body.lookup #dock,body.lookup #card,body.lookup #hover,body.lookup #credits{display:none!important}
@@ -108,6 +108,7 @@ body.lookup #top,body.lookup #band,body.lookup #dock,body.lookup #card,body.look
 .tn-head{margin:4px 0 2px;font:500 14px/1.45 var(--body)} .tn-head b,.tn-p .ok,.tn-head .ok{color:#7dffa6} .tn-p{margin:0;font:500 12.5px/1.45 var(--body)} .tn-p small{color:var(--faint)}
 .tn-list{display:flex;flex-direction:column;gap:4px;max-height:34vh;overflow:auto} .tn-row{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;justify-content:space-between;padding:7px 9px;border-radius:9px;border:1px solid var(--edge-dim);background:rgba(230,237,243,.03);font:500 12.5px/1.4 var(--body)}
 .tn-row.dim{opacity:.5} .tn-b{display:flex;gap:4px} .tn-b .chipbtn{padding:6px 9px;color:#7dffa6} .note.warn{color:#ffb44d}
+.lc-cd{margin:2px 0 8px;font:700 26px/1.1 var(--mono);color:#ff9f5c;letter-spacing:.02em}
 .fl-form{display:flex;gap:6px;margin:6px 0} .fl-form input{flex:1;min-width:0;padding:9px 11px;border-radius:9px;border:1px solid var(--edge-dim);background:rgba(5,8,12,.6);color:var(--ink);font:600 15px/1 var(--mono);text-transform:uppercase}
 
 #hover{position:fixed;pointer-events:none;z-index:6;padding:5px 9px;border-radius:7px;font:500 11.5px/1.2 var(--mono);background:var(--glass-strong);border:1px solid var(--edge-dim);display:none;white-space:nowrap}
@@ -222,6 +223,7 @@ body.lookup #navpad{display:none}
   <button class="go" data-go="lookup" style="color:#7dffa6" title="Your sky right now: point your phone up">Look up</button>
   <button class="go" data-go="flight" style="color:#5fd3ff" title="Type a flight number and follow that plane">Find flight</button>
   <button class="go" data-go="tour" style="color:#ff9f5c" title="A guided 80-second flight through what this globe can do">▶ Tour</button>
+  <button class="go" data-go="launches" style="color:#ff9f5c" title="Every upcoming rocket launch, with countdowns, webcasts and reminders">Launches</button>
   <button class="go" data-go="flybys" style="color:#ffb44d" title="Asteroids and comets passing Earth in the next 60 days">Flybys</button>
   <button class="go" data-go="weather" style="color:#7fd0ff" title="Live clouds, rain radar and rain from space">Weather</button>
   <button class="go" data-go="eclipses" title="Solar eclipses 2027-2030: watch the Moon's shadow cross the Earth">Eclipses</button>
@@ -231,7 +233,7 @@ body.lookup #navpad{display:none}
 <div id="lookup" aria-live="polite">
   <div class="lu-top glass"><b>Look up</b><span id="luWhere"></span><button class="chipbtn" id="luExit">Done</button></div>
   <div class="lu-cross"></div>
-  <div class="lu-bottom glass"><div id="luDir">—</div><div id="luNow"></div><div id="luPass"></div><div class="lu-when"><label for="luDate">Sky on</label><input type="datetime-local" id="luDate" min="1800-01-01T00:00" max="2049-12-31T23:59" aria-label="Show the sky at a date and time"><button class="chipbtn" id="luLive">Now</button></div><div id="luHint" class="note"></div></div>
+  <div class="lu-bottom glass"><div id="luDir">—</div><div id="luNow"></div><div id="luPass"></div><div class="lu-when"><label for="luDate">Sky on</label><input type="datetime-local" id="luDate" min="1800-01-01T00:00" max="2049-12-31T23:59" aria-label="Show the sky at a date and time"><button class="chipbtn" id="luLive">Now</button><button class="chipbtn" id="luCon" title="Constellation figures and names">Figures</button></div><div id="luHint" class="note"></div></div>
 </div>
 <div id="hover"></div>
 <div id="credits"></div>

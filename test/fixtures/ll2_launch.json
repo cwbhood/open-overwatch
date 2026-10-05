@@ -1,0 +1,73 @@
+{
+ "results": [
+  {
+   "id": "da43dc2c-00af-4cc1-8ef1-90a60b2eb9e5",
+   "name": "Falcon 9 Block 5 | SDA Tranche 1 Transport Layer A",
+   "net": "2026-10-06T08:17:44Z",
+   "window_start": "2026-10-06T08:17:44Z",
+   "window_end": "2026-10-06T08:17:44Z",
+   "net_precision": {
+    "abbrev": "SEC",
+    "name": "Second"
+   },
+   "status": {
+    "abbrev": "Go",
+    "name": "Go for Launch"
+   },
+   "webcast_live": false,
+   "launch_service_provider": {
+    "name": "SpaceX",
+    "type": {
+     "name": "Commercial"
+    }
+   },
+   "rocket": {
+    "configuration": {
+     "name": "Falcon 9",
+     "full_name": "Falcon 9 Block 5"
+    }
+   },
+   "mission": {
+    "name": "SDA Tranche 1 Transport Layer A",
+    "type": "Government/Top Secret",
+    "description": "Tranche 1 Transport Layer A is one of six missions by the United States Space Force Space Development Agency (SDA) for the Proliferated Warfighter Space Architecture (PWSA) Tranche 1 Transport Layer constellation, which will provide assured, resilient, low-latency military data and connectivity worl",
+    "orbit": {
+     "name": "Polar Orbit",
+     "abbrev": "PO"
+    }
+   },
+   "pad": {
+    "name": "Space Launch Complex 4E",
+    "latitude": 34.632,
+    "longitude": -120.611,
+    "country": {
+     "alpha_2_code": "US",
+     "name": "United States of America"
+    },
+    "location": {
+     "name": "Vandenberg SFB, CA, USA"
+    }
+   },
+   "vid_urls": [
+    {
+     "url": "https://www.youtube.com/watch?v=-SYfgSTJsyM",
+     "title": "SCRUBBED - SpaceX - Falcon 9 - Tranche 1 Transport Layer A - SLC-4E - VSFB, CA -",
+     "priority": 8,
+     "publisher": "SPACE AFFAIRS"
+    },
+    {
+     "url": "https://www.youtube.com/watch?v=FJpcyVk9vaI",
+     "title": "Scrub: SpaceX aborts Falcon 9 rocket launch from California for the Space Develo",
+     "priority": 9,
+     "publisher": "Spaceflight Now"
+    },
+    {
+     "url": "https://x.com/i/broadcasts/1oJMvNEQewoxQ",
+     "title": "SDA\u2019s Fourth Tranche 1 Mission",
+     "priority": 10,
+     "publisher": "SpaceX"
+    }
+   ]
+  }
+ ]
+}

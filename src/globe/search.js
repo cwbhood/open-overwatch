@@ -11,6 +11,7 @@ import { Volcanoes } from './volcanoes.js';
 import { Companies } from './companies.js';
 import { Lighthouses } from './lighthouses.js';
 import { Flight } from './flight.js';
+import { Launches } from './launches.js';
 import { LookUp } from './lookup.js';
 import { select, flyToObject } from './ui.js';
 import { parseFlightQuery, matchesFlight } from '../core/flight.js';
@@ -20,7 +21,7 @@ const ALIAS = { iss: '25544', 'space station': '25544', 'international space sta
   tiangong: '48274', css: '48274', 'chinese space station': '48274', 'landsat 9': '49260', 'landsat 8': '39084', 'sentinel-2a': '40697', 'goes-16': '41866', 'goes 16': '41866', 'goes-18': '51850' };
 const VIEW_WORDS = { tonight: 'tonight sky stars above me passes meteor', lookup: 'look up sky', moon: 'moon lunar', eclipses: 'eclipse eclipses', flybys: 'asteroid comet flyby flybys',
   weather: 'weather clouds rain radar wind storm', conj: 'near miss collision conjunction', space: 'solar system planets mars jupiter saturn venus mercury uranus neptune pluto stars galaxy',
-  geo: 'geostationary geo belt tv satellites', tour: 'tour guide', flight: 'flight plane aircraft' };
+  geo: 'geostationary geo belt tv satellites', tour: 'tour guide', launches: 'launch launches rocket spacex nasa artemis falcon starship countdown', flight: 'flight plane aircraft' };
 
 let results = [], timer = 0, seq = 0;
 
@@ -52,8 +53,8 @@ async function find(q) {
   const countries = await Country.search(s).catch(() => []); if (seqNow !== seq) return null;
   for (const c of countries) out.push({ kind: 'country', iso: c.iso, label: `🏳 ${c.name}`, sub: 'Country dossier' });
   // whatever else has loaded
-  for (const [list, icon, what] of [[Volcanoes.list, '🌋', 'Volcano'], [Companies.list, '🏢', 'Employer'], [Lighthouses.list, '🗼', 'Lighthouse']]) {
-    for (const o of list.filter(o => o.name && o.name.toLowerCase().includes(s)).slice(0, 4)) out.push({ kind: 'obj', obj: o, label: `${icon} ${o.name}`, sub: [what, o.country].filter(Boolean).join(' · ') });
+  for (const [list, icon, what] of [[Volcanoes.list, '🌋', 'Volcano'], [Companies.list, '🏢', 'Employer'], [Lighthouses.list, '🗼', 'Lighthouse'], [Launches.list, '🚀', 'Launch']]) {
+    for (const o of list.filter(o => o.name && o.name.toLowerCase().includes(s)).slice(0, 4)) out.push({ kind: 'obj', obj: o, label: `${icon} ${o.name}`, sub: [what, o.kind === 'launch' ? o.place : o.country].filter(Boolean).join(' · ') });
   }
   return out;
 }
@@ -70,7 +71,7 @@ async function pick(r) {
   if (r.kind === 'view') { $(`#band [data-go="${r.go}"]`).click(); return; }
   if (r.kind === 'flight') { Flight.find(r.q); return; }
   if (r.kind === 'country') { const o = await Country.byIso(r.iso); if (o) { select(o); Country.fly(o); } return; }
-  if (r.kind === 'obj') { const o = r.obj, lay = L[o.layer || (o.kind === 'air' ? (o.mil ? 'mil' : 'air') : o.kind === 'volcano' ? 'volcanoes' : o.kind === 'company' ? 'companies' : 'lighthouses')]; if (lay && !lay.on) { lay.on = true; syncDock(); hooks.applyVisibility(); } select(o); flyToObject(o); }
+  if (r.kind === 'obj') { const o = r.obj, lay = L[o.layer || (o.kind === 'air' ? (o.mil ? 'mil' : 'air') : o.kind === 'volcano' ? 'volcanoes' : o.kind === 'company' ? 'companies' : o.kind === 'launch' ? 'launches' : 'lighthouses')]; if (lay && !lay.on) { lay.on = true; syncDock(); hooks.applyVisibility(); } select(o); flyToObject(o); }
 }
 
 export const Search = {

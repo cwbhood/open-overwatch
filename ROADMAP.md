@@ -76,6 +76,9 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] Satellite cards say what the thing is in one sentence (core/explain.js)
 - [x] Install as an app (manifest.webmanifest: standalone, shortcuts to Tonight and Find a flight); "reduce motion"
       makes camera flights jump instead of swoop
+- [x] Constellation figures and names in Look up (d3-celestial, BSD: data/constellations.json via brand/tools/make_constellations.py), "Figures" toggles them
+- [x] Rocket launches (band → Launches, pads as orange markers with countdowns): Launch Library 2, copied by the site build every 6 h
+      (build_site.py mirror_launches), countdown, how sure the time is, webcasts, calendar / notification reminders, fly to the pad
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
 
 ## Rules of thumb

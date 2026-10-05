@@ -17,6 +17,7 @@ import { eclToEq } from '../core/units.js';
 import { jdFromMs } from '../core/time.js';
 import { deviceVectors, alphaFromCompass, azEl } from '../core/orientation.js';
 import { activeShowers } from '../core/meteors.js';
+import { fetchAsset } from '../core/assets.js';
 
 const D = Math.PI / 180, FAR = 1.0e9;   // planets and stars are drawn 1 million km out: beyond every satellite
 const FALLBACK = { lat: 51.4769, lon: -0.0005, name: 'Greenwich (allow location to see your own sky)' };
@@ -26,6 +27,27 @@ const STARS = [['Sirius', 101.287, -16.716], ['Canopus', 95.988, -52.696], ['Arc
   ['Altair', 297.696, 8.868], ['Acrux', 186.650, -63.099], ['Aldebaran', 68.980, 16.509], ['Antares', 247.352, -26.432], ['Spica', 201.298, -11.161],
   ['Pollux', 116.329, 28.026], ['Fomalhaut', 344.413, -29.622], ['Deneb', 310.358, 45.280], ['Regulus', 152.093, 11.967], ['Polaris', 37.955, 89.264]];
 const PLANETS = [['mercury', 'Mercury', '#d9c7b0'], ['venus', 'Venus', '#fff1c9'], ['mars', 'Mars', '#ff8a5c'], ['jupiter', 'Jupiter', '#f2dcb4'], ['saturn', 'Saturn', '#f0d9a0'], ['uranus', 'Uranus', '#b8f0f5'], ['neptune', 'Neptune', '#8fa8ff']];
+
+// constellation stick figures (data/constellations.json, from d3-celestial: brand/tools/make_constellations.py). Drawn once in
+// ICRF axes around the origin; each second their modelMatrix turns them with the Earth and centres them on you.
+const CON = { data: null, lines: null, names: null, on: true };
+async function constellations() {
+  if (!CON.data) CON.data = await fetchAsset('data/constellations.json', 'json').catch(e => { console.warn('constellations', e); return { figures: [] }; });
+  if (!S.active || CON.lines) return;
+  const col = C.Color.fromCssColorString('#6f8fb8').withAlpha(0.55), mat = C.Material.fromType('Color', { color: col });
+  CON.lines = scene.primitives.add(new C.PolylineCollection()); CON.names = scene.primitives.add(new C.LabelCollection());
+  for (const f of CON.data.figures) {
+    for (const l of f.l) { const pos = []; for (let i = 0; i < l.length; i += 2) pos.push(C.Cartesian3.multiplyByScalar(radec(l[i], l[i + 1]), FAR, new C.Cartesian3())); if (pos.length > 1) CON.lines.add({ positions: pos, width: 1.3, material: mat }); }
+    if (f.rank <= 2) CON.names.add({ position: C.Cartesian3.multiplyByScalar(radec(f.c[0], f.c[1]), FAR, new C.Cartesian3()), text: f.name.toUpperCase(), font: `600 ${f.rank === 1 ? 11 : 10}px system-ui`, fillColor: C.Color.fromCssColorString('#8fa6c4').withAlpha(f.rank === 1 ? 0.85 : 0.6), horizontalOrigin: C.HorizontalOrigin.CENTER });
+  }
+  placeConstellations();
+}
+function placeConstellations() {
+  if (!CON.lines || !S.obs) return;
+  const M = icrfToFixed(viewer.clock.currentTime), m = C.Matrix4.fromRotationTranslation(M, S.obs.pos, new C.Matrix4());
+  CON.lines.modelMatrix = m; CON.names.modelMatrix = m; CON.lines.show = CON.names.show = CON.on;
+}
+function dropConstellations() { for (const c of [CON.lines, CON.names]) if (c) scene.primitives.remove(c); CON.lines = CON.names = null; }
 
 const S = { active: false, obs: null, saved: null, labels: null, points: null, ring: null, sensor: false, dir: null, up: null, heading: 180, pitch: 25, fov: 65, timer: 0, pass: null, onDown: null };
 
@@ -75,6 +97,7 @@ function refresh() {
     pts.add({ position: pos, pixelSize: size, color: C.Color.fromCssColorString(color) });
     labs.add({ position: pos, text, font, fillColor: C.Color.fromCssColorString(color), pixelOffset: new C.Cartesian2(10, -8), showBackground: true, backgroundColor: C.Color.fromCssColorString('#05080caa'), horizontalOrigin: C.HorizontalOrigin.LEFT });
   };
+  placeConstellations();
   const E = earthPosition(jd, {});
   for (const [key, name, col] of PLANETS) {
     const p = planetPosition(key, jd, {}), q = eclToEq(p.x - E.x, p.y - E.y, p.z - E.z), v = C.Cartesian3.normalize(new C.Cartesian3(q.x, q.y, q.z), new C.Cartesian3());
@@ -163,7 +186,9 @@ async function enter() {
   dateBox.value = local(Date.now());
   dateBox.onchange = () => { const ms = new Date(dateBox.value).getTime(); if (Number.isFinite(ms)) { Time.setJd(jdFromMs(ms), 0); refresh(); } };   // paused at that moment
   $('#luLive').onclick = () => { Time.goLive(); dateBox.value = local(Date.now()); refresh(); };
-  refresh(); S.timer = setInterval(refresh, 1000); nextPass(); S.passTimer = setInterval(nextPass, 600e3);
+  $('#luCon').classList.toggle('on', CON.on);
+  $('#luCon').onclick = () => { CON.on = !CON.on; $('#luCon').classList.toggle('on', CON.on); placeConstellations(); };
+  refresh(); S.timer = setInterval(refresh, 1000); nextPass(); S.passTimer = setInterval(nextPass, 600e3); constellations();
 }
 
 function leave() {
@@ -173,6 +198,7 @@ function leave() {
   const cv = scene.canvas; cv.removeEventListener('pointerdown', S.onDown); removeEventListener('pointermove', S.onMove); removeEventListener('pointerup', S.onUp); cv.removeEventListener('wheel', S.onWheel);
   scene.preRender.removeEventListener(frame);
   for (const c of [S.labels, S.points, S.ring]) scene.primitives.remove(c);
+  dropConstellations();
   Earth.hidden = false; globe.baseColor = S.saved.base; ctrl.enableInputs = S.saved.inputs; camera.frustum.fov = S.saved.fov;
   camera.setView({ destination: S.saved.pos, orientation: { direction: S.saved.dir, up: S.saved.up } });
   $('#lookup').classList.remove('on'); document.body.classList.remove('lookup');

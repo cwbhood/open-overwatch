@@ -187,6 +187,42 @@ def mirror_flybys(path):
         print(f'flybys: FAILED {e}')
 
 
+# the parts of a Launch Library 2 launch the globe reads (src/core/launches.js fromLL2 maps them; the build only trims)
+LL2_KEEP = {'id': 1, 'name': 1, 'net': 1, 'window_start': 1, 'window_end': 1, 'net_precision': {'abbrev': 1, 'name': 1}, 'status': {'abbrev': 1, 'name': 1},
+            'probability': 1, 'webcast_live': 1, 'launch_service_provider': {'name': 1}, 'rocket': {'configuration': {'name': 1, 'full_name': 1}},
+            'mission': {'name': 1, 'type': 1, 'description': 1, 'orbit': {'name': 1, 'abbrev': 1}},
+            'pad': {'name': 1, 'latitude': 1, 'longitude': 1, 'country': {'alpha_2_code': 1}, 'location': {'name': 1}},
+            'vid_urls': [{'url': 1, 'title': 1, 'priority': 1, 'publisher': 1}]}
+
+
+def _keep(o, spec):
+    if isinstance(spec, dict):
+        return {k: _keep(o[k], v) for k, v in spec.items() if isinstance(o, dict) and o.get(k) is not None}
+    if isinstance(spec, list):
+        return [_keep(x, spec[0]) for x in (o or [])[:3]]
+    return o
+
+
+def mirror_launches(path):
+    """Best effort: the next 40 rocket launches from The Space Devs' Launch Library 2 (free; 15 requests an hour without a key, so
+    every visitor asking directly would soon be refused) -> data/launches.json: {t, source, results: [trimmed LL2 launches]}."""
+    try:
+        url = 'https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=40&mode=detailed&hide_recent_previous=true'
+        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'}), timeout=90))
+        rows = []
+        for r in d.get('results', []):
+            k = _keep(r, LL2_KEEP)
+            m = k.get('mission') or {}
+            if m.get('description'): m['description'] = m['description'][:600]
+            rows.append(k)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as fh:
+            json.dump({'t': int(time.time() * 1000), 'source': 'The Space Devs, Launch Library 2 (thespacedevs.com)', 'results': rows}, fh, separators=(',', ':'))
+        print(f'launches: {len(rows)} upcoming')
+    except Exception as e:
+        print(f'launches: FAILED {e}')
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     n = extract('HEAD', ['.'], OUT, SKIP_ROOT)
@@ -216,6 +252,7 @@ def main():
     mirror_socrates(os.path.join(OUT, 'data', 'socrates.json'))
     mirror_wind(os.path.join(OUT, 'data', 'wind.json'))
     mirror_flybys(os.path.join(OUT, 'data', 'flybys.json'))
+    mirror_launches(os.path.join(OUT, 'data', 'launches.json'))
     mirror_news(os.path.join(OUT, 'data', 'news.json'), os.path.join(OUT, 'data', 'countries.json'))
 
 

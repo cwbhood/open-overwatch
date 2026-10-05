@@ -14,6 +14,7 @@ export const LAYERS = [
   // rocket body and fragment, is Space-Track's and may not be redistributed.) Off by default on phones: ~5,000 more dots.
   { id: 'active', group: 'Space', name: 'All other active satellites', color: '#8fb8ff', on: !PHONE, sat: ['active'], size: 2, alpha: 0.75 },
   { id: 'debris', group: 'Space', name: 'Debris (Fengyun-1C, Iridium 33, Cosmos 2251)', color: '#ff6b6b', on: !PHONE, sat: ['fengyun-1c-debris', 'iridium-33-debris', 'cosmos-2251-debris'], size: 1.8, alpha: 0.8 },
+  { id: 'launches', group: 'Space', name: 'Rocket launches (next 40, pads)', color: '#ff9f5c', on: true },
   { id: 'air', group: 'Air', name: 'Civil aircraft (OpenSky, every 15 min)', color: '#5fd3ff', on: true },
   { id: 'mil', group: 'Air', name: 'Military aircraft (adsb.lol, every 60 s)', color: '#ffb44d', on: true },
   { id: 'quakes', group: 'Earth', name: 'Earthquakes M2.5+ · 24 h', color: '#ff7b4f', on: true },

@@ -97,3 +97,19 @@ test('explain: a friendly sentence for any satellite', async () => {
   assert.match(explainSat({ name: 'INTELSAT 901', layer: 'geo' }, { alt: 35790 }), /geostationary/);
   assert.match(explainSat({ name: 'OBJECT A', layer: 'active' }, { alt: 520, period: 95 }), /520 km up/);
 });
+
+test('launches: Launch Library 2 records, countdowns and fuzzy dates', async () => {
+  const { fromLL2, countdown, when, upcoming } = await import('../src/core/launches.js');
+  const { readFileSync } = await import('node:fs');
+  const raw = JSON.parse(readFileSync(new URL('./fixtures/ll2_launch.json', import.meta.url), 'utf8')).results[0];
+  const l = fromLL2(raw);
+  assert.equal(l.rocket, 'Falcon 9 Block 5'); assert.equal(l.provider, 'SpaceX'); assert.ok(Math.abs(l.lat - 34.632) < 1e-6 && Math.abs(l.lon + 120.611) < 1e-6);
+  assert.ok(Number.isFinite(l.net)); assert.match(l.place, /Vandenberg/); assert.ok(l.webcasts.every(v => v.url.startsWith('https://')));
+  assert.equal(fromLL2({ ...raw, pad: { latitude: 'x', longitude: 2 } }), null);
+  assert.deepEqual(fromLL2({ ...raw, vid_urls: [{ url: 'javascript:alert(1)' }, { url: 'https://x.example/"onload=1' }] }).webcasts, []);   // only plain https links
+  assert.equal(countdown(Date.UTC(2026, 0, 2, 4, 10, 22), Date.UTC(2026, 0, 1)), 'T-1 d 04:10:22');
+  assert.equal(countdown(1000, 73000), 'T+00:01:12');
+  assert.match(when({ net: Date.UTC(2027, 2, 1), precision: 'M' }), /March 2027/);
+  assert.match(when({ net: Date.UTC(2027, 3, 1), precision: 'Q2' }), /^Q2 2027/);
+  assert.deepEqual(upcoming([{ net: 5e6 }, { net: 1e6 }, { net: -9e6 }], 0).map(x => x.net), [1e6, 5e6]);
+});
