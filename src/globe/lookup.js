@@ -16,7 +16,7 @@ import { findPasses, lookAngles, compass } from '../core/passes.js';
 import { planetPosition, earthPosition } from '../core/planets.js';
 import { eclToEq } from '../core/units.js';
 import { jdFromMs } from '../core/time.js';
-import { deviceVectors, alphaFromCompass, azEl } from '../core/orientation.js';
+import { deviceVectors, alphaFromCompass, azEl, guide } from '../core/orientation.js';
 import { activeShowers } from '../core/meteors.js';
 import { fetchAsset } from '../core/assets.js';
 import { bodyFact, starFact } from '../core/skyfacts.js';
@@ -53,7 +53,7 @@ function placeConstellations() {
 }
 function dropConstellations() { for (const c of [CON.lines, CON.names]) if (c) scene.primitives.remove(c); CON.lines = CON.names = null; }
 
-const S = { active: false, obs: null, saved: null, labels: null, points: null, ring: null, sensor: false, dir: null, up: null, heading: 180, pitch: 25, fov: 65, timer: 0, pass: null, onDown: null };
+const S = { find: '', targets: new Map(), active: false, obs: null, saved: null, labels: null, points: null, ring: null, sensor: false, dir: null, up: null, heading: 180, pitch: 25, fov: 65, timer: 0, pass: null, onDown: null };
 
 export function observerAt(lat, lon) {
   const pos = C.Cartesian3.fromDegrees(lon, lat, 2), m = C.Transforms.eastNorthUpToFixedFrame(pos);
@@ -90,6 +90,14 @@ function frame() {
   camera.setView({ destination: S.obs.pos, orientation: { direction: dir, up } });
   const { az, el } = azEl(d);
   $('#luDir').textContent = `${compass(az)} ${Math.round(az)}° · ${el >= 0 ? 'up' : 'down'} ${Math.abs(Math.round(el))}°`;
+  // "Find": an arrow from the centre toward the chosen thing, and which way to turn
+  const t = S.find && S.targets.get(S.find), arrow = $('#luArrow');
+  if (!t) { arrow.classList.remove('on'); return; }
+  const o = S.obs, te = C.Cartesian3.dot(t, o.E), tn = C.Cartesian3.dot(t, o.N), tu = C.Cartesian3.dot(t, o.U), tAz = (Math.atan2(te, tn) / D + 360) % 360, tEl = Math.asin(Math.max(-1, Math.min(1, tu))) / D;
+  const g = guide(az, el, tAz, tEl, { near: Math.max(3, S.fov / 12) });
+  arrow.classList.add('on'); arrow.classList.toggle('there', g.text === 'There it is!');
+  arrow.style.transform = g.text === 'There it is!' ? 'none' : `rotate(${g.arrow - 90}deg) translateX(70px)`; arrow.textContent = g.text === 'There it is!' ? '◎' : '➤';
+  $('#luGo').textContent = `${S.find}: ${g.text}`;
 }
 
 // ---- once a second: planets, star names, what is overhead
@@ -102,15 +110,22 @@ function refresh() {
     labs.add({ position: pos, text, font, id, fillColor: C.Color.fromCssColorString(color), pixelOffset: new C.Cartesian2(10, -8), showBackground: true, backgroundColor: C.Color.fromCssColorString('#05080caa'), horizontalOrigin: C.HorizontalOrigin.LEFT });
   };
   placeConstellations();
+  const T = S.targets, dirOf = p => C.Cartesian3.normalize(C.Cartesian3.subtract(p, o.pos, new C.Cartesian3()), new C.Cartesian3());   // fixed-frame directions for "Find"
+  T.clear();
   const E = earthPosition(jd, {});
   for (const [key, name, col] of PLANETS) {
     const p = planetPosition(key, jd, {}), q = eclToEq(p.x - E.x, p.y - E.y, p.z - E.z), v = C.Cartesian3.normalize(new C.Cartesian3(q.x, q.y, q.z), new C.Cartesian3());
-    add(far(C.Matrix3.multiplyByVector(M, v, new C.Cartesian3())), name, col, 8, undefined, { sky: 'body', key });
+    const fp = far(C.Matrix3.multiplyByVector(M, v, new C.Cartesian3())); T.set(name, dirOf(fp));
+    add(fp, name, col, 8, undefined, { sky: 'body', key });
   }
   { const m = moonGeocentric(jd), q = eclToEq(m.x, m.y, m.z), v = C.Cartesian3.normalize(new C.Cartesian3(q.x, q.y, q.z), new C.Cartesian3());   // Cesium draws the Moon; this names it
-    labs.add({ position: pts.add({ position: far(C.Matrix3.multiplyByVector(M, v, new C.Cartesian3())), pixelSize: 22, color: C.Color.WHITE.withAlpha(0.01), id: { sky: 'body', key: 'moon' } }).position, text: 'Moon', font: '600 13px system-ui', fillColor: C.Color.fromCssColorString('#e6edf3'), pixelOffset: new C.Cartesian2(18, -14), horizontalOrigin: C.HorizontalOrigin.LEFT, id: { sky: 'body', key: 'moon' } }); }
+    const mp = far(C.Matrix3.multiplyByVector(M, v, new C.Cartesian3())); T.set('Moon', dirOf(mp));
+    labs.add({ position: pts.add({ position: mp, pixelSize: 22, color: C.Color.WHITE.withAlpha(0.01), id: { sky: 'body', key: 'moon' } }).position, text: 'Moon', font: '600 13px system-ui', fillColor: C.Color.fromCssColorString('#e6edf3'), pixelOffset: new C.Cartesian2(18, -14), horizontalOrigin: C.HorizontalOrigin.LEFT, id: { sky: 'body', key: 'moon' } }); }
   for (const m of activeShowers(Time.nowMs())) add(far(C.Matrix3.multiplyByVector(M, radec(m.ra, m.dec), new C.Cartesian3())), `☄ ${m.name} radiant`, '#ffb44d', 6, '600 12px system-ui');   // meteors seem to fly out of here
   const tapDot = C.Color.fromCssColorString('#cfd8e3').withAlpha(0.3);   // labels alone can't be tapped at their anchor: a faint dot can
+  for (const [name, ra, dec] of STARS) T.set(name, C.Matrix3.multiplyByVector(M, radec(ra, dec), new C.Cartesian3()));
+  for (const [id, name] of [['25544', 'ISS'], ['48274', 'Tiangong']]) { const s = Sats.byId.get(id); if (s && s.pt && s.pt.position && C.Cartesian3.magnitude(s.pt.position) > 6.3e6 && Math.abs(Time.nowMs() - Date.now()) < 3 * 86400e3) T.set(name, dirOf(s.pt.position)); }
+  const sel = $('#luFind'); if (sel && sel.options.length - 1 !== T.size) { const keep = sel.value; sel.innerHTML = '<option value="">a planet, the Moon, the ISS, a star…</option>' + [...T.keys()].map(k => `<option>${esc(k)}</option>`).join(''); sel.value = T.has(keep) ? keep : ''; }
   for (const [name, ra, dec] of STARS) labs.add({ position: pts.add({ position: far(C.Matrix3.multiplyByVector(M, radec(ra, dec), new C.Cartesian3())), pixelSize: 7, color: tapDot, id: { sky: 'star', name } }).position, text: name, font: '500 12px system-ui', fillColor: C.Color.fromCssColorString('#cfd8e3'), pixelOffset: new C.Cartesian2(8, -6), horizontalOrigin: C.HorizontalOrigin.LEFT, id: { sky: 'star', name } });
   // satellites above the horizon: count all, label the brightest ones. Not far from today: orbits from this week's
   // elements drift by kilometres a day, and nothing tells us what was up in 1990
@@ -170,7 +185,7 @@ async function enter() {
   });
   S.obs = loc ? observerAt(loc.latitude, loc.longitude) : observerAt(FALLBACK.lat, FALLBACK.lon);
   $('#luWhere').textContent = loc ? `Your sky · ${loc.latitude.toFixed(2)}, ${loc.longitude.toFixed(2)} (stays on this device)` : FALLBACK.name;
-  S.active = true; state.lookup = true; S.sensor = false; S.dir = S.up = null;
+  S.active = true; state.lookup = true; hooks.applyVisibility(); S.sensor = false; S.dir = S.up = null;
   Earth.hidden = true; Earth.apply(); globe.baseColor = C.Color.fromCssColorString('#0b0f14');
   ctrl.enableInputs = false; camera.frustum.fov = S.fov * D;
   S.labels = scene.primitives.add(new C.LabelCollection()); S.points = scene.primitives.add(new C.PointPrimitiveCollection());
@@ -182,7 +197,8 @@ async function enter() {
   }
   if (motionOk) { addEventListener('deviceorientationabsolute', onOrientation); addEventListener('deviceorientation', onOrientation); }
   $('#luHint').textContent = PHONE && motionOk ? 'Hold your phone up to the sky. (No movement? Drag to look around.) Tap anything to find out what it is.' : 'Drag to look around · scroll or pinch to zoom · tap a planet, star or satellite to find out what it is';
-  $('#luInfo').textContent = '';
+  $('#luInfo').textContent = ''; S.find = ''; $('#luGo').textContent = '';
+  $('#luFind').onchange = e => { S.find = e.target.value; if (!S.find) { $('#luGo').textContent = ''; $('#luArrow').classList.remove('on'); } };
   // drag / zoom when there are no sensors (or as an override)
   const cv = scene.canvas; let last = null;
   let down = null;
@@ -215,7 +231,7 @@ function leave() {
   const cv = scene.canvas; cv.removeEventListener('pointerdown', S.onDown); removeEventListener('pointermove', S.onMove); removeEventListener('pointerup', S.onUp); cv.removeEventListener('wheel', S.onWheel);
   scene.preRender.removeEventListener(frame);
   for (const c of [S.labels, S.points, S.ring]) scene.primitives.remove(c);
-  dropConstellations(); document.documentElement.classList.remove('redlight');
+  dropConstellations(); document.documentElement.classList.remove('redlight'); S.find = ''; $('#luArrow').classList.remove('on');
   Earth.hidden = false; globe.baseColor = S.saved.base; ctrl.enableInputs = S.saved.inputs; camera.frustum.fov = S.saved.fov;
   camera.setView({ destination: S.saved.pos, orientation: { direction: S.saved.dir, up: S.saved.up } });
   $('#lookup').classList.remove('on'); document.body.classList.remove('lookup');

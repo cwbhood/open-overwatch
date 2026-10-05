@@ -93,8 +93,11 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] Look up: tap a planet, the Moon, a bright star or a satellite to find out what it is (distance, light travel time,
       "the light reaching your eyes left Vega in 2001"; core/skyfacts.js)
 - [x] Tonight "Share tonight": a one-line summary of your sky with a link, to the share sheet or the clipboard
+- [x] Look up "Find": pick a planet, the Moon, the ISS or a bright star; an arrow and "turn right 32°, up 11°" lead you to it
+      (core/orientation.js guide, tested)
+- [x] Look up hides things on the ground (employer towers, volcanoes, lighthouses, pads, quakes, buildings): from eye height
+      they were the "streaks" seen across the sky
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
-- [ ] Look up shows two fixed streaks (pink, orange) in headless Chromium's software renderer, also in v0.9.2.4: check on a real GPU
 
 ## Rules of thumb
 - One clear goal per session; read this file first, tick boxes as they land.

@@ -19,3 +19,16 @@ export const alphaFromCompass = heading => (360 - heading) % 360;
 
 /** Azimuth (deg from north, clockwise) and elevation (deg) of an east-north-up direction. */
 export const azEl = d => ({ az: (Math.atan2(d[0], d[1]) / D + 360) % 360, el: Math.asin(Math.max(-1, Math.min(1, d[2]))) / D });
+
+/**
+ * Pointing help: where to turn from the current view (az, el in degrees) to a target. Returns { dAz (-180..180, + = right),
+ * dEl (+ = up), off (deg apart), arrow (screen angle in degrees, 0 = up, clockwise), text }. "There!" inside `near` degrees.
+ */
+export function guide(az, el, tAz, tEl, { near = 4 } = {}) {
+  const r = Math.PI / 180, dAz = ((tAz - az + 540) % 360) - 180, dEl = tEl - el;
+  const c = Math.sin(el * r) * Math.sin(tEl * r) + Math.cos(el * r) * Math.cos(tEl * r) * Math.cos(dAz * r), off = Math.acos(Math.max(-1, Math.min(1, c))) / r;
+  const arrow = (Math.atan2(dAz * Math.cos(((el + tEl) / 2) * r), dEl) / r + 360) % 360;
+  if (off <= near) return { dAz, dEl, off, arrow, text: tEl < 0 ? "It's there, but below the horizon right now." : 'There it is!' };
+  const turn = Math.abs(dAz) >= 3 ? `turn ${dAz > 0 ? 'right' : 'left'} ${Math.round(Math.abs(dAz))}°` : '', tilt = Math.abs(dEl) >= 3 ? `${dEl > 0 ? 'up' : 'down'} ${Math.round(Math.abs(dEl))}°` : '';
+  return { dAz, dEl, off, arrow, text: [turn, tilt].filter(Boolean).join(', ') || 'Nearly there' };
+}

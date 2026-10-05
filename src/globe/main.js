@@ -37,7 +37,14 @@ import { Snapshot } from './snapshot.js';
 import { Search } from './search.js';
 import { Launches } from './launches.js';
 
+// things on the ground: from look-up mode's eye height they become huge streaks across the sky, so they hide there
+const GROUND = ['companies', 'volcanoes', 'lighthouses', 'launches', 'quakes', 'sun', 'buildings'];
 function applyVisibility() {
+  const held = state.lookup ? GROUND.map(id => [id, L[id].on]) : null;   // switch them off for this pass only (the dock keeps its state)
+  if (held) for (const [id] of held) L[id].on = false;
+  try { applyAll(); } finally { if (held) for (const [id, on] of held) L[id].on = on; }
+}
+function applyAll() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
   airPts.show = airIcons.show = !state.weather; satPts.show = !state.weather;
   for (const a of Air.map.values()) { const on = airShown(a); a.pt.show = on && !a.ent; a.icon.show = on && !a.ent; if (!on && a.ent) AirModels.drop(a); }
