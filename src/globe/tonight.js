@@ -3,19 +3,13 @@
 // satellites when they climb high, the bright planets, the Moon's phase and the aurora chance where you stand. Each
 // pass can become a calendar reminder (works with the site closed) or a notification (while the page is open).
 // Your location is used here and saved only on this device (rounded to ~1 km), so the next visit can say it straight away.
-import { C, $, esc, toast, store } from './env.js';
+import { $, esc, toast, store } from './env.js';
 import { state } from './state.js';
-import { Sats } from './satellites.js';
-import { sunDirection } from './earth.js';
-import { Aurora } from './aurora.js';
 import { Alerts } from './alerts.js';
-import { LookUp, observerAt } from './lookup.js';
+import { observer, sunEcef } from '../core/observer.js';
 import { findPasses, compass } from '../core/passes.js';
 import { showersFor } from '../core/meteors.js';
-import { Launches } from './launches.js';
-import { Eclipses } from './eclipses.js';
 import { Crew } from './crew.js';
-import { Country } from './country.js';
 import { oceanAt } from '../core/explain.js';
 import { haversine } from '../core/geo.js';
 import { planetsTonight, darkWindow, moonPhase, auroraAt, describePass, starlinkTrains, sunAlt, riseSet, nextFullMoon, craftAt, meetings } from '../core/sky.js';
@@ -45,15 +39,16 @@ const locate = () => new Promise(res => {
 });
 async function satsReady(ms = 40e3) {
   const t0 = Date.now();
-  while (!(Sats.list.length && window.satellite) && Date.now() - t0 < ms) await new Promise(r => setTimeout(r, 400));
-  return Sats.list.length > 0 && !!window.satellite;
+  if (D.sats.ready) await Promise.race([D.sats.ready, new Promise(r => setTimeout(r, ms))]);   // a page that says when all groups are in
+  while (!(D.sats.list.length && window.satellite) && Date.now() - t0 < ms) await new Promise(r => setTimeout(r, 400));
+  return D.sats.list.length > 0 && !!window.satellite;
 }
 
 /** Passes of one satellite (Sats entry) over the observer between t0 and t1. */
 function passesOf(s, obs, t0, t1, step = 30e3) {
   const sl = window.satellite, rec = s.rec || (s.rec = sl.twoline2satrec(s.l1, s.l2));
   const at = ms => { const d = new Date(ms), pv = sl.propagate(rec, d); if (!pv.position || isNaN(pv.position.x)) return null; const f = sl.eciToEcf(pv.position, sl.gstime(d)); return { x: f.x, y: f.y, z: f.z }; };
-  return findPasses(at, obs.km, t0, t1, { step, sunAt: ms => sunDirection(C.JulianDate.fromDate(new Date(ms))) });
+  return findPasses(at, obs, t0, t1, { step, sunAt: sunEcef });
 }
 
 const S = { open: false, run: 0, loc: null, passes: [], aurora: null, iss: '', launches: [], far: [], hours: null, cloudErr: '' };
@@ -102,18 +97,18 @@ const bearing = (la1, lo1, la2, lo2) => { const r = Math.PI / 180, y = Math.sin(
 
 /** Where the ISS is right now, in words. */
 async function issNow() {
-  const s = Sats.byId.get('25544'), sl = window.satellite; if (!s || !sl) return '';
+  const s = D.sats.byId.get('25544'), sl = window.satellite; if (!s || !sl) return '';
   const rec = s.rec || (s.rec = sl.twoline2satrec(s.l1, s.l2)), d = new Date(), pv = sl.propagate(rec, d); if (!pv.position) return '';
   const g = sl.eciToGeodetic(pv.position, sl.gstime(d)), lat = sl.degreesLat(g.latitude), lon = sl.degreesLong(g.longitude);
-  const k = await Country.at(lon, lat).catch(() => null);
-  return `Right now the ISS is over ${k ? k.facts.name : oceanAt(lat, lon)}, ${Math.round(g.height)} km up, doing 28,000 km/h (a lap of the Earth every 92 minutes).`;
+  const k = await D.countryName(lon, lat).catch(() => null);
+  return `Right now the ISS is over ${k || oceanAt(lat, lon)}, ${Math.round(g.height)} km up, doing 28,000 km/h (a lap of the Earth every 92 minutes).`;
 }
 /** The next launch anywhere, and any in the next week close enough to see from here (a plume shows ~1,000 km away at dusk or night). */
 async function launchesNear(loc) {
-  await Launches.load(); const now = Date.now(), out = [];
+  const list = await D.launches(); const now = Date.now(), out = [];
   const precise = l => ['SEC', 'MIN', 'HR', ''].includes(String(l.precision).toUpperCase()) && l.net > now;
-  const next = Launches.list.find(precise);
-  for (const l of Launches.list.filter(l => precise(l) && l.net < now + 7 * DAY)) {
+  const next = list.find(precise);
+  for (const l of list.filter(l => precise(l) && l.net < now + 7 * DAY)) {
     const km = haversine(loc.lat, loc.lon, l.lat, l.lon) / 1000; if (km > 1000) continue;
     const dark = sunAlt(loc.lat, loc.lon, l.net) < -4, dir = compass(bearing(loc.lat, loc.lon, l.lat, l.lon));
     out.push({ l, text: `${l.rocket} from ${l.place || l.pad}, ${time(l.net)}: ${Math.round(km)} km from you, toward the ${dir}. ${km < 150 ? 'Close enough to hear it.' : ''} ${dark ? 'After dark or at dusk, so watch for the plume rising and the bright exhaust.' : 'In daylight, so it\'s hard to see unless you are close.'}` });
@@ -184,14 +179,14 @@ function render(initial = false) {
     <h3>Aurora</h3><p class="tn-p">${S.aurora ? esc(S.aurora.text) + ` <small>(NOAA OVATION: ${S.aurora.overhead}% overhead)</small>` : 'Checking NOAA\'s aurora forecast…'}</p>
     <div class="acts"><button class="chipbtn" id="tnAur">${watching ? 'Stop aurora alerts' : 'Alert me if aurora gets likely'}</button></div>
     ${soon.length ? `<h3>Coming up in the sky</h3><div class="tn-list">${soon.map(t => `<div class="tn-row"><span>${esc(t)}</span></div>`).join('')}</div>` : ''}
-    ${S.ecl ? `<h3>Next solar eclipse you can see</h3><div class="tn-list"><div class="tn-row"><span>${esc(new Date(S.ecl.at).toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))}, ${esc(new Date(S.ecl.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }))}: ${S.ecl.kind === 'total' ? '<b class="ok">TOTAL</b> from here' : S.ecl.kind === 'annular' ? 'a ring of fire from here' : `the Moon covers ${Math.round(S.ecl.covered * 100)}% of the Sun from here`}${S.ecl.e.type === 'total' && S.ecl.kind !== 'total' ? ' (totality elsewhere)' : ''}. Never look at the Sun without eclipse glasses.</span><span class="tn-b"><button class="chipbtn" id="tnEcl">Watch the shadow</button></span></div></div>` : S.ecl === false ? '<h3>Solar eclipses</h3><p class="tn-p">None visible from here in 2027–2030.</p>' : ''}
+    ${S.ecl ? `<h3>Next solar eclipse you can see</h3><div class="tn-list"><div class="tn-row"><span>${esc(new Date(S.ecl.at).toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))}, ${esc(new Date(S.ecl.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }))}: ${S.ecl.kind === 'total' ? '<b class="ok">TOTAL</b> from here' : S.ecl.kind === 'annular' ? 'a ring of fire from here' : `the Moon covers ${Math.round(S.ecl.covered * 100)}% of the Sun from here`}${S.ecl.e.type === 'total' && S.ecl.kind !== 'total' ? ' (totality elsewhere)' : ''}. Never look at the Sun without eclipse glasses.</span>${D.watchEclipse ? '<span class="tn-b"><button class="chipbtn" id="tnEcl">Watch the shadow</button></span>' : ''}</div></div>` : S.ecl === false ? '<h3>Solar eclipses</h3><p class="tn-p">None visible from here in 2027–2030.</p>' : ''}
     ${S.far.length ? `<h3>Farthest from home</h3><div class="tn-list">${S.far.map(f => `<div class="tn-row"><span>${esc(f.text)}</span></div>`).join('')}</div>` : ''}
-    <div class="acts"><button class="chipbtn" id="tnLook" style="color:#7dffa6">Look up</button><button class="chipbtn" id="tnShare">Share tonight</button>${demo ? '<button class="chipbtn" id="tnLoc">Use my location</button>' : '<button class="chipbtn" id="tnForget">Forget my location</button>'}</div>
+    <div class="acts">${D.lookUp ? '<button class="chipbtn" id="tnLook" style="color:#7dffa6">Look up</button>' : ''}<button class="chipbtn" id="tnShare">Share tonight</button>${demo ? '<button class="chipbtn" id="tnLoc">Use my location</button>' : '<button class="chipbtn" id="tnForget">Forget my location</button>'}</div>
     <p class="note">Times are yours (${esc(Intl.DateTimeFormat().resolvedOptions().timeZone || 'local')}). "Calendar" adds an event that reminds you 10 minutes before, even with this site closed. "Remind me" and aurora alerts work while this page is open in a tab.</p>`);
   bindPasses(c);
   if (c.querySelector('#tnCrew')) c.querySelector('#tnCrew').onclick = e => { e.preventDefault(); S.open = false; Crew.open(); };
-  if (c.querySelector('#tnEcl')) c.querySelector('#tnEcl').onclick = () => { S.open = false; Eclipses.watch(S.ecl.e); };
-  c.querySelectorAll('[data-lch]').forEach(b => { b.onclick = () => { S.open = false; Launches.show(S.launches[+b.dataset.lch].l); }; });
+  if (c.querySelector('#tnEcl')) c.querySelector('#tnEcl').onclick = () => { S.open = false; D.watchEclipse(S.ecl.e); };
+  c.querySelectorAll('[data-lch]').forEach(b => { b.onclick = () => { S.open = false; D.showLaunch(S.launches[+b.dataset.lch].l); }; });
   c.querySelectorAll('[data-met]').forEach(b => { b.onclick = () => {
     const m = showers[+b.dataset.met], night = showersFor(lat, lon, m.peakMs - 12 * HOUR, { time }).find(x => x.name === m.name), at = (night && night.bestMs) || m.peakMs;
     Alerts.calendar([{ uid: `oo-${m.name.replace(/\W+/g, '')}-${new Date(m.peakMs).getUTCFullYear()}@open-overwatch`, start: at - HOUR, end: at + HOUR, title: `${m.name} meteor shower: look up (radiant ${m.dir})`, details: `${m.text}\nFrom ${m.parent}, hitting the air at ${m.kms} km/s. Get away from lights, give your eyes 20 minutes, lie back.\nhttps://cwbhood.github.io/open-overwatch/globe.html#go=tonight`, alarmMin: 30 }], `${m.name.toLowerCase().replace(/\W+/g, '-')}.ics`);
@@ -206,35 +201,35 @@ function render(initial = false) {
     if (navigator.share) { try { await navigator.share({ title: "Tonight's sky", text, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
     try { await navigator.clipboard.writeText(text + ' ' + url); toast('Copied: paste it into a message', 3000); } catch (e) { window.prompt('Copy this:', text + ' ' + url); }
   };
-  c.querySelector('#tnLook').onclick = () => { Tonight.close(); LookUp.enter(); };
+  if (c.querySelector('#tnLook')) c.querySelector('#tnLook').onclick = () => { Tonight.close(); D.lookUp(); };
   if (c.querySelector('#tnForget')) c.querySelector('#tnForget').onclick = () => { home.forget(); toast('Location forgotten'); intro(); };
   if (c.querySelector('#tnLoc')) c.querySelector('#tnLoc').onclick = async () => { const p = await locate(); if (p) { home.set(p.latitude, p.longitude); show(home.get()); } else toast('Location refused or unavailable', 4000); };
 }
 
 async function show(loc) {
   const run = ++S.run; S.open = true; S.loc = loc; S.passes = []; S.aurora = null; S.computing = true; render(true);
-  const obs = observerAt(loc.lat, loc.lon), t0 = Date.now(), t1 = t0 + DAY;
+  const obs = observer(loc.lat, loc.lon), t0 = Date.now(), t1 = t0 + DAY;
   S.crew = '';
   Crew.load().then(() => { if (run === S.run) { S.crew = Crew.sentence(); render(); } }, () => {});
   S.ecl = null;
-  Eclipses.nextFrom(loc.lat, loc.lon).then(x => { if (run === S.run) { S.ecl = x || false; render(); } }, e => console.warn('eclipse', e));
+  (D.nextEclipse ? D.nextEclipse(loc.lat, loc.lon) : Promise.resolve(null)).then(x => { if (run === S.run) { S.ecl = x || false; render(); } }, e => console.warn('eclipse', e));
   S.iss = ''; S.launches = []; S.far = []; S.hours = null; S.cloudErr = '';
   forecast(loc.lat, loc.lon).then(h => { if (run === S.run) { S.hours = h; render(); } }, e => { console.warn('clouds', e); if (run === S.run) { S.cloudErr = 'The cloud forecast is unreachable right now.'; render(); } });
   farthest(Date.now()).then(x => { if (run === S.run) { S.far = x; render(); } }, e => console.warn('farthest', e));
   launchesNear(loc).then(x => { if (run === S.run) { S.launches = x; render(); } }, () => {});
-  Aurora.grid().then(g => { if (run === S.run) { S.aurora = auroraAt(g.coordinates, loc.lat, loc.lon); render(); } }, () => { if (run === S.run) { S.aurora = { level: 0, overhead: 0, text: 'NOAA\'s aurora forecast is unreachable right now.' }; render(); } });
+  D.auroraGrid().then(g => { if (run === S.run) { S.aurora = auroraAt(g.coordinates, loc.lat, loc.lon); render(); } }, () => { if (run === S.run) { S.aurora = { level: 0, overhead: 0, text: 'NOAA\'s aurora forecast is unreachable right now.' }; render(); } });
   if (!(await satsReady())) { S.computing = false; render(); return; }
   issNow().then(t => { if (run === S.run) { S.iss = t; render(); } }, () => {});
   const add = (s, name, short, ps) => { for (const p of ps) S.passes.push({ ...p, id: s.id, name, short }); };
-  for (const [id, name, short] of MAIN) { const s = Sats.byId.get(id); if (s) add(s, name, short, passesOf(s, obs, t0, t1)); }
+  for (const [id, name, short] of MAIN) { const s = D.sats.byId.get(id); if (s) add(s, name, short, passesOf(s, obs, t0, t1)); }
   if (run !== S.run) return; render(); await breathe();
-  for (const t of starlinkTrains(Sats.list.filter(s => s.layer === 'starlink')).slice(0, 3)) {
-    const s = Sats.byId.get(t.sat.id) || t.sat; add(s, `Starlink train (launched ${t.launch}, ${t.count} satellites in a line)`, 'Starlink train', passesOf(s, obs, t0, t1)); await breathe();
+  for (const t of starlinkTrains(D.sats.list.filter(s => s.layer === 'starlink')).slice(0, 3)) {
+    const s = D.sats.byId.get(t.sat.id) || t.sat; add(s, `Starlink train (launched ${t.launch}, ${t.count} satellites in a line)`, 'Starlink train', passesOf(s, obs, t0, t1)); await breathe();
   }
   if (run !== S.run) return; render();
   // the brightest other satellites, only when they climb high in a dark sky (a coarser search: there are ~150 of them)
   const bright = [];
-  for (const s of Sats.list.filter(x => x.layer === 'visual' && !MAIN.some(([id]) => id === x.id)).slice(0, 90)) {
+  for (const s of D.sats.list.filter(x => x.layer === 'visual' && !MAIN.some(([id]) => id === x.id)).slice(0, 90)) {
     for (const p of passesOf(s, obs, t0, t1, 60e3)) if (p.visible && p.maxEl >= 45) bright.push([p, s]);
     await breathe(); if (run !== S.run) return;
   }
@@ -247,7 +242,7 @@ async function show(loc) {
 async function forSat(s, loc) {
   const c = card(`<div class="k" style="--c:#7dffa6">Passes over you</div><h2>${esc(s.name)}</h2><p class="note">Working it out…</p>`);
   await new Promise(r => setTimeout(r, 30));
-  const t0 = Date.now(), all = passesOf(s, observerAt(loc.lat, loc.lon), t0, t0 + 3 * DAY), short = friendly(s.name);
+  const t0 = Date.now(), all = passesOf(s, observer(loc.lat, loc.lon), t0, t0 + 3 * DAY), short = friendly(s.name);
   S.passes = all.map(p => ({ ...p, id: s.id, name: friendly(s.name), short }));
   const vis = S.passes.filter(p => p.visible), rows = (vis.length ? vis : S.passes).slice(0, 8);
   c.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" style="--c:#7dffa6">${loc.demo ? 'From Greenwich (example)' : `From ${loc.lat.toFixed(2)}, ${loc.lon.toFixed(2)}`} · next 3 days</div><h2>${esc(s.name)}</h2>
@@ -262,7 +257,17 @@ function bindPasses(c) {
   c.querySelectorAll('[data-cal]').forEach(b => { b.onclick = () => { const p = S.passes[+b.dataset.cal]; Alerts.calendar([{ uid: `oo-${p.id}-${Math.round(p.rise / 60e3)}@open-overwatch`, start: p.rise, end: p.set, title: `${p.short} passes over: look ${compass(p.azRise)}`, details: describePass(p.name, p, { time }) + '\nhttps://cwbhood.github.io/open-overwatch/globe.html#go=tonight', alarmMin: 10 }], `${p.short.toLowerCase().replace(/\W+/g, '-')}-pass.ics`); }; });
 }
 
+/**
+ * What this card needs from the page it lives on (the 3D globe, or the light tonight.html):
+ *   sats: { list, byId }    satellites with { id, name, layer, l1, l2 }, filled as they load
+ *   auroraGrid() -> Promise<OVATION json>      countryName(lon, lat) -> Promise<name | null>
+ *   launches() -> Promise<[launch]>            showLaunch(launch)
+ *   nextEclipse(lat, lon) -> Promise | null     watchEclipse(e)      lookUp()   (optional: their buttons hide without them)
+ */
+let D = null;
+
 export const Tonight = {
+  use(deps) { D = deps; return this; },
   open() { S.open = true; const h = home.get(); if (h) show(h); else intro(); },
   /** Passes of one satellite over the saved location (asks for it first if there isn't one). */
   async forSat(s) {
@@ -277,11 +282,11 @@ export const Tonight = {
   async peek() {
     Alerts.init(); this.watchAurora();
     const h = home.get(); if (!h || !(await satsReady(60e3))) return;
-    const iss = Sats.byId.get('25544'); if (!iss) return;
-    const obs = observerAt(h.lat, h.lon), now = Date.now();
+    const iss = D.sats.byId.get('25544'); if (!iss) return;
+    const obs = observer(h.lat, h.lon), now = Date.now();
     // "look up now": a nudge a minute before each visible station pass in the next 12 hours, while this page is open
     for (const [id, short] of [['25544', 'The ISS'], ['48274', 'Tiangong']]) {
-      const sat = Sats.byId.get(id); if (!sat) continue;
+      const sat = D.sats.byId.get(id); if (!sat) continue;
       for (const q of passesOf(sat, obs, now, now + 12 * HOUR).filter(x => x.visible && x.maxEl >= 20)) {
         const say = () => { const t = `${short} is rising in the ${compass(q.azRise)} now: up to ${Math.round(q.maxEl)}° high, bright, for about ${Math.max(1, Math.round((q.set - q.rise) / 60e3))} min. Look up!`;
           if ('Notification' in window && Notification.permission === 'granted') Alerts.now('Look up now', t, 'now-' + id); else toast(t, 15000); };
@@ -298,7 +303,7 @@ export const Tonight = {
     const check = async () => {
       const w = store.get('auroraWatch', null); if (!w) return;
       const now = Date.now(); if (sunAlt(w.lat, w.lon, now) > -12 || now - store.get('auroraSaid', 0) < 6 * HOUR) return;
-      const a = auroraAt((await Aurora.grid()).coordinates, w.lat, w.lon);
+      const a = auroraAt((await D.auroraGrid()).coordinates, w.lat, w.lon);
       if (a.level >= 2) { store.set('auroraSaid', now); Alerts.now('Aurora likely now', a.text, 'aurora'); }
     };
     this._aw = setInterval(() => check().catch(e => console.warn('aurora watch', e)), 10 * 60e3); check().catch(() => {});

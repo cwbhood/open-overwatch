@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#04060a">
+<title>Tonight above you · Open Overwatch</title>
+<meta name="description" content="What you can see in your own sky tonight, in plain words: the space station and Starlink trains passing over, the planets, the Moon, meteor showers, aurora, clouds and rocket launches, with reminders. Free, no account, works on any phone.">
+<link rel="canonical" href="https://cwbhood.github.io/open-overwatch/tonight.html">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Destin Jones">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Open Overwatch"><meta property="og:title" content="Tonight above you"><meta property="og:description" content="The space station, Starlink trains, planets, meteors, aurora and clouds over you tonight, in plain words, with reminders."><meta property="og:image" content="https://cwbhood.github.io/open-overwatch/brand/social/og-1200x630.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="brand/emblem/favicon.svg">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="brand/emblem/apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Tonight above you, without the 3D globe: the same card as the globe's Tonight (src/globe/tonight.js), full page, fast on phones. */
+:root{
+  --bg:#04060a; --glass:rgba(8,12,18,.62); --edge-dim:rgba(230,237,243,.08); --ink:#e6edf3; --dim:#8b9bab; --faint:#55667a; --accent:#7dffa6;
+  --display:"Big Shoulders Display","Arial Narrow",sans-serif; --body:"Barlow",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg) radial-gradient(ellipse at 50% -20%,#0d1a2a 0,#04060a 60%) no-repeat;color:var(--ink);font:15px/1.45 var(--body);-webkit-font-smoothing:antialiased;min-height:100%}
+a{color:var(--accent)}
+button{font:inherit;color:inherit;cursor:pointer}
+.glass{background:var(--glass);border:1px solid var(--edge-dim);border-radius:14px}
+header{max-width:720px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 0;display:flex;align-items:center;gap:10px}
+header img{width:30px;height:30px} header b{font:900 18px/1 var(--display);letter-spacing:.08em;text-transform:uppercase} header nav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+#card{max-width:720px;margin:12px auto 0;padding:18px 18px 22px;position:relative}
+#card .x{display:none}
+#card .k{font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--c,var(--accent))}
+#card h2{margin:6px 0 10px;font:900 34px/1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+#card h3{margin:16px 0 6px;font:700 11px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)} #card h3 small{letter-spacing:0;text-transform:none;color:var(--faint)}
+#card [hidden]{display:none!important} /* folded sections (display:flex would otherwise win) */
+#card h3.fold{cursor:pointer;user-select:none} #card h3.fold::after{content:' ▾';color:var(--faint)} #card h3.fold.shut::after{content:' ▸'}
+#card .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chipbtn{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;border-radius:9px;font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-decoration:none;border:1px solid var(--edge-dim);background:none}
+.chipbtn:hover{color:var(--ink)}
+.note{font-size:12px;color:var(--faint);margin:8px 2px 2px;line-height:1.4} .note.warn{color:#ffb44d}
+.tn-head{margin:4px 0 2px;font:500 16px/1.45 var(--body)} .tn-head b,.tn-p .ok,.tn-head .ok{color:#7dffa6} .tn-p{margin:0;font:500 14px/1.5 var(--body)} .tn-p small{color:var(--faint)}
+.tn-list{display:flex;flex-direction:column;gap:5px} .tn-row{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;justify-content:space-between;padding:9px 11px;border-radius:10px;border:1px solid var(--edge-dim);background:rgba(230,237,243,.03);font:500 14px/1.45 var(--body)}
+.tn-row.dim{opacity:.5} .tn-row .ok{color:#7dffa6;font-weight:600} .tn-row .cl,.tn-head .cl{color:#ffb44d;font-weight:600} .tn-b{display:flex;gap:4px} .tn-b .chipbtn{padding:6px 9px;color:#7dffa6}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:calc(100vw - 24px);padding:10px 14px;z-index:7;font:500 12.5px/1.3 var(--mono);opacity:0;transition:opacity .3s;pointer-events:none;text-align:center}
+#toast.show{opacity:1}
+footer{max-width:720px;margin:0 auto;padding:14px 16px calc(30px + env(safe-area-inset-bottom,0px));color:var(--faint);font-size:12px}
+button:focus-visible,a:focus-visible,h3:focus-visible{outline:2px solid #7dffa6;outline-offset:2px}
+@media (max-width:480px){ #card{border-radius:0;border-left:0;border-right:0} #card h2{font-size:28px} }
+</style>
+</head>
+<body>
+<header>
+  <img src="brand/emblem/emblem-256.png" alt=""><b>Open Overwatch</b>
+  <nav><a class="chipbtn" href="globe.html" title="The full 3D globe, with look-up mode">3D globe</a><a class="chipbtn" href="index.html">Home</a></nav>
+</header>
+<section id="card" class="glass show" aria-live="polite" role="region" aria-label="Tonight above you"><div class="k">Your sky</div><h2>Tonight above you</h2><p class="note">Loading…</p></section>
+<footer>Open data: satellite orbits from CelesTrak (US Space Force), planets from JPL elements, aurora from NOAA SWPC, clouds from Open-Meteo.com (CC BY 4.0), launches and crews from The Space Devs. <a href="about.html">About</a> · <a href="globe.html">The 3D globe</a> has look-up mode: hold your phone to the sky.</footer>
+<div id="toast" class="glass"></div>
+<script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+<script>if (location.protocol === 'file:') document.querySelector('#card .note').innerHTML = 'This page needs the local helper: run <b>Start Open Overwatch.bat</b>, then open http://127.0.0.1:8787/tonight.html';</script>
+<script type="module" src="src/sky/main.js"></script>
+</body>
+</html>

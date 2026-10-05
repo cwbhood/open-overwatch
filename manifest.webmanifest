@@ -16,7 +16,7 @@
     { "src": "brand/emblem/emblem-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
   ],
   "shortcuts": [
-    { "name": "Tonight above you", "url": "./globe.html#go=tonight" },
+    { "name": "Tonight above you", "url": "./tonight.html" },
     { "name": "Find a flight", "url": "./globe.html#go=flight" },
     { "name": "Live map (2D)", "url": "./open-overwatch.html" }
   ]

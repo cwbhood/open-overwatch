@@ -101,6 +101,9 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
       (remembered)
 - [x] People in space right now (Launch Library 2 astronauts, build copy in data/astronauts.json, core/crew.js tested): a card
       with names, flags, agencies, days in space; "Aboard now: 11 people" on the ISS and Tiangong cards; in Tonight and search
+- [x] tonight.html: the Tonight card without the 3D globe (src/sky/main.js wires light feeds into src/globe/tonight.js, which
+      no longer imports the globe; core/observer.js replaces Cesium for passes). Phone profile: card 1.2 s, full answer 1.7 s
+      after location. Landing page and the app shortcut link here
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
 
 ## Rules of thumb

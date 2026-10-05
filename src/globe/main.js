@@ -67,6 +67,11 @@ PRESETS.eclipses = () => Eclipses.openList();
 PRESETS.weather = () => Weather.toggle();
 PRESETS.tour = () => { hooks.clearPresets(); Tour.start(); };
 PRESETS.flybys = () => { hooks.clearPresets(); Flybys.openList(); };
+Tonight.use({   // the globe's own feeds for the Tonight card (tonight.html wires light versions of the same)
+  sats: Sats, auroraGrid: () => Aurora.grid(), countryName: (lon, lat) => Country.at(lon, lat).then(k => k && k.facts.name),
+  launches: () => Launches.load().then(() => Launches.list), showLaunch: l => Launches.show(l),
+  nextEclipse: (lat, lon) => Eclipses.nextFrom(lat, lon), watchEclipse: e => Eclipses.watch(e), lookUp: () => LookUp.enter(),
+});
 PRESETS.tonight = () => Tonight.open();
 hooks.satPasses = o => Tonight.forSat(o);
 PRESETS.search = () => Search.open();

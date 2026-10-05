@@ -114,6 +114,7 @@ body.embed #top,body.embed #band,body.embed #dock,body.embed #navpad,body.embed 
 body.lookup #top,body.lookup #band,body.lookup #dock,body.lookup #card,body.lookup #hover,body.lookup #credits{display:none!important}
 #card .x{position:absolute;right:10px;top:10px;border:0;background:none;color:var(--faint);font-size:18px;padding:4px 8px}
 #card .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#card [hidden]{display:none!important} /* folded sections (display:flex would otherwise win) */
 #card h3.fold{cursor:pointer;user-select:none} #card h3.fold::after{content:' ▾';color:var(--faint)} #card h3.fold.shut::after{content:' ▸'}
 #card h3{margin:14px 0 6px;font:700 11px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)} #card h3 small{letter-spacing:0;text-transform:none;color:var(--faint)}
 .tn-head{margin:4px 0 2px;font:500 14px/1.45 var(--body)} .tn-head b,.tn-p .ok,.tn-head .ok{color:#7dffa6} .tn-p{margin:0;font:500 12.5px/1.45 var(--body)} .tn-p small{color:var(--faint)}

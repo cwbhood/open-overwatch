@@ -182,3 +182,11 @@ test('crew: who is in space, from Launch Library 2 astronauts', async () => {
   assert.equal(crewSentence(w), '14 people are in space right now: 11 on the ISS and 3 on Tiangong.');
   assert.equal(list[0].flag, '🇺🇸'); assert.equal(fromLL2Astronaut({ name: 'x', wiki: 'javascript:alert(1)' }).wiki, null);
 });
+
+test('observer: WGS84 position and axes, and the Sun in the Earth-fixed frame', async () => {
+  const { observer, sunEcef } = await import('../src/core/observer.js');
+  const o = observer(0, 0); assert.ok(Math.abs(o.pos.x - 6378.137) < 1e-6 && Math.abs(o.up.x - 1) < 1e-12 && Math.abs(o.north.z - 1) < 1e-12 && Math.abs(o.east.y - 1) < 1e-12);
+  const pole = observer(90, 0); assert.ok(Math.abs(pole.pos.z - 6356.752) < 1e-3);
+  // equinox 2024-03-20 03:06 UTC: the Sun on the equator; at 12:00 UTC it is near overhead at longitude ~ -2 (equation of time)
+  const s = sunEcef(Date.parse('2024-03-20T12:00:00Z')); assert.ok(Math.abs(s.z) < 0.01 && s.x > 0.99, JSON.stringify(s));
+});

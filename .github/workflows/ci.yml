@@ -17,7 +17,7 @@ jobs:
           python3 -m py_compile serve.py .github/build_site.py brand/tools/*.py
       - name: Every module a page loads exists
         run: |
-          for page in open-overwatch.html globe.html solar.html; do
+          for page in open-overwatch.html globe.html solar.html tonight.html; do
             grep -o 'src="src/[^"]*"' "$page" | sed 's/src="//; s/"$//' | while read -r f; do test -f "$f" || { echo "$page -> missing $f"; exit 1; }; done
           done
       - name: Tests (orbital maths against JPL Horizons, TLE source, geodesy)
