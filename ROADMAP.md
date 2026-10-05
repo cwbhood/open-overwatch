@@ -68,6 +68,14 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] Find a flight (globe band → Find flight): ticket number (BA 123 → BAW123), callsign, registration or hex
       (core/flight.js, tested); the download version asks adsb.lol and refreshes every 15 s; the website searches what it
       has and otherwise opens adsb.lol's own map. Aircraft cards get "Share", and links carry the flight (`&f=BAW123`)
+- [x] Meteor showers (core/meteors.js, tested): the ten major showers in Tonight with an honest rate from where you are
+      (radiant height, Moon, suburban sky), a peak-night calendar reminder, and the active radiants marked in Look up
+- [x] Search everything (band → ⌕ Search, or "/"): satellites by name, NORAD number or everyday name (ISS, Hubble,
+      Tiangong), countries, flight numbers, views, and volcanoes / employers / lighthouses once their layers have loaded
+- [x] Look up → "Sky on": any date 1800-2049 (planets, Moon, stars; satellites only within 3 days of today)
+- [x] Satellite cards say what the thing is in one sentence (core/explain.js)
+- [x] Install as an app (manifest.webmanifest: standalone, shortcuts to Tonight and Find a flight); "reduce motion"
+      makes camera flights jump instead of swoop
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
 
 ## Rules of thumb

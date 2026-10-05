@@ -12,6 +12,13 @@ export const viewer = new C.Viewer('globe', {
 });
 viewer.clock.clockStep = C.ClockStep.SYSTEM_CLOCK;
 export const scene = viewer.scene, globe = scene.globe, camera = viewer.camera, ctrl = scene.screenSpaceCameraController;
+// "Reduce motion" (a phone or OS setting): camera flights jump instead of swooping
+export const CALM = matchMedia('(prefers-reduced-motion: reduce)');
+{
+  const calm = o => CALM.matches ? { ...o, duration: 0 } : o, flyTo = camera.flyTo.bind(camera), flySphere = camera.flyToBoundingSphere.bind(camera);
+  camera.flyTo = o => flyTo(calm(o));                                  // flyTo(options)
+  camera.flyToBoundingSphere = (sphere, o = {}) => flySphere(sphere, calm(o));
+}
 $('#credits').appendChild(viewer.cesiumWidget.creditContainer);
 scene.backgroundColor = C.Color.fromCssColorString('#04060a');
 scene.postProcessStages.fxaa.enabled = true;

@@ -34,6 +34,7 @@ import { toggle as toggleNerd } from './nerd.js';
 import { Tonight } from './tonight.js';
 import { Flight } from './flight.js';
 import { Snapshot } from './snapshot.js';
+import { Search } from './search.js';
 
 function applyVisibility() {
   for (const s of Sats.list) if (s.pt) s.pt.show = L[s.layer].on && !s.ent && !s.docked;
@@ -58,6 +59,7 @@ PRESETS.weather = () => Weather.toggle();
 PRESETS.tour = () => { hooks.clearPresets(); Tour.start(); };
 PRESETS.flybys = () => { hooks.clearPresets(); Flybys.openList(); };
 PRESETS.tonight = () => Tonight.open();
+PRESETS.search = () => Search.open();
 PRESETS.flight = () => Flight.open();
 hooks.shareCopy = () => Share.copy();
 hooks.snapshot = () => Snapshot.share();
@@ -132,7 +134,7 @@ every(60e3, () => Air.military(), 'Military aircraft');
 every(10 * 60e3, () => Quakes.load(), 'Earthquakes');
 setInterval(() => Aurora.apply(), 60e3);   // refreshes itself every 10 minutes while the layer is on
 
-window.OO3D = { Conj, LookUp, Eclipses, Tonight, Flight, Snapshot,
+window.OO3D = { Conj, LookUp, Eclipses, Tonight, Flight, Snapshot, Search,
   viewer, space: Space, time: Time, Earth, marbleLayer, nightLayer, fxShell, cloudShell, limbShell, Fx, Sats, Air, Quakes, Lighthouses, Weather, Wind, Country, Aurora, Flybys, Companies, Volcanoes, SunLine, Buildings, Share, Tour, setIonToken: t => Buildings.setToken(t), L, PRESETS, moonPosition, SatModels, AirModels, Follow, select, applyVisibility,
   /** debug: the axes test model at lon/lat/height, body X = east, Y = north, Z = up, arrays turned by `deg` */
   debugAxes(lon, lat, h, deg = 0, uri = 'brand/models/test/axes.glb') {

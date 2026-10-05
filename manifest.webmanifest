@@ -1,0 +1,23 @@
+{
+  "name": "Open Overwatch · the 3D Earth, live",
+  "short_name": "Overwatch",
+  "description": "A live 3D Earth: satellites, aircraft, weather, your sky tonight, and a zoom out to the Solar System. Open data, no account.",
+  "id": "./globe.html",
+  "start_url": "./globe.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#04060a",
+  "theme_color": "#04060a",
+  "categories": ["education", "weather", "navigation"],
+  "icons": [
+    { "src": "brand/emblem/emblem-256.png", "sizes": "256x256", "type": "image/png" },
+    { "src": "brand/emblem/emblem-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "brand/emblem/emblem-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Tonight above you", "url": "./globe.html#go=tonight" },
+    { "name": "Find a flight", "url": "./globe.html#go=flight" },
+    { "name": "Live map (2D)", "url": "./open-overwatch.html" }
+  ]
+}

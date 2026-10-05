@@ -76,3 +76,24 @@ test('flight: ticket numbers, callsigns, hex and registrations', () => {
   assert.ok(matchesFlight({ flight: 'BAW123  ' }, q)); assert.ok(!matchesFlight({ flight: 'BAW1234' }, q));
   assert.ok(matchesFlight({ hex: '3C6444' }, parseFlightQuery('3c6444')));
 });
+
+test('meteors: the Perseids from London in August, the Geminids over New Year, nothing in early June', async () => {
+  const { showersFor, activeShowers } = await import('../src/core/meteors.js');
+  const per = showersFor(51.48, 0, Date.parse('2026-08-09T12:00:00Z')).find(s => s.name === 'Perseids');
+  assert.ok(per && per.active && Math.round(per.days) === 3, JSON.stringify(per));
+  assert.ok(per.radiantAlt > 50 && per.rate > 5 && per.ratePeak > per.rate && per.ratePeak < 100, per.text);
+  assert.match(per.text, /peaks in 3 days/);
+  assert.ok(activeShowers(Date.parse('2027-01-02T00:00:00Z')).some(s => s.name === 'Quadrantids'));      // wraps past New Year
+  assert.equal(showersFor(51.48, 0, Date.parse('2026-06-05T12:00:00Z'), { ahead: 10 }).length, 0);
+  const south = showersFor(-33.9, 151.2, Date.parse('2026-12-13T08:00:00Z')).find(s => s.name === 'Ursids');   // Sydney: the Ursid radiant never rises
+  assert.ok(south && /below the horizon/.test(south.text), south && south.text);
+});
+
+test('explain: a friendly sentence for any satellite', async () => {
+  const { explainSat } = await import('../src/core/explain.js');
+  assert.match(explainSat({ name: 'ISS (ZARYA)' }), /International Space Station/);
+  assert.match(explainSat({ name: 'STARLINK-1007' }), /Starlink/);
+  assert.match(explainSat({ name: 'SL-16 R/B' }), /rocket stage/);
+  assert.match(explainSat({ name: 'INTELSAT 901', layer: 'geo' }, { alt: 35790 }), /geostationary/);
+  assert.match(explainSat({ name: 'OBJECT A', layer: 'active' }, { alt: 520, period: 95 }), /520 km up/);
+});

@@ -59,7 +59,7 @@ export function initNavpad() {
   addEventListener('keydown', e => {
     if (e.ctrlKey || e.metaKey || e.altKey || LookUp.active || /input|textarea|select/i.test(e.target.tagName)) return;
     const k = e.key.toLowerCase();
-    if (k === '+' || k === '=') A.in(); else if (k === '-' || k === '_') A.out(); else if (k === 'n') A.north(); else if (k === 't') A.down(); else if (k === 'r') A.reset(); else if (k === 'p') A.pic();
+    if (k === '+' || k === '=') A.in(); else if (k === '-' || k === '_') A.out(); else if (k === 'n') A.north(); else if (k === 't') A.down(); else if (k === 'r') A.reset(); else if (k === 'p') A.pic(); else if (e.key === '/') { e.preventDefault(); PRESETS.search(); }
   });
 
   // the needle points to north: it turns against the camera heading, so a skewed view is obvious at a glance

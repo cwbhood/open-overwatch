@@ -16,6 +16,7 @@ import { planetPosition, earthPosition } from '../core/planets.js';
 import { eclToEq } from '../core/units.js';
 import { jdFromMs } from '../core/time.js';
 import { deviceVectors, alphaFromCompass, azEl } from '../core/orientation.js';
+import { activeShowers } from '../core/meteors.js';
 
 const D = Math.PI / 180, FAR = 1.0e9;   // planets and stars are drawn 1 million km out: beyond every satellite
 const FALLBACK = { lat: 51.4769, lon: -0.0005, name: 'Greenwich (allow location to see your own sky)' };
@@ -79,10 +80,13 @@ function refresh() {
     const p = planetPosition(key, jd, {}), q = eclToEq(p.x - E.x, p.y - E.y, p.z - E.z), v = C.Cartesian3.normalize(new C.Cartesian3(q.x, q.y, q.z), new C.Cartesian3());
     add(far(C.Matrix3.multiplyByVector(M, v, new C.Cartesian3())), name, col, 8);
   }
+  for (const m of activeShowers(Time.nowMs())) add(far(C.Matrix3.multiplyByVector(M, radec(m.ra, m.dec), new C.Cartesian3())), `☄ ${m.name} radiant`, '#ffb44d', 6, '600 12px system-ui');   // meteors seem to fly out of here
   for (const [name, ra, dec] of STARS) labs.add({ position: far(C.Matrix3.multiplyByVector(M, radec(ra, dec), new C.Cartesian3())), text: name, font: '500 12px system-ui', fillColor: C.Color.fromCssColorString('#cfd8e3'), pixelOffset: new C.Cartesian2(8, -6), horizontalOrigin: C.HorizontalOrigin.LEFT });
-  // satellites above the horizon: count all, label the brightest ones
+  // satellites above the horizon: count all, label the brightest ones. Not far from today: orbits from this week's
+  // elements drift by kilometres a day, and nothing tells us what was up in 1990
+  const away = Math.abs(Time.nowMs() - Date.now()) / 86400e3;
   let above = 0; const bright = [];
-  for (const s of Sats.list) {
+  if (away < 3) for (const s of Sats.list) {
     if (!s.pt || !s.pt.position || s.docked) continue;
     const p = s.pt.position, a = lookAngles({ x: p.x / 1000, y: p.y / 1000, z: p.z / 1000 }, o.km);
     if (a.el < 0 || C.Cartesian3.magnitude(p) < 6.3e6) continue;
@@ -92,13 +96,15 @@ function refresh() {
   for (const [, s, p] of bright.slice(0, 10)) add(p, s.name, s.layer === 'stations' ? '#7dffa6' : '#e6edf3', s.layer === 'stations' ? 8 : 5, '600 12px system-ui');
   // aircraft within ~120 km and above the horizon
   let planes = 0;
-  for (const r of Air.map.values()) {
+  for (const r of Time.offLive() ? [] : Air.map.values()) {   // aircraft are live only
     if (!r.cur || r.ground) continue;
     const p = C.Cartesian3.fromDegrees(r.cur.lon, r.cur.lat, r.alt || 0), a = lookAngles({ x: p.x / 1000, y: p.y / 1000, z: p.z / 1000 }, o.km);
     if (a.el < 3 || a.range > 120) continue;
     planes++; if (planes <= 12) labs.add({ position: p, text: `✈ ${r.flight || r.hex} · ${fmt((r.alt || 0) / 0.3048)} ft`, font: '600 12px system-ui', fillColor: C.Color.fromCssColorString(r.mil ? '#ffb44d' : '#5fd3ff'), pixelOffset: new C.Cartesian2(10, 10), horizontalOrigin: C.HorizontalOrigin.LEFT, showBackground: true, backgroundColor: C.Color.fromCssColorString('#05080caa') });
   }
-  $('#luNow').textContent = `Above you now: ${fmt(above)} satellites${planes ? ` · ${planes} aircraft nearby` : ''}`;
+  $('#luNow').textContent = away < 3 ? `Above you ${Time.offLive() ? 'then' : 'now'}: ${fmt(above)} satellites${planes ? ` · ${planes} aircraft nearby` : ''}`
+    : `The sky on ${new Date(Time.nowMs()).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}: planets, Moon and stars where they were (satellites only near today)`;
+  $('#luPass').style.display = Time.offLive() ? 'none' : '';
 }
 
 // ---- the next ISS pass (recomputed every 10 minutes)
@@ -153,12 +159,16 @@ async function enter() {
   S.onWheel = e => { S.fov = Math.max(10, Math.min(100, S.fov * (e.deltaY > 0 ? 1.08 : 0.93))); camera.frustum.fov = S.fov * D; };
   cv.addEventListener('pointerdown', S.onDown); addEventListener('pointermove', S.onMove); addEventListener('pointerup', S.onUp); cv.addEventListener('wheel', S.onWheel, { passive: true });
   scene.preRender.addEventListener(frame);
+  const dateBox = $('#luDate'), local = ms => { const d = new Date(ms - new Date(ms).getTimezoneOffset() * 60e3); return d.toISOString().slice(0, 16); };
+  dateBox.value = local(Date.now());
+  dateBox.onchange = () => { const ms = new Date(dateBox.value).getTime(); if (Number.isFinite(ms)) { Time.setJd(jdFromMs(ms), 0); refresh(); } };   // paused at that moment
+  $('#luLive').onclick = () => { Time.goLive(); dateBox.value = local(Date.now()); refresh(); };
   refresh(); S.timer = setInterval(refresh, 1000); nextPass(); S.passTimer = setInterval(nextPass, 600e3);
 }
 
 function leave() {
   if (!S.active) return;
-  S.active = false; clearInterval(S.timer); clearInterval(S.passTimer);
+  S.active = false; clearInterval(S.timer); clearInterval(S.passTimer); if (!Time.live) Time.goLive();
   removeEventListener('deviceorientationabsolute', onOrientation); removeEventListener('deviceorientation', onOrientation);
   const cv = scene.canvas; cv.removeEventListener('pointerdown', S.onDown); removeEventListener('pointermove', S.onMove); removeEventListener('pointerup', S.onUp); cv.removeEventListener('wheel', S.onWheel);
   scene.preRender.removeEventListener(frame);

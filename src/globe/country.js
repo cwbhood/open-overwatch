@@ -49,6 +49,12 @@ export const Country = {
     this.current = o; scene.requestRender();
   },
   clear() { lines.removeAll(); this.current = null; },
+  /** Countries whose name contains q (names that start with it first): [{ iso, name }]. */
+  async search(q, n = 5) {
+    await load(); const s = q.toLowerCase(), name = b => (data.facts[b.iso] && data.facts[b.iso].name) || b.name || '';
+    return data.borders.filter(b => name(b).toLowerCase().includes(s)).map(b => ({ iso: b.iso, name: name(b) }))
+      .sort((a, b) => b.name.toLowerCase().startsWith(s) - a.name.toLowerCase().startsWith(s) || a.name.localeCompare(b.name)).slice(0, n);
+  },
   rectangle(o) { const bx = mainBox(o.border); return C.Rectangle.fromDegrees(bx[0], bx[1], bx[2], bx[3]); },   // the biggest part: far islands do not drag the view
   fly(o) {
     const r = this.rectangle(o), pad = Math.max(0.15 * (r.east - r.west), 0.02);
