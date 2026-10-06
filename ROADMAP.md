@@ -1,7 +1,7 @@
 # Roadmap — the rebuild
 
 Work happens on the local `rebuild` branch. Nothing is pushed, tagged or deployed until the user says so (a local
-pre-push hook refuses pushes without OO_PUSH_OK=1). Published: v0.9.1 (2026-10-02), v0.9.2.1 and v0.9.2.2 (2026-10-03), v0.9.2.3 and v0.9.2.4 (2026-10-04); next v0.9.2.5.
+pre-push hook refuses pushes without OO_PUSH_OK=1). Published: v0.9.1 (2026-10-02), v0.9.2.1 and v0.9.2.2 (2026-10-03), v0.9.2.3 and v0.9.2.4 (2026-10-04), v0.9.2.5 (2026-10-06); next v0.9.2.6.
 
 Goal: one coherent, well-engineered project that zooms from a street to the Local Group on real, open data — code a
 programmer would enjoy reading, not three big HTML files.
@@ -51,11 +51,13 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [ ] Decide how the public history looks (squash / fresh repo) — the user's call
 - [x] Publish as v0.9.1 (2026-10-02)
 - [x] Publish as v0.9.2.1 (2026-10-03): other solar systems, look up, eclipses, light delay, under the hood, phone fixes
+- [x] Publish as v0.9.2.5 (2026-10-06): Tonight above you (+ tonight.html), look-up upgrades, launches, people in space, search, find a flight,
+      share a picture, cloud forecast, meteor showers, constellations, embed mode, two bug-hunt rounds (80 fixes), build keeps last good feeds
 - [x] Publish as v0.9.2.4 (2026-10-04): About the creator page, links to Ironbound, search tags, MIT licence, citation file
 - [x] Publish as v0.9.2.3 (2026-10-04): country dossiers, big employers, volcanoes, aurora, flybys, sun and time zones, share links, the tour, 3D buildings (OpenStreetMap, no account)
 - [x] Publish as v0.9.2.2 (2026-10-03): phone dock, desktop nav pad, lighthouses, weather mode (clouds, radar, rain, wind, temperature), phone performance
 
-## Stage 4 — things people asked for (2026-10-05, not yet published; would be v0.9.2.5 with the notices commit)
+## Stage 4 — things people asked for (2026-10-05/06, published as v0.9.2.5 on 2026-10-06 with the notices commit)
 - [x] Tonight above you (globe band → Tonight; `globe.html#go=tonight` from the landing page): visible ISS / Tiangong / Hubble
       passes, Starlink trains (launches still below ~470 km), the brightest satellites when high, the five bright planets,
       the Moon's phase, the aurora chance where you stand, all in plain words (core/sky.js, tested). Location saved on the
