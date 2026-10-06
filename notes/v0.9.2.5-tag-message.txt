@@ -1,0 +1,14 @@
+Tonight above you, look-up upgrades, launches, people in space, search, flights, and two bug-hunt rounds
+
+New: "Tonight above you" (a Tonight button on the globe and a fast tonight.html): visible space-station,
+Hubble and Starlink-train passes, bright planets, meteor showers, the Moon and the next full Moon, sunset
+and dark times, the cloud forecast (Open-Meteo), aurora chance, rocket launches near you, the next eclipse
+from your home, who is in space, the farthest spacecraft, and reminders (calendar files or notifications).
+Look up: constellation figures, tap anything to learn what it is, "Find" guides you to a planet or the ISS,
+the sky on any date 1800-2049, red-light mode, pinch to zoom.
+Also: rocket launches with countdowns (Launch Library 2), people in space, search everything, find a
+flight by ticket number, share a picture of the view, embed the globe on your own page, install as an app,
+a warning before the weather-balloon layer, footer notices and a licence table.
+Fixes: 80 defects from two review rounds, including a script-injection hole on the 2D map, cards
+overwriting each other, look-up leaks, "AA1234" read as a hex address, meteor peak nights a day off, and
+the site build now keeps the last good copy of any feed it cannot refresh.
