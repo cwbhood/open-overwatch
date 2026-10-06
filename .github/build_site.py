@@ -50,9 +50,10 @@ def extract(ref, paths, dest, skip):
 SITE = 'https://destinjones.github.io/open-overwatch/'
 
 
-def renamed_owner(root):
-    """Old tags still link to the GitHub account's old name (cwbhood, renamed to destinjones on 2026-10-06), and
-    GitHub Pages doesn't redirect the old address, so archived versions get their links rewritten."""
+def fix_archived_links(root):
+    """Links in an archived version that would break: old tags still name the GitHub account's old name (cwbhood,
+    renamed to destinjones on 2026-10-06; GitHub Pages doesn't redirect the old address), and their pages link to the
+    landing page and about page, which aren't archived, so those point back at the site root."""
     for dirpath, _, files in os.walk(root):
         for name in files:
             if not name.endswith(('.html', '.js', '.json', '.webmanifest', '.txt', '.css', '.xml')):
@@ -60,9 +61,13 @@ def renamed_owner(root):
             path = os.path.join(dirpath, name)
             with open(path, 'rb') as f:
                 data = f.read()
-            if b'cwbhood' in data:
+            fixed = data.replace(b'cwbhood', b'destinjones')
+            if name.endswith('.html') and dirpath == root:
+                for page in (b'index.html', b'about.html'):
+                    fixed = fixed.replace(b'href="' + page, b'href="../../' + page)
+            if fixed != data:
                 with open(path, 'wb') as f:
-                    f.write(data.replace(b'cwbhood', b'destinjones'))
+                    f.write(fixed)
 
 
 def last_good(rel, timeout=30):
@@ -314,7 +319,7 @@ def main():
         if 'open-overwatch.html' not in paths:
             continue
         n = extract(tag, paths, os.path.join(OUT, 'v', tag), SKIP_VERSION)
-        renamed_owner(os.path.join(OUT, 'v', tag))
+        fix_archived_links(os.path.join(OUT, 'v', tag))
         notes = git('tag', '-l', '--format=%(contents)', tag) or git('log', '-1', '--format=%B', tag)
         lines = [l for l in notes.splitlines() if l.strip() and not l.startswith(('-----BEGIN', 'Co-Authored-By'))]
         versions.append({
