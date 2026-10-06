@@ -97,7 +97,7 @@ I vibe code this with Claude (an AI): I describe what I want, Claude writes and 
 
 ## Credit and licence
 Open Overwatch is by [Destin Jones](https://destinjones.github.io/open-overwatch/about.html) ([GitHub](https://github.com/destinjones)), built in public with Claude as the building partner.
-Also by me: [Ironbound](https://destinjones.github.io/godot-open-rts/), a free open source RTS made with Godot.
+Also by me: [Ironbound](https://destinjones.github.io/godot-open-rts/), a free open source RTS made with Godot, and [CarFinder](https://destinjones.github.io/carfinder/), every new car on sale in 11 countries with what it really costs.
 
 The code is MIT licensed ([LICENSE](LICENSE)): use it, fork it, build on it, and keep the copyright line. The data, maps, textures and models it shows belong to their sources and keep their own licences: see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
 If you write about it or build on it, please credit it: *Jones, D. (2026). Open Overwatch [Computer software]. https://github.com/destinjones/open-overwatch* (GitHub's "Cite this repository" button reads [CITATION.cff](CITATION.cff)).

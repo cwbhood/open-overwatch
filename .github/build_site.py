@@ -50,6 +50,21 @@ def extract(ref, paths, dest, skip):
 SITE = 'https://destinjones.github.io/open-overwatch/'
 
 
+def renamed_owner(root):
+    """Old tags still link to the GitHub account's old name (cwbhood, renamed to destinjones on 2026-10-06), and
+    GitHub Pages doesn't redirect the old address, so archived versions get their links rewritten."""
+    for dirpath, _, files in os.walk(root):
+        for name in files:
+            if not name.endswith(('.html', '.js', '.json', '.webmanifest', '.txt', '.css', '.xml')):
+                continue
+            path = os.path.join(dirpath, name)
+            with open(path, 'rb') as f:
+                data = f.read()
+            if b'cwbhood' in data:
+                with open(path, 'wb') as f:
+                    f.write(data.replace(b'cwbhood', b'destinjones'))
+
+
 def last_good(rel, timeout=30):
     """The copy the live site serves right now (bytes), or None. A source that refuses this build (CelesTrak timing out on
     GitHub's runners did that on 2026-10-06: every group FAILED and the deploy wiped the mirror) must not take the
@@ -299,6 +314,7 @@ def main():
         if 'open-overwatch.html' not in paths:
             continue
         n = extract(tag, paths, os.path.join(OUT, 'v', tag), SKIP_VERSION)
+        renamed_owner(os.path.join(OUT, 'v', tag))
         notes = git('tag', '-l', '--format=%(contents)', tag) or git('log', '-1', '--format=%B', tag)
         lines = [l for l in notes.splitlines() if l.strip() and not l.startswith(('-----BEGIN', 'Co-Authored-By'))]
         versions.append({
