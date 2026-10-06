@@ -68,6 +68,13 @@ the archived app 404s on it (v0.7-v0.8 globe crashed that way until v0.8.1). Eac
 `open-overwatch.zip` (the download the lander links to via releases/latest/download). Keep the zip file list in that
 workflow in sync when the app starts needing new files. gh CLI (portable): ~/bin/gh-cli/bin/gh.exe.
 
+### Search and sharing (SEO)
+`index.html`, `about.html` and the three app pages each carry a title, description, canonical URL, Open Graph and Twitter tags; the landing and About
+pages also carry JSON-LD (`WebSite`, `SoftwareApplication`, `Person` with `sameAs` links to GitHub and Ironbound). `robots.txt` keeps the archived `/v/<tag>/`
+copies and `/data/` out of search results and points at `sitemap.xml`: bump its `lastmod` when a release changes a page. `CITATION.cff` gives GitHub's
+"Cite this repository" button; `LICENSE` (MIT) covers the code only, the data keeps its own licences (docs/DATA_SOURCES.md). The portrait is
+`brand/about/destin-*.webp` (cropped from the owner's own photo).
+
 ## 2D map: modules (src/map/)
 util (helpers, Store, Log/toast/Sound, Net + Relay, clock; `late` registry) · mapview (Leaflet map, base maps, Sun) ·
 engine (Glyphs canvas renderer, Points, Layers registry + panel, feed scheduler) · detail (Detail panel, tracks, hover,

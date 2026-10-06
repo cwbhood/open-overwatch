@@ -19,3 +19,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+This licence covers the source code of this project. The data, maps, textures and
+3D models it shows belong to their sources and keep their own licences (NASA,
+NOAA, USGS, OpenStreetMap, Wikidata, Solar System Scope and others): see
+docs/DATA_SOURCES.md and the credits shown in the apps.

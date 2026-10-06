@@ -92,9 +92,9 @@ aisstream.io, SondeHub, RainViewer, TeleGeography. Basemap © Esri. Full list wi
 [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). These are public and volunteer services; check each one's terms before
 any commercial use.
 
-## The creator
-Made by Destin Jones ([@cwbhood](https://github.com/cwbhood)), with Claude as the building partner. Also by Destin:
-**[Ironbound](https://github.com/cwbhood/godot-open-rts)**, a free, open source 3D real-time strategy game built in Godot
-where your city builds itself while you run the army and the trade routes.
+## Credit and licence
+Open Overwatch is by [Destin Jones](https://cwbhood.github.io/open-overwatch/about.html) ([GitHub](https://github.com/cwbhood)), built in public with Claude as the building partner.
+Also by me: [Ironbound](https://cwbhood.github.io/godot-open-rts/), a free open source RTS made with Godot.
 
-Please fork this project and build anything you like with it. The code is under the [MIT licence](LICENSE); the live data feeds keep their own terms (see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)). If you make something, I'd love to see it.
+The code is MIT licensed ([LICENSE](LICENSE)): use it, fork it, build on it, and keep the copyright line. The data, maps, textures and models it shows belong to their sources and keep their own licences: see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
+If you write about it or build on it, please credit it: *Jones, D. (2026). Open Overwatch [Computer software]. https://github.com/cwbhood/open-overwatch* (GitHub's "Cite this repository" button reads [CITATION.cff](CITATION.cff)).
