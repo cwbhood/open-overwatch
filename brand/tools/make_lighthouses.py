@@ -27,7 +27,7 @@ def tile(south, west, north, east):
     q = f'[out:json][timeout:120];(node["man_made"="lighthouse"]({south},{west},{north},{east});way["man_made"="lighthouse"]({south},{west},{north},{east}););out center tags;'
     for attempt in range(4):   # one polite request at a time; the public server answers 429/504 when busy
         # curl, not urllib: Python's certificate store on some Windows installs is stale and rejects the (valid) Overpass certificate
-        r = subprocess.run(['curl', '-sS', '--fail', '-m', '200', '-A', 'open-overwatch/0.9 (https://github.com/cwbhood/open-overwatch)',
+        r = subprocess.run(['curl', '-sS', '--fail', '-m', '200', '-A', 'open-overwatch/0.9 (https://github.com/destinjones/open-overwatch)',
                             '--data-urlencode', 'data=' + q, 'https://overpass-api.de/api/interpreter'], capture_output=True)
         if r.returncode == 0:
             d = json.loads(r.stdout)['elements']

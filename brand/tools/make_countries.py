@@ -12,7 +12,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 CACHE = HERE.parent / 'source' / 'countries'
-UA = 'open-overwatch/0.9 (https://github.com/cwbhood/open-overwatch)'
+UA = 'open-overwatch/0.9 (https://github.com/destinjones/open-overwatch)'
 sys.path.insert(0, str(HERE))
 
 

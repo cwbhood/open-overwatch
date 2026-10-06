@@ -21,7 +21,7 @@ Q = '''SELECT ?v ?vLabel ?coord ?elev ?countryLabel ?typeLabel WHERE {
 def fetch():
     if RAW.exists(): return json.loads(RAW.read_text(encoding='utf-8'))
     for attempt in range(3):
-        r = subprocess.run(['curl', '-sSL', '--fail', '-m', '170', '-G', 'https://query.wikidata.org/sparql', '--data-urlencode', 'query=' + Q, '-H', 'Accept: application/sparql-results+json', '-A', 'open-overwatch/0.9 (https://github.com/cwbhood/open-overwatch)'], capture_output=True)
+        r = subprocess.run(['curl', '-sSL', '--fail', '-m', '170', '-G', 'https://query.wikidata.org/sparql', '--data-urlencode', 'query=' + Q, '-H', 'Accept: application/sparql-results+json', '-A', 'open-overwatch/0.9 (https://github.com/destinjones/open-overwatch)'], capture_output=True)
         if r.returncode == 0:
             d = json.loads(r.stdout)['results']['bindings']; RAW.parent.mkdir(parents=True, exist_ok=True); RAW.write_text(json.dumps(d), encoding='utf-8'); return d
         print('attempt', attempt + 1, 'failed', r.stderr.decode()[:70]); time.sleep(30)

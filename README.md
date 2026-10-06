@@ -7,7 +7,7 @@ satellite, the planets, 1.57 million asteroids, the planets of other stars and 4
 zoom**. Positions are checked against NASA JPL. It runs in your browser (phones too), with no install, no account and
 no build step.
 
-**▶ [Website](https://cwbhood.github.io/open-overwatch/) · [3D globe](https://cwbhood.github.io/open-overwatch/globe.html) · [Solar System](https://cwbhood.github.io/open-overwatch/solar.html) · [2D ops map](https://cwbhood.github.io/open-overwatch/open-overwatch.html)** · [the 30 s clip (MP4)](brand/clip/open-overwatch-zoom.mp4)
+**▶ [Website](https://destinjones.github.io/open-overwatch/) · [3D globe](https://destinjones.github.io/open-overwatch/globe.html) · [Solar System](https://destinjones.github.io/open-overwatch/solar.html) · [2D ops map](https://destinjones.github.io/open-overwatch/open-overwatch.html)** · [the 30 s clip (MP4)](brand/clip/open-overwatch-zoom.mp4)
 
 ## What you can do
 - **Zoom from a street to the cosmic web without a cut.** The 3D globe hands its camera to the Solar System view past the
@@ -96,10 +96,10 @@ any commercial use.
 I vibe code this with Claude (an AI): I describe what I want, Claude writes and tests it, and I try to make good calls. It surely has bugs. Please download it, fork it and build anything you like, no need to ask. If you'd like to take the whole project over, a hand-off is what I'd prefer: open an issue and say so.
 
 ## Credit and licence
-Open Overwatch is by [Destin Jones](https://cwbhood.github.io/open-overwatch/about.html) ([GitHub](https://github.com/cwbhood)), built in public with Claude as the building partner.
-Also by me: [Ironbound](https://cwbhood.github.io/godot-open-rts/), a free open source RTS made with Godot.
+Open Overwatch is by [Destin Jones](https://destinjones.github.io/open-overwatch/about.html) ([GitHub](https://github.com/destinjones)), built in public with Claude as the building partner.
+Also by me: [Ironbound](https://destinjones.github.io/godot-open-rts/), a free open source RTS made with Godot.
 
 The code is MIT licensed ([LICENSE](LICENSE)): use it, fork it, build on it, and keep the copyright line. The data, maps, textures and models it shows belong to their sources and keep their own licences: see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
-If you write about it or build on it, please credit it: *Jones, D. (2026). Open Overwatch [Computer software]. https://github.com/cwbhood/open-overwatch* (GitHub's "Cite this repository" button reads [CITATION.cff](CITATION.cff)).
+If you write about it or build on it, please credit it: *Jones, D. (2026). Open Overwatch [Computer software]. https://github.com/destinjones/open-overwatch* (GitHub's "Cite this repository" button reads [CITATION.cff](CITATION.cff)).
 
-**Read the notices** at the bottom of [the site](https://cwbhood.github.io/open-overwatch/#legal): no warranty, not for safety use, other people's data can be wrong or faked, and a specific warning about weather-balloon data (anyone can upload it; the layer is off by default and asks first).
+**Read the notices** at the bottom of [the site](https://destinjones.github.io/open-overwatch/#legal): no warranty, not for safety use, other people's data can be wrong or faked, and a specific warning about weather-balloon data (anyone can upload it; the layer is off by default and asks first).

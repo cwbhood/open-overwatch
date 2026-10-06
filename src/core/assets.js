@@ -1,7 +1,7 @@
 // Fetch a data file, falling back to the published site. Archived versions (/v/<tag>/) and partial checkouts don't
 // carry the big data files, so they read them from the site root instead of duplicating ~40 MB per version.
 
-export const SITE = 'https://cwbhood.github.io/open-overwatch/';
+export const SITE = 'https://destinjones.github.io/open-overwatch/';
 
 /** kind: 'buffer' (ArrayBuffer) | 'json' | 'text'. */
 export async function fetchAsset(path, kind = 'buffer', { fetchImpl = globalThis.fetch, site = SITE } = {}) {

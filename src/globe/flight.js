@@ -60,7 +60,7 @@ export const Flight = {
     if (!r) {
       const map = `<a class="chipbtn" href="${esc(liveMap(q))}" target="_blank" rel="noopener" style="color:#5fd3ff">Open on adsb.lol's live map ↗</a>`;
       const why = RELAY ? `${esc(q.label)} isn't in the air right now, or no volunteer receiver can hear it (oceans and remote areas have gaps).`
-        : `${esc(q.label)} isn't among the planes on this globe. Live flight feeds don't let websites read them, so the website can't ask for one plane; the <a href="https://github.com/cwbhood/open-overwatch/releases/latest/download/open-overwatch.zip">download version</a> can.`;
+        : `${esc(q.label)} isn't among the planes on this globe. Live flight feeds don't let websites read them, so the website can't ask for one plane; the <a href="https://github.com/destinjones/open-overwatch/releases/latest/download/open-overwatch.zip">download version</a> can.`;
       return this.open(why, `<div class="acts">${map}</div>`);
     }
     Time.goLive();   // only now that there is a plane to follow (aircraft are live-only)
