@@ -53,7 +53,7 @@ function placeConstellations() {
 }
 function dropConstellations() { for (const c of [CON.lines, CON.names]) if (c) scene.primitives.remove(c); CON.lines = CON.names = null; }
 
-const S = { find: '', targets: new Map(), active: false, obs: null, saved: null, labels: null, points: null, ring: null, sensor: false, dir: null, up: null, heading: 180, pitch: 25, fov: 65, timer: 0, pass: null, onDown: null };
+const S = { find: '', targets: new Map(), startId: 0, starting: false, cancel: false, active: false, obs: null, saved: null, labels: null, points: null, ring: null, sensor: false, dir: null, up: null, heading: 180, pitch: 25, fov: 65, timer: 0, pass: null, onDown: null };
 
 export function observerAt(lat, lon) {
   const pos = C.Cartesian3.fromDegrees(lon, lat, 2), m = C.Transforms.eastNorthUpToFixedFrame(pos);
@@ -89,15 +89,15 @@ function frame() {
   const dir = C.Cartesian3.normalize(enuToFixed(d[0], d[1], d[2]), new C.Cartesian3()), up = C.Cartesian3.normalize(enuToFixed(u[0], u[1], u[2]), new C.Cartesian3());
   camera.setView({ destination: S.obs.pos, orientation: { direction: dir, up } });
   const { az, el } = azEl(d);
-  $('#luDir').textContent = `${compass(az)} ${Math.round(az)}° · ${el >= 0 ? 'up' : 'down'} ${Math.abs(Math.round(el))}°`;
+  const dirText = `${compass(az)} ${Math.round(az)}° · ${el >= 0 ? 'up' : 'down'} ${Math.abs(Math.round(el))}°`, dirEl = $('#luDir'); if (dirEl.textContent !== dirText) dirEl.textContent = dirText;   // per frame: write only on change (aria-live region)
   // "Find": an arrow from the centre toward the chosen thing, and which way to turn
   const t = S.find && S.targets.get(S.find), arrow = $('#luArrow');
-  if (!t) { arrow.classList.remove('on'); return; }
+  if (!t) { arrow.classList.remove('on'); if (S.find) { S.find = ''; $('#luGo').textContent = ''; } return; }
   const o = S.obs, te = C.Cartesian3.dot(t, o.E), tn = C.Cartesian3.dot(t, o.N), tu = C.Cartesian3.dot(t, o.U), tAz = (Math.atan2(te, tn) / D + 360) % 360, tEl = Math.asin(Math.max(-1, Math.min(1, tu))) / D;
   const g = guide(az, el, tAz, tEl, { near: Math.max(3, S.fov / 12) });
   arrow.classList.add('on'); arrow.classList.toggle('there', g.text === 'There it is!');
   arrow.style.transform = g.text === 'There it is!' ? 'none' : `rotate(${g.arrow - 90}deg) translateX(70px)`; arrow.textContent = g.text === 'There it is!' ? '◎' : '➤';
-  $('#luGo').textContent = `${S.find}: ${g.text}`;
+  const goText = `${S.find}: ${g.text}`, goEl = $('#luGo'); if (goEl.textContent !== goText) goEl.textContent = goText;
 }
 
 // ---- once a second: planets, star names, what is overhead
@@ -124,7 +124,11 @@ function refresh() {
   for (const m of activeShowers(Time.nowMs())) add(far(C.Matrix3.multiplyByVector(M, radec(m.ra, m.dec), new C.Cartesian3())), `☄ ${m.name} radiant`, '#ffb44d', 6, '600 12px system-ui');   // meteors seem to fly out of here
   const tapDot = C.Color.fromCssColorString('#cfd8e3').withAlpha(0.3);   // labels alone can't be tapped at their anchor: a faint dot can
   for (const [name, ra, dec] of STARS) T.set(name, C.Matrix3.multiplyByVector(M, radec(ra, dec), new C.Cartesian3()));
-  for (const [id, name] of [['25544', 'ISS'], ['48274', 'Tiangong']]) { const s = Sats.byId.get(id); if (s && s.pt && s.pt.position && C.Cartesian3.magnitude(s.pt.position) > 6.3e6 && Math.abs(Time.nowMs() - Date.now()) < 3 * 86400e3) T.set(name, dirOf(s.pt.position)); }
+  if (window.satellite && Math.abs(Time.nowMs() - Date.now()) < 3 * 86400e3) for (const [id, name] of [['25544', 'ISS'], ['48274', 'Tiangong']]) {   // from the elements, not the dot: a dot whose layer is off keeps a frozen position
+    const s = Sats.byId.get(id); if (!s) continue;
+    const rec = s.rec || (s.rec = satellite.twoline2satrec(s.l1, s.l2)), d = new Date(Time.nowMs()), pv = satellite.propagate(rec, d); if (!pv.position) continue;
+    const f = satellite.eciToEcf(pv.position, satellite.gstime(d)); T.set(name, dirOf(new C.Cartesian3(f.x * 1000, f.y * 1000, f.z * 1000)));
+  }
   const sel = $('#luFind'); if (sel && sel.options.length - 1 !== T.size) { const keep = sel.value; sel.innerHTML = '<option value="">a planet, the Moon, the ISS, a star…</option>' + [...T.keys()].map(k => `<option>${esc(k)}</option>`).join(''); sel.value = T.has(keep) ? keep : ''; }
   for (const [name, ra, dec] of STARS) labs.add({ position: pts.add({ position: far(C.Matrix3.multiplyByVector(M, radec(ra, dec), new C.Cartesian3())), pixelSize: 7, color: tapDot, id: { sky: 'star', name } }).position, text: name, font: '500 12px system-ui', fillColor: C.Color.fromCssColorString('#cfd8e3'), pixelOffset: new C.Cartesian2(8, -6), horizontalOrigin: C.HorizontalOrigin.LEFT, id: { sky: 'star', name } });
   // satellites above the horizon: count all, label the brightest ones. Not far from today: orbits from this week's
@@ -133,7 +137,7 @@ function refresh() {
   satPts.show = away < 3;
   let above = 0; const bright = [];
   if (away < 3) for (const s of Sats.list) {
-    if (!s.pt || !s.pt.position || s.docked) continue;
+    if (!s.pt || !s.pt.position || s.docked || !L[s.layer].on) continue;   // a switched-off layer's dots are frozen where they were
     const p = s.pt.position, a = lookAngles({ x: p.x / 1000, y: p.y / 1000, z: p.z / 1000 }, o.km);
     if (a.el < 0 || C.Cartesian3.magnitude(p) < 6.3e6) continue;
     above++; if ((s.layer === 'stations' || s.layer === 'visual') && a.el > 8) bright.push([a.el, s, p]);
@@ -156,7 +160,7 @@ function refresh() {
 // ---- the next ISS pass (recomputed every 10 minutes)
 function nextPass() {
   const iss = Sats.byId.get('25544');
-  if (!iss || !window.satellite) { $('#luPass').textContent = 'Next ISS pass: waiting for the orbit data…'; return; }
+  if (!iss || !window.satellite) { $('#luPass').textContent = Sats.list.length && window.satellite ? "Next ISS pass: the station's orbit data didn't load this time." : 'Next ISS pass: waiting for the orbit data…'; return; }
   const rec = iss.rec || (iss.rec = satellite.twoline2satrec(iss.l1, iss.l2));
   const at = ms => { const d = new Date(ms), pv = satellite.propagate(rec, d); if (!pv.position) return null; const f = satellite.eciToEcf(pv.position, satellite.gstime(d)); return { x: f.x, y: f.y, z: f.z }; };
   const sunAt = ms => sunDirection(C.JulianDate.fromDate(new Date(ms)));
@@ -170,7 +174,9 @@ function nextPass() {
 // ---- enter / leave
 async function enter() {
   if (S.active || S.starting) return;   // a second call while the first waits on permissions would double everything
-  S.starting = true; S.cancel = false;
+  const token = ++S.startId; S.starting = true; S.cancel = false;
+  state.lookup = true; hooks.applyVisibility();   // from the first moment: clicks, double-clicks and ground layers stand aside while we wait on permissions
+  hooks.closeWeather?.();                           // weather mode freezes the satellite dots and aircraft that look-up counts and labels
   // iOS asks for motion permission, and only from inside a tap: ask first, before anything awaits
   let motionOk = true;
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -184,8 +190,9 @@ async function enter() {
     if (!navigator.geolocation) return res(null);
     navigator.geolocation.getCurrentPosition(p => res(p.coords), () => res(null), { timeout: 9000, maximumAge: 600e3 });
   });
+  if (token !== S.startId) return;   // Done, then Look up again while this one waited: the newer start owns everything now
   S.starting = false;
-  if (S.cancel) { $('#lookup').classList.remove('on'); document.body.classList.remove('lookup'); return; }   // "Done" (or Esc) while it was starting
+  if (S.cancel) { state.lookup = false; hooks.applyVisibility(); $('#lookup').classList.remove('on'); document.body.classList.remove('lookup'); return; }   // "Done" (or Esc) while it was starting
   S.obs = loc ? observerAt(loc.latitude, loc.longitude) : observerAt(FALLBACK.lat, FALLBACK.lon);
   $('#luWhere').textContent = loc ? `Your sky · ${loc.latitude.toFixed(2)}, ${loc.longitude.toFixed(2)} (stays on this device)` : FALLBACK.name;
   S.active = true; state.lookup = true; hooks.applyVisibility(); S.sensor = false; S.dir = S.up = null;
@@ -199,21 +206,26 @@ async function enter() {
     S.ring.add({ position: p, text: compass(az), font: az % 90 ? '600 13px system-ui' : '800 17px system-ui', fillColor: C.Color.fromCssColorString(az === 0 ? '#ff6b6b' : '#e6edf3'), horizontalOrigin: C.HorizontalOrigin.CENTER });
   }
   if (motionOk) { addEventListener('deviceorientationabsolute', onOrientation); addEventListener('deviceorientation', onOrientation); }
-  $('#luHint').textContent = PHONE && motionOk ? 'Hold your phone up to the sky. (No movement? Drag to look around.) Tap anything to find out what it is.' : 'Drag to look around · scroll or pinch to zoom · tap a planet, star or satellite to find out what it is';
+  $('#luHint').textContent = PHONE && motionOk ? 'Hold your phone up to the sky. (No movement? Drag to look around.) Tap anything to find out what it is.' : 'Drag to look around · pinch or scroll to zoom · tap a planet, star or satellite to find out what it is';
   $('#luInfo').textContent = ''; S.find = ''; $('#luGo').textContent = '';
   $('#luFind').onchange = e => { S.find = e.target.value; if (!S.find) { $('#luGo').textContent = ''; $('#luArrow').classList.remove('on'); } };
   // drag / zoom when there are no sensors (or as an override)
   const cv = scene.canvas; let last = null;
-  let down = null;
-  S.onDown = e => { last = [e.clientX, e.clientY]; down = [e.clientX, e.clientY]; S.sensor = false; };
-  S.onMove = e => { if (!last) return; S.heading = (S.heading - (e.clientX - last[0]) * S.fov / innerHeight + 360) % 360; S.pitch = Math.max(-80, Math.min(89, S.pitch + (e.clientY - last[1]) * S.fov / innerHeight)); last = [e.clientX, e.clientY]; };
+  let down = null; const ptrs = new Map(); let pinch = 0;   // two fingers: pinch to zoom (the page blocks the browser's own pinch)
+  const span = () => { const [a, b] = [...ptrs.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]); };
+  S.onDown = e => { ptrs.set(e.pointerId, [e.clientX, e.clientY]); last = [e.clientX, e.clientY]; down = [e.clientX, e.clientY]; S.sensor = false; if (ptrs.size === 2) pinch = span(); };
+  S.onMove = e => {
+    if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptrs.size >= 2) { const d = span(); if (pinch && d > 0) { S.fov = Math.max(10, Math.min(100, S.fov * pinch / d)); camera.frustum.fov = S.fov * D; } pinch = d; down = null; return; }
+    if (!last) return; S.heading = (S.heading - (e.clientX - last[0]) * S.fov / innerHeight + 360) % 360; S.pitch = Math.max(-80, Math.min(89, S.pitch + (e.clientY - last[1]) * S.fov / innerHeight)); last = [e.clientX, e.clientY]; };
   S.onUp = e => {   // a tap (not a drag): what is that?
+    ptrs.delete(e.pointerId); pinch = 0;
     last = null; if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return; down = null;
     const r = cv.getBoundingClientRect(), hits = scene.drillPick(new C.Cartesian2(e.clientX - r.left, e.clientY - r.top), 6, 24, 24), hit = hits.find(h => h.id && (h.id.sky || h.id.kind)), id = hit && hit.id;   // under constellation lines and names
     $('#luInfo').textContent = id && id.kind === 'sat' ? `${id.name}: ${explainSat(id)}` : id && id.kind === 'air' ? `✈ ${id.flight || id.hex}: an aircraft${id.type ? ' (' + id.type + ')' : ''} at ${fmt((id.alt || 0) / 0.3048)} ft.` : !id || !id.sky ? '' : id.sky === 'star' ? starFact(id.name) : id.sky === 'body' ? bodyFact(id.key, jdFromMs(Time.nowMs())) : `${id.s.name}: ${explainSat(id.s)}`;
   };
   S.onWheel = e => { S.fov = Math.max(10, Math.min(100, S.fov * (e.deltaY > 0 ? 1.08 : 0.93))); camera.frustum.fov = S.fov * D; };
-  cv.addEventListener('pointerdown', S.onDown); addEventListener('pointermove', S.onMove); addEventListener('pointerup', S.onUp); cv.addEventListener('wheel', S.onWheel, { passive: true });
+  cv.addEventListener('pointerdown', S.onDown); addEventListener('pointermove', S.onMove); addEventListener('pointerup', S.onUp); addEventListener('pointercancel', S.onUp); cv.addEventListener('wheel', S.onWheel, { passive: true });
   scene.preRender.addEventListener(frame);
   const dateBox = $('#luDate'), local = ms => { const d = new Date(ms - new Date(ms).getTimezoneOffset() * 60e3); return d.toISOString().slice(0, 16); };
   dateBox.value = local(Date.now());
@@ -228,15 +240,15 @@ async function enter() {
 }
 
 function leave() {
-  if (S.starting) { S.cancel = true; $('#lookup').classList.remove('on'); document.body.classList.remove('lookup'); return; }
+  if (S.starting) { S.cancel = true; S.starting = false; state.lookup = false; hooks.applyVisibility(); $('#lookup').classList.remove('on'); document.body.classList.remove('lookup'); return; }
   if (!S.active) return;
-  S.active = false; state.lookup = false; clearInterval(S.timer); clearInterval(S.passTimer); if (!Time.live) Time.goLive(); else hooks.applyVisibility();
+  S.active = false; state.lookup = false; Earth.hidden = false; clearInterval(S.timer); clearInterval(S.passTimer); if (!Time.live) Time.goLive(); else hooks.applyVisibility();   // Earth first: applyVisibility would re-hide every layer
   removeEventListener('deviceorientationabsolute', onOrientation); removeEventListener('deviceorientation', onOrientation);
-  const cv = scene.canvas; cv.removeEventListener('pointerdown', S.onDown); removeEventListener('pointermove', S.onMove); removeEventListener('pointerup', S.onUp); cv.removeEventListener('wheel', S.onWheel);
+  const cv = scene.canvas; cv.removeEventListener('pointerdown', S.onDown); removeEventListener('pointermove', S.onMove); removeEventListener('pointerup', S.onUp); removeEventListener('pointercancel', S.onUp); cv.removeEventListener('wheel', S.onWheel);
   scene.preRender.removeEventListener(frame);
   for (const c of [S.labels, S.points, S.ring]) scene.primitives.remove(c);
   dropConstellations(); document.documentElement.classList.remove('redlight'); S.find = ''; $('#luArrow').classList.remove('on');
-  Earth.hidden = false; globe.baseColor = S.saved.base; ctrl.enableInputs = S.saved.inputs; camera.frustum.fov = S.saved.fov;
+  globe.baseColor = S.saved.base; ctrl.enableInputs = S.saved.inputs; camera.frustum.fov = S.saved.fov;
   camera.setView({ destination: S.saved.pos, orientation: { direction: S.saved.dir, up: S.saved.up } });
   $('#lookup').classList.remove('on'); document.body.classList.remove('lookup');
 }

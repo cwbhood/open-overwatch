@@ -25,8 +25,9 @@ test('missing heading and pitch default to a straight-down view', () => {
 });
 
 test('links can open a panel or find a flight, and nothing else', () => {
-  assert.deepEqual(decodeExtras('#go=tonight'), { go: 'tonight', flight: null });
-  assert.deepEqual(decodeExtras('#go=lookup&f=baw123'), { go: null, flight: 'BAW123' });   // look-up needs a tap first
+  assert.deepEqual(decodeExtras('#go=tonight'), { go: 'tonight', flight: null, id: null });
+  assert.deepEqual(decodeExtras('#go=launches&id=abc-123'), { go: 'launches', flight: null, id: 'abc-123' }); assert.equal(decodeExtras('#id=<x>').id, null);
+  assert.deepEqual(decodeExtras('#go=lookup&f=baw123'), { go: null, flight: 'BAW123', id: null });   // look-up needs a tap first
   assert.equal(decodeExtras('#f=<img src=x>').flight, null); assert.equal(decodeExtras('#f=ABCDEFGHIJ').flight, null);
   assert.equal(decodeView('#go=tonight'), null);                                           // no camera: not a view
   assert.equal(new URLSearchParams(encodeView({ lon: 0, lat: 0, height: 1, heading: 0, pitch: 0, flight: 'a"b' })).get('f'), null);

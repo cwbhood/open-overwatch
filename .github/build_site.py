@@ -10,7 +10,7 @@
   refresh it). The website reads these instead of CelesTrak, which firewalls networks that download too often; the
   download version falls back to them when CelesTrak fails.
 """
-import re, io, json, os, subprocess, sys, tarfile, time, urllib.request
+import re, io, json, os, socket, subprocess, sys, tarfile, time, urllib.request
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 OUT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, '_site'))
@@ -18,7 +18,7 @@ SKIP_ROOT = ('brand/source/', 'brand/blend/', '.github/', 'brand/models/previews
 # everything an archived app loads at run time (missing ones are skipped per tag); keep in sync with what the pages fetch.
 # solar.html's big data/textures (data/solar, brand/textures/planets, sky_equirect) are NOT copied per version: the page
 # falls back to the site root for them, which keeps each archived version small.
-APP_PATHS = ['open-overwatch.html', 'globe.html', 'solar.html', 'tonight.html', 'README.txt', 'src', 'brand/emblem', 'brand/hero', 'brand/sprites',
+APP_PATHS = ['open-overwatch.html', 'globe.html', 'solar.html', 'tonight.html', 'manifest.webmanifest', 'README.txt', 'src', 'brand/emblem', 'brand/hero', 'brand/sprites',
              'brand/models', 'brand/textures/night', 'brand/textures/earth_fx_8k.jpg', 'brand/textures/earth_fx_4k.jpg', 'brand/textures/earth_fx_2k.jpg',
              'brand/textures/sky', 'brand/textures/sky_1k', 'brand/social/og-1200x630.png']
 SKIP_VERSION = ('brand/models/previews/', 'brand/sprites/raw/')
@@ -47,13 +47,43 @@ def extract(ref, paths, dest, skip):
     return len(members)
 
 
+SITE = 'https://cwbhood.github.io/open-overwatch/'
+
+
+def last_good(rel, timeout=30):
+    """The copy the live site serves right now (bytes), or None. A source that refuses this build (CelesTrak timing out on
+    GitHub's runners did that on 2026-10-06: every group FAILED and the deploy wiped the mirror) must not take the
+    previous good copy down with it: visitors would otherwise go to the source directly, 20 downloads each."""
+    try:
+        req = urllib.request.Request(SITE + rel, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
+        return urllib.request.urlopen(req, timeout=timeout).read()
+    except Exception:
+        return None
+
+
+def keep_last(path, rel, what):
+    """After a failed refresh: write the live site's current copy of rel to path, if it has one. True if kept."""
+    old = last_good(rel)
+    if not old:
+        return False
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'wb') as f:
+        f.write(old)
+    print(f'{what}: kept the live site\'s copy ({len(old)} bytes)')
+    return True
+
+
 def mirror_tles(dest):
-    """Best effort: a group that fails is simply missing from this build (the apps then try CelesTrak)."""
+    """Best effort: a group that fails keeps the copy the live site already has (with its age in index.json); only when
+    there is none either is it missing from this build (the apps then try CelesTrak)."""
     os.makedirs(dest, exist_ok=True)
-    index = {'updated': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'groups': {}}
+    index = {'updated': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'groups': {}, 'kept': []}
+    down = False   # after one timeout, stop waiting 90 s on every other group: CelesTrak is refusing this runner
     for g in TLE_GROUPS:
         url = f'https://celestrak.org/NORAD/elements/gp.php?GROUP={g}&FORMAT=TLE'
         try:
+            if down:
+                raise TimeoutError('skipped: CelesTrak timed out earlier in this build')
             req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
             txt = urllib.request.urlopen(req, timeout=90).read().decode('utf-8', 'replace')
             n = sum(1 for l in txt.splitlines() if l.startswith('1 '))
@@ -64,7 +94,18 @@ def mirror_tles(dest):
             index['groups'][g] = n
             print(f'tle {g}: {n}')
         except Exception as e:
-            print(f'tle {g}: FAILED {e}')
+            if isinstance(e, (TimeoutError, socket.timeout)) or 'timed out' in str(e):
+                down = True
+            old = last_good(f'data/tle/{g}.txt')
+            n = sum(1 for l in old.decode('utf-8', 'replace').splitlines() if l.startswith('1 ')) if old else 0
+            if n:
+                with open(os.path.join(dest, g + '.txt'), 'wb') as f:
+                    f.write(old)
+                index['groups'][g] = n
+                index['kept'].append(g)
+                print(f'tle {g}: FAILED {e} -> kept the live site\'s copy ({n})')
+            else:
+                print(f'tle {g}: FAILED {e}')
         time.sleep(2)   # be gentle with CelesTrak
     with open(os.path.join(dest, 'index.json'), 'w', encoding='utf-8') as f:
         json.dump(index, f, indent=1)
@@ -101,6 +142,7 @@ def mirror_socrates(path):
         print(f'socrates: {len(rows)} conjunctions, kept {min(len(out), SOCRATES_KEEP)}')
     except Exception as e:
         print(f'socrates: FAILED {e}')
+        keep_last(path, 'data/socrates.json', 'socrates')
 
 
 def mirror_wind(path):
@@ -130,6 +172,7 @@ def mirror_wind(path):
         print(f'wind: {len(pts)} points at {when}')
     except Exception as e:
         print(f'wind: FAILED {e}')
+        keep_last(path, 'data/wind.json', 'wind')
 
 
 def mirror_news(path, countries_path):
@@ -185,6 +228,7 @@ def mirror_flybys(path):
         print(f'flybys: {len(rows)} approaches')
     except Exception as e:
         print(f'flybys: FAILED {e}')
+        keep_last(path, 'data/flybys.json', 'flybys')
 
 
 # the parts of a Launch Library 2 launch the globe reads (src/core/launches.js fromLL2 maps them; the build only trims)
@@ -225,6 +269,7 @@ def mirror_launches(path):
         print(f'launches: {len(rows)} upcoming')
     except Exception as e:
         print(f'launches: FAILED {e}')
+        keep_last(path, 'data/launches.json', 'launches')
 
 
 
@@ -242,6 +287,7 @@ def mirror_astronauts(path):
         print(f'astronauts: {len(rows)} in space')
     except Exception as e:
         print(f'astronauts: FAILED {e}')
+        keep_last(path, 'data/astronauts.json', 'astronauts')
 
 def main():
     os.makedirs(OUT, exist_ok=True)

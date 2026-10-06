@@ -17,7 +17,7 @@ jobs:
           D=dist/open-overwatch
           mkdir -p "$D/brand/hero" "$D/brand/social" "$D/brand/textures" "$D/brand/models"
           cp -r src "$D/"                                                                          # the apps' ES modules
-          cp open-overwatch.html globe.html solar.html serve.js serve.py README.txt \
+          cp open-overwatch.html globe.html solar.html tonight.html manifest.webmanifest serve.js serve.py README.txt \
              "Start Open Overwatch.bat" "Start Open Overwatch (minimized).vbs" "$D/"
           cp -r brand/emblem brand/sprites "$D/brand/"
           rm -rf "$D/brand/sprites/raw"
@@ -27,7 +27,7 @@ jobs:
           cp brand/textures/earth_fx_8k.jpg brand/textures/earth_fx_4k.jpg brand/textures/earth_fx_2k.jpg "$D/brand/textures/"   # globe clouds/glint
           cp -r brand/textures/sky brand/textures/sky_1k "$D/brand/textures/"                     # globe star field
           cp -r brand/textures/planets brand/textures/moons brand/textures/sky_equirect.jpg brand/textures/sky_equirect_2k.jpg "$D/brand/textures/"  # solar system
-          mkdir -p "$D/data" && cp -r data/solar data/eclipses.json data/lighthouses.json data/countries.json data/borders.json data/companies.json data/volcanoes.json "$D/data/"                    # orbits, stars, spacecraft, exoplanets; eclipses; lighthouses
+          mkdir -p "$D/data" && cp -r data/solar data/eclipses.json data/lighthouses.json data/countries.json data/borders.json data/companies.json data/volcanoes.json data/constellations.json "$D/data/"                    # orbits, stars, spacecraft, exoplanets; eclipses; lighthouses
           cp -r brand/models/. "$D/brand/models/"   # satellites, aircraft/ and test/ (3D planes need aircraft/)
           rm -rf "$D/brand/models/previews"
           echo "$GITHUB_REF_NAME" > "$D/VERSION.txt"

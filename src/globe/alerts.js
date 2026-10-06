@@ -34,6 +34,7 @@ export const Alerts = {
   /** Notify at `at` (ms) while this page is open. Returns false (with a message) if notifications are blocked. */
   async remind(a) {
     if (!(await permission())) { toast('Notifications are blocked or not supported here: use "Add to calendar" instead', 5000); return false; }
+    if (a.at - Date.now() > MAX_WAIT) { toast('That is more than 24 days away: too far for a tab reminder. Use "Calendar" instead', 5000); return false; }
     store.set('alerts', [...this.list.filter(x => x.tag !== a.tag), a]); arm(a);
     toast(`Reminder set for ${new Date(a.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} · keep this tab open (or add it to your calendar)`, 5000);
     return true;

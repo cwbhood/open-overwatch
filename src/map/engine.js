@@ -156,8 +156,9 @@ export const Layers = {
   migrate() { if (!this.opts.cam_v2) { this.opts.cam_src = [...new Set([...(this.opts.cam_src || []), 'singapore', 'finland'])]; this.opts.cam_v2 = true; Store.set('opts', this.opts); } },
   add(def) { if (!this._migrated) { this._migrated = true; this.migrate(); } this.defs.push(def); this.byId[def.id] = def; def.on = (def.id in this.state) ? !!this.state[def.id] : !!def.default; if (def.guard && def.on && !this.acked(def)) { def.on = false; this.state[def.id] = false; } return def; },
   /** A layer with a `guard` (a warning to read first) can only be switched on after the reader has accepted it, once per browser session. */
-  acked(d) { try { return sessionStorage.getItem('oo.ack.' + d.id) === '1'; } catch (e) { return false; } },
-  ack(d) { try { sessionStorage.setItem('oo.ack.' + d.id, '1'); } catch (e) { /* private mode: asked again next time */ } },
+  _acked: new Set(),   // this page load, even where sessionStorage is blocked (accepting would otherwise re-open the warning for ever)
+  acked(d) { if (this._acked.has(d.id)) return true; try { return sessionStorage.getItem('oo.ack.' + d.id) === '1'; } catch (e) { return false; } },
+  ack(d) { this._acked.add(d.id); try { sessionStorage.setItem('oo.ack.' + d.id, '1'); } catch (e) { /* private mode: asked again next load */ } },
   on(id) { const d = this.byId[id]; return !!(d && d.on); },
   opt(k) { return this.opts[k]; },
   setOpt(k, v) { this.opts[k] = v; Store.set('opts', this.opts); },
@@ -175,7 +176,7 @@ export const UI = {
       const g = d.guard, prev = document.activeElement, root = document.createElement('div'); root.className = 'guard-back';
       root.innerHTML = `<div class="guard" role="alertdialog" aria-modal="true" aria-labelledby="guardT"><h3 id="guardT">${esc(g.title)}</h3><div class="guard-body" tabindex="0">${g.body.map(x => `<h4>${esc(x.h)}</h4><p>${esc(x.p)}</p>`).join('')}</div><div class="guard-act"><button type="button" class="btn" data-no>Keep them off</button><button type="button" class="btn small" data-yes>${esc(g.accept)}</button></div></div>`;
       const done = ok => { document.removeEventListener('keydown', key, true); root.remove(); if (prev && prev.focus) prev.focus(); resolve(ok); };
-      const key = e => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } else if (e.key === 'Tab') { const b = [...root.querySelectorAll('button')]; const i = b.indexOf(document.activeElement); e.preventDefault(); b[(i + (e.shiftKey ? b.length - 1 : 1)) % b.length].focus(); } };
+      const key = e => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } else if (e.key === 'Tab') { const b = [...root.querySelectorAll('.guard-body, button')]; /* the text too: keyboard users must be able to scroll what they accept */ const i = b.indexOf(document.activeElement); e.preventDefault(); b[(i + (e.shiftKey ? b.length - 1 : 1)) % b.length].focus(); } };
       root.addEventListener('click', e => { if (e.target === root || e.target.closest('[data-no]')) done(false); else if (e.target.closest('[data-yes]')) done(true); });
       document.addEventListener('keydown', key, true); document.body.appendChild(root); root.querySelector('[data-no]').focus();   // the safe choice has the focus
     });

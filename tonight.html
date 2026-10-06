@@ -34,7 +34,7 @@ header img{width:30px;height:30px} header b{font:900 18px/1 var(--display);lette
 #card h2{margin:6px 0 10px;font:900 34px/1 var(--display);letter-spacing:.03em;text-transform:uppercase}
 #card h3{margin:16px 0 6px;font:700 11px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)} #card h3 small{letter-spacing:0;text-transform:none;color:var(--faint)}
 #card [hidden]{display:none!important} /* folded sections (display:flex would otherwise win) */
-#card h3.fold{cursor:pointer;user-select:none} #card h3.fold::after{content:' ▾';color:var(--faint)} #card h3.fold.shut::after{content:' ▸'}
+#card h3.fold{cursor:pointer;user-select:none;padding:8px 0;margin:6px 0 0} /* a finger-sized hit area */ #card h3.fold::after{content:' ▾';color:var(--faint)} #card h3.fold.shut::after{content:' ▸'}
 #card .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .chipbtn{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;border-radius:9px;font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);text-decoration:none;border:1px solid var(--edge-dim);background:none}
 .chipbtn:hover{color:var(--ink)}

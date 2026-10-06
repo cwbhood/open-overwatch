@@ -80,6 +80,7 @@ PRESETS.launches = () => { hooks.clearPresets(); Launches.openList(); };
 hooks.showLaunch = o => Launches.show(o);
 PRESETS.flight = () => Flight.open();
 hooks.shareCopy = () => Share.copy();
+hooks.closeWeather = () => { if (Weather.on) Weather.close(); };
 hooks.snapshot = () => Snapshot.share();
 hooks.toggleNerd = toggleNerd;
 initMobile();   // phones only: the bottom dock

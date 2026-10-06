@@ -46,7 +46,7 @@ async function find(q) {
   // satellites
   const sats = [], alias = ALIAS[s], push = o => { if (o && !sats.includes(o)) sats.push(o); };
   if (alias) push(Sats.byId.get(alias));
-  if (/^\d{1,6}$/.test(s)) push(Sats.byId.get(String(+s)));
+  if (/^\d{1,6}$/.test(s)) { push(Sats.byId.get(String(+s))); push(Sats.byId.get(s.padStart(5, '0'))); }   // parseTle keeps the TLE's zero-padded id ("00005")
   const rank = o => (o.layer === 'stations' ? 0 : o.layer === 'visual' ? 1 : o.layer === 'debris' ? 3 : 2) + (o.name.toLowerCase().startsWith(s) ? 0 : 0.5);
   if (s.length >= 3 || !alias) for (const o of Sats.list.filter(o => o.name.toLowerCase().includes(s)).sort((a, b) => rank(a) - rank(b)).slice(0, 8)) push(o);
   for (const o of sats.slice(0, 8)) out.push({ kind: 'obj', obj: o, label: `🛰 ${o.name}`, sub: `NORAD ${o.id} · ${L[o.layer].name.split(' (')[0]}` });
@@ -68,6 +68,7 @@ function draw(list, q) {
   results = list;
   box.innerHTML = list.length ? list.map((r, i) => `<button class="cj sr" data-i="${i}"><span>${esc(r.label)}</span><small>${esc(r.sub)}</small></button>`).join('')
     : q.trim().length < 2 ? '<p class="note">Satellites (name or NORAD number), countries, flight numbers, volcanoes, views… Try "ISS", "Japan", "BA 123", "Etna" or "eclipse".</p>'
+    : !Sats.list.length ? '<p class="note">The satellite catalogue is still loading: try again in a moment.</p>'
     : `<p class="note">Nothing called "${esc(q.trim())}" on the globe. Volcanoes, employers and lighthouses are searched once their layers are on.</p>`;
 }
 
@@ -81,7 +82,7 @@ async function pick(r) {
 export const Search = {
   open(text = '') {
     if (LookUp.active) LookUp.leave();
-    const c = $('#card'); state.selected = null;
+    const c = $('#card'); hooks.clearSelection?.();
     c.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" style="--c:#7dffa6">Everything on the globe</div><h2>Search</h2>
       <form class="fl-form" id="srForm" autocomplete="off" role="search"><input id="srQ" maxlength="40" placeholder="ISS · Japan · BA 123 · Etna" aria-label="Search" value="${esc(text)}" style="text-transform:none"></form>
       <div class="cjl" id="srRes" aria-live="polite"></div>`;

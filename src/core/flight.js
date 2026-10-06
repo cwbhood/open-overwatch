@@ -12,6 +12,8 @@ export const AIRLINES = {
   UA: 'UAL', UX: 'AEA', VA: 'VOZ', VN: 'HVN', VS: 'VIR', VY: 'VLG', W6: 'WZZ', WN: 'SWA', WS: 'WJA', '6E': 'IGO', '9W': 'JAI',
 };
 
+const ICAO_CODES = new Set(Object.values(AIRLINES));
+
 /** A callsign as the feeds write it: upper case, no spaces, no leading zeros in the number ("BAW0123 " -> "BAW123"). */
 export const normCallsign = s => String(s || '').toUpperCase().replace(/\s+/g, '').replace(/^([A-Z0-9]{2,3}?[A-Z])0+(\d)/, '$1$2');
 
@@ -23,14 +25,16 @@ export function parseFlightQuery(q) {
   const raw = String(q || '').trim().toUpperCase().replace(/\s+/g, ' ');
   if (!raw || raw.length > 12) return null;
   const out = { callsigns: [], hex: '', reg: '', label: raw };
-  if (/^[0-9A-F]{6}$/.test(raw) && /\d/.test(raw)) out.hex = raw.toLowerCase();
   if (/^[A-Z0-9]{1,2}-[A-Z0-9]{2,5}$/.test(raw) || /^N\d{1,5}[A-Z]{0,2}$/.test(raw)) out.reg = raw;
   const m = raw.replace(/[\s-]/g, '').match(/^([A-Z0-9]{2,3}?)(\d{1,4})([A-Z]?)$/);
+  let ticket = false;   // "AA1234" / "BA0123" are flights, even though they also read as 24-bit hex addresses
   if (m) {
     const [, code, num, suffix] = m, n = String(+num) + suffix;
-    if (code.length === 2 && AIRLINES[code]) out.callsigns.push(AIRLINES[code] + n);
+    if (code.length === 2 && AIRLINES[code]) { out.callsigns.push(AIRLINES[code] + n); ticket = true; }
+    if (/^[A-Z]{3}$/.test(code) && ICAO_CODES.has(code)) ticket = true;
     if (/^[A-Z]{3}$/.test(code) || code.length === 2) out.callsigns.push(code + n);
   } else if (/^[A-Z0-9]{3,8}$/.test(raw)) out.callsigns.push(raw);
+  if (!ticket && /^[0-9A-F]{6}$/.test(raw) && /\d/.test(raw)) out.hex = raw.toLowerCase();
   out.callsigns = [...new Set(out.callsigns)];
   return out.callsigns.length || out.hex || out.reg ? out : null;
 }

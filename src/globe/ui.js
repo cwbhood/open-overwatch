@@ -155,7 +155,9 @@ export function select(o) {
 }
 hooks.reselect = select;
 hooks.closeCard = () => closeCard();
-export function closeCard() { state.selected = null; orbitLines.removeAll(); Country.clear(); $('#card').classList.remove('show'); }
+/** Another module is taking the card: drop the selected object and its orbit line / country outline, keep the card. */
+hooks.clearSelection = () => { state.selected = null; orbitLines.removeAll(); Country.clear(); };
+export function closeCard() { hooks.clearSelection(); $('#card').classList.remove('show'); }
 export function flyToObject(o) {
   release();
   if (o.kind === 'sat') { const st = SatModels.state(o), p = st.ok ? st.pos : o.pt.position, h = C.Cartesian3.magnitude(p) - 6371000; camera.flyToBoundingSphere(new C.BoundingSphere(p, 1), { offset: new C.HeadingPitchRange(0, -0.6, Math.max(2.5e6, h * 0.6)), duration: 2.5 }); }

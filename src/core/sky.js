@@ -48,15 +48,23 @@ export function moonPhase(ms) {
 const where = alt => alt >= 60 ? 'high up' : alt >= 30 ? 'halfway up' : 'low';
 const utcTime = ms => new Date(ms).toISOString().slice(11, 16) + ' UTC';
 
-/** The dark part of the next 24 h: { start, end } (Sun below -6 deg, civil dusk), or null in polar day. */
-export function darkWindow(lat, lon, t0, step = 5 * 60e3) {
-  let start = null;
-  for (let t = t0; t <= t0 + 24 * 3600e3; t += step) {
+/**
+ * The dark part of the next 24 h: { start, end } (Sun below -6 deg, civil dusk), or null in polar day. A stretch already
+ * under way at t0 that ends within `minLeft` ms (the last minutes before dawn) is skipped for the coming night.
+ */
+export function darkWindow(lat, lon, t0, opts = {}) {
+  const { step = 5 * 60e3, minLeft = 0 } = typeof opts === 'number' ? { step: opts } : opts;
+  let start = null, skipped = false;
+  for (let t = t0; t <= t0 + 30 * 3600e3; t += step) {
     const dark = sunAlt(lat, lon, t) < -6;
     if (dark && start == null) start = t;
-    if (!dark && start != null) return { start, end: t };
+    if (!dark && start != null) {
+      if (start === t0 && t - t0 < minLeft && !skipped) { start = null; skipped = true; continue; }   // the tail of last night: wait for tonight
+      return { start, end: t };
+    }
+    if (t >= t0 + 24 * 3600e3 && (start == null || !skipped)) break;
   }
-  return start != null ? { start, end: t0 + 24 * 3600e3 } : null;
+  return start != null ? { start, end: Math.max(start + step, t0 + 24 * 3600e3) } : null;
 }
 
 // the five bright planets, brightest first (Uranus and Neptune need binoculars and a chart)
@@ -66,8 +74,8 @@ const NAKED = [['venus', 'Venus'], ['jupiter', 'Jupiter'], ['mars', 'Mars'], ['s
  * Bright planets in the dark part of the next 24 h. Each: { key, name, up: bool, from, to, best, alt, az, text }.
  * time(ms) -> string formats a time for the sentence (default: UTC). A planet counts when it is 8 deg up in a dark sky.
  */
-export function planetsTonight(lat, lon, t0, { time = utcTime, step = 10 * 60e3 } = {}) {
-  const win = darkWindow(lat, lon, t0);
+export function planetsTonight(lat, lon, t0, { time = utcTime, step = 10 * 60e3, minLeft = 0 } = {}) {
+  const win = darkWindow(lat, lon, t0, { minLeft });
   return NAKED.map(([key, name]) => {
     if (!win) return { key, name, up: false, text: `${name}: no dark sky here in the next day` };
     let from = null, to = null, best = null, bestAlt = -90, bestAz = 0;
@@ -155,19 +163,23 @@ export function riseSet(key, lat, lon, t0, { h0 = -0.833, hours = 24, step = 10 
 const SYNODIC = 29.530589 * 86400e3;
 /** Full Moon names (the one nearest the September equinox is the Harvest Moon, the next the Hunter's Moon). */
 const MONTH_MOON = ['Wolf', 'Snow', 'Worm', 'Pink', 'Flower', 'Strawberry', 'Buck', 'Sturgeon', 'Corn', "Hunter's", 'Beaver', 'Cold'];
-/** The next full Moon after ms: { at, name, km, supermoon }. */
-export function nextFullMoon(ms) {
-  const elong = t => { const jd = jdFromMs(t), m = moonGeocentric(jd), E = earthPosition(jd); return ((Math.atan2(m.y, m.x) - Math.atan2(-E.y, -E.x)) / DEG + 720) % 360; };
-  // elongation grows ~12.2 deg a day; full when it passes 180
+const elong = t => { const jd = jdFromMs(t), m = moonGeocentric(jd), E = earthPosition(jd); return ((Math.atan2(m.y, m.x) - Math.atan2(-E.y, -E.x)) / DEG + 720) % 360; };
+/** The instant of the first full Moon after ms (elongation grows ~12.2 deg a day; full when it passes 180). */
+function fullAfter(ms) {
   let t = ms, e = elong(t);
   for (let i = 0; i < 40 * 4 && !(e < 180 && elong(t + 6 * 3600e3) >= 180); i++) { t += 6 * 3600e3; e = elong(t); }
   let a = t, b = t + 6 * 3600e3;
   for (let k = 0; k < 30; k++) { const m = (a + b) / 2; if (elong(m) < 180) a = m; else b = m; }
-  const at = Math.round((a + b) / 2), d = new Date(at), y = d.getUTCFullYear(), eq = Date.UTC(y, 8, 22, 12);
-  const near = x => Math.abs(x - eq);
+  return Math.round((a + b) / 2);
+}
+/** The next full Moon after ms: { at, name, km, supermoon }. */
+export function nextFullMoon(ms) {
+  const at = fullAfter(ms), d = new Date(at), eq = Date.UTC(d.getUTCFullYear(), 8, 22, 12);   // the September equinox, to a few hours
+  // the real neighbouring full Moons (a mean month would be off by hours: two Moons nearly equidistant from the equinox could both be "Harvest")
+  const prev = fullAfter(at - 1.5 * SYNODIC), next = fullAfter(at + 86400e3), prev2 = fullAfter(prev - 1.5 * SYNODIC), near = x => Math.abs(x - eq);
   let name = MONTH_MOON[d.getUTCMonth()] + ' Moon';
-  if (near(at) < near(at - SYNODIC) && near(at) < near(at + SYNODIC)) name = 'Harvest Moon';
-  else if (near(at - SYNODIC) < near(at - 2 * SYNODIC) && near(at - SYNODIC) < near(at) && at > eq) name = "Hunter's Moon";
+  if (near(at) < near(prev) && near(at) <= near(next)) name = 'Harvest Moon';
+  else if (near(prev) < near(prev2) && near(prev) <= near(at) && at > eq) name = "Hunter's Moon";
   const m = moonGeocentric(jdFromMs(at)), km = Math.hypot(m.x, m.y, m.z) * 149597870.7;
   return { at, name, km: Math.round(km), supermoon: km < 362000 };
 }

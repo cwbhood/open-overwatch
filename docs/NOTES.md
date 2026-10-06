@@ -64,6 +64,11 @@ workflow (.github/workflows/pages.yml -> .github/build_site.py): main at the roo
 contain build_site.py's APP_PATHS: add every new runtime asset there (the Launch button opens /v/<latest>/), or
 the archived app 404s on it (v0.7-v0.8 globe crashed that way until v0.8.1). Each archived version costs
 ~25 MB of the 1 GB Pages limit.
+Mirrors are best effort, and a failed refresh must never take the previous copy down: on 2026-10-06 06:28 UTC the
+scheduled build timed out on every CelesTrak group (90 s each, a 36-minute build that still "succeeded"), deployed with
+an empty data/tle/, and the live globe fell back to CelesTrak directly for every visitor until the next build.
+build_site.py now keeps the live site's copy of any feed it cannot refresh (last_good / keep_last), stops waiting on
+CelesTrak after the first timeout, and index.json lists the groups it `kept`.
 `Publish Update.bat` bumps OW_VERSION, commits, tags vX and pushes; .github/workflows/release.yml then builds
 `open-overwatch.zip` (the download the lander links to via releases/latest/download). Keep the zip file list in that
 workflow in sync when the app starts needing new files. gh CLI (portable): ~/bin/gh-cli/bin/gh.exe.

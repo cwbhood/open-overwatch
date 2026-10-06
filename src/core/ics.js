@@ -2,7 +2,7 @@
 // server of ours. DOM-free. events: [{ uid, start, end (ms), title, details, alarmMin }].
 
 const stamp = ms => new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');   // 20270802T100639Z
-const text = s => String(s ?? '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+const text = s => String(s ?? '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n');
 /** Lines longer than 75 octets are folded (a space starts each continuation). */
 function fold(line) {
   const out = []; let cur = '', n = 0;

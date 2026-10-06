@@ -20,10 +20,12 @@ const NAMED = [
 
 /** sat: { name, layer }, orbit: { alt (km), period (min) } -> a sentence. */
 export function explainSat(sat, orbit = {}) {
-  const name = String(sat.name || '').toUpperCase(), hit = NAMED.find(([re]) => re.test(name));
+  const name = String(sat.name || '').toUpperCase(), debris = NAMED[NAMED.length - 1][1], stage = NAMED[NAMED.length - 2][1];
+  if (sat.layer === 'debris' || / DEB\b/.test(name)) return debris;   // "ISS DEB" is a shed part, not the station
+  if (/ R\/B\b/.test(name)) return stage;
+  const hit = NAMED.find(([re]) => re.test(name));
   if (hit) return hit[1];
   const alt = orbit.alt, per = orbit.period;
-  if (sat.layer === 'debris') return NAMED[NAMED.length - 1][1];
   if (alt > 34000 && alt < 37500) return 'A geostationary satellite: 35,786 km up it circles once a day, so it seems to hang still over one spot. TV, weather and communications live here.';
   if (alt > 18000 && alt < 24000) return 'A satellite in medium orbit (around 20,000 km), where the navigation constellations fly.';
   if (alt != null && alt < 2000) return `A satellite in low orbit, ${Math.round(alt).toLocaleString('en-US')} km up, going round the Earth every ${Math.round(per || 95)} minutes at about 27,000 km/h.`;

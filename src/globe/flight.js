@@ -39,7 +39,7 @@ export const Flight = {
   },
   /** msg and extra are HTML: callers escape anything typed. */
   open(msg = '', extra = '') {
-    const c = $('#card'); state.selected = null;
+    const c = $('#card'); hooks.clearSelection?.();
     c.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" style="--c:#5fd3ff">Live ADS-B</div><h2>Find a flight</h2>
       <form id="flForm" class="fl-form" autocomplete="off"><input id="flQ" maxlength="12" placeholder="BA 123 · EZY8123 · G-EUPT" aria-label="Flight number, callsign, registration or hex" value="${esc(this.query ? this.query.label : '')}"><button class="chipbtn" style="color:#5fd3ff">Find</button></form>
       <p class="note" id="flMsg">${msg}</p>${extra}
@@ -53,16 +53,17 @@ export const Flight = {
     if (!q) return this.open('That doesn\'t look like a flight number, callsign, registration or hex code.');
     this.query = q; this.stop(); const run = this.run = (this.run || 0) + 1;
     if ($('#flMsg')) $('#flMsg').textContent = 'Looking…';
-    Time.goLive();
     let r = [...Air.map.values()].find(x => matchesFlight(x, q));
     if (RELAY) r = (await lookup(q).catch(() => null)) || r;
     if (run !== this.run) return;   // a newer search took over
+    if (!($('#card').classList.contains('show') && $('#flForm'))) return;   // the user opened something else while adsb.lol answered: leave it be
     if (!r) {
       const map = `<a class="chipbtn" href="${esc(liveMap(q))}" target="_blank" rel="noopener" style="color:#5fd3ff">Open on adsb.lol's live map ↗</a>`;
       const why = RELAY ? `${esc(q.label)} isn't in the air right now, or no volunteer receiver can hear it (oceans and remote areas have gaps).`
         : `${esc(q.label)} isn't among the planes on this globe. Live flight feeds don't let websites read them, so the website can't ask for one plane; the <a href="https://github.com/cwbhood/open-overwatch/releases/latest/download/open-overwatch.zip">download version</a> can.`;
       return this.open(why, `<div class="acts">${map}</div>`);
     }
+    Time.goLive();   // only now that there is a plane to follow (aircraft are live-only)
     const lay = L[r.mil ? 'mil' : 'air']; if (!lay.on) { lay.on = true; syncDock(); hooks.applyVisibility(); }
     this.rec = r; select(r); AirModels.follow(r);
     toast(`Found ${r.flight || r.hex}${r.reg ? ' · ' + r.reg : ''} · following it`, 4000);

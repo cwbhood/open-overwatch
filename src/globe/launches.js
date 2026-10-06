@@ -5,7 +5,7 @@
 import { C, $, esc, toast } from './env.js';
 import { viewer, scene, camera } from './viewer.js';
 import { L, setCount } from './layers.js';
-import { state } from './state.js';
+import { state, hooks } from './state.js';
 import { release } from './follow.js';
 import { Alerts } from './alerts.js';
 import { fetchAsset } from '../core/assets.js';
@@ -19,16 +19,20 @@ const local = ms => new Date(ms).toLocaleString([], { weekday: 'short', day: 'nu
 const precise = l => ['SEC', 'MIN', 'HR', ''].includes(String(l.precision).toUpperCase()) && Number.isFinite(l.net);
 
 export const Launches = {
-  list: [], loading: null, error: '', tick: 0, at: 0,
+  list: [], loading: null, error: '', tick: 0, at: 0, failedAt: 0, stale: false,
   load() {
     if (!this.loading) this.loading = (async () => {
       let d = await fetchAsset('data/launches.json', 'json').catch(() => null), src = 'site copy';
-      if (!d || !d.results) { const r = await fetch(API); if (!r.ok) throw new Error('HTTP ' + r.status); d = await r.json(); src = 'live'; }
+      const stale = d && d.results && (!d.t || Date.now() - d.t > 36 * 3600e3);   // the build runs every 6 h: an old copy means the build has stopped
+      if (!d || !d.results || stale) {
+        try { const r = await fetch(API); if (!r.ok) throw new Error('HTTP ' + r.status); d = await r.json(); src = 'live'; }
+        catch (e) { if (!stale) throw e; this.stale = true; }   // a stale copy beats nothing
+      }
       this.list = upcoming((d.results || []).map(fromLL2).filter(Boolean).map(l => ({ ...l, kind: 'launch' })), Date.now());
-      this.at = d.t || Date.now(); this.src = src; this.error = '';
+      this.at = d.t || Date.now(); this.src = src; this.error = ''; this.failedAt = 0;
       viewer.creditDisplay.addStaticCredit(new C.Credit('Launch data: The Space Devs, Launch Library 2'));
       this.draw(); setCount('launches', this.list.length);
-    })().catch(e => { console.warn('launches', e); this.error = "The launch schedule isn't reachable right now."; this.loading = null; });
+    })().catch(e => { console.warn('launches', e); this.error = "The launch schedule isn't reachable right now."; this.loading = null; this.failedAt = Date.now(); });
     return this.loading;
   },
   /** One marker per pad, for its next launch. */
@@ -46,25 +50,27 @@ export const Launches = {
   relabel() { const now = Date.now(); for (const l of this.list) if (l.label) l.label.text = `🚀 ${l.rocket}${precise(l) ? ' · ' + countdown(l.net, now).replace(/:\d\d$/, '') : ''}`; },
   apply() {
     pts.show = labels.show = L.launches.on && !state.lookup;   // look-up mode hides things on the ground
-    if (L.launches.on && !this.loading) this.load();
+    if (L.launches.on && !this.loading && Date.now() - this.failedAt > 5 * 60e3) this.load();   // after a failure, try again in 5 minutes, not on every redraw
     clearInterval(this.labelTimer); if (L.launches.on) this.labelTimer = setInterval(() => this.relabel(), 30e3);
     scene.requestRender();
   },
-  async openList() {
-    const card = $('#card'); state.selected = null; clearInterval(this.tick);
+  /** The list; with an id (from a share link or tonight.html), straight to that launch's card. */
+  async openList(id = '') {
+    const card = $('#card'); hooks.clearSelection?.(); clearInterval(this.tick);
     card.innerHTML = '<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ff9f5c">Launch Library 2</div><h2>Launches</h2><p class="note" data-wait="lc">Loading…</p>'; card.classList.add('show');
     card.querySelector('.x').onclick = () => this.close(); await this.load();
-    if (!card.querySelector('[data-wait="lc"]')) return;   // another card opened while the schedule loaded
+    if (!card.querySelector('[data-wait="lc"]') || !card.classList.contains('show')) return;   // another card opened, or Esc, while the schedule loaded
+    if (id) { const l = this.list.find(x => x.id === id); if (l) return this.show(l); }
     const rows = upcoming(this.list, Date.now());
     const row = (l, i) => { const [st, col] = STATUS[l.status] || [l.statusName || l.status, '#8b9bab']; return `<button class="cj lc" data-i="${i}"><b style="color:#ff9f5c" data-cd="${i}">${precise(l) ? esc(countdown(l.net, Date.now()).replace(/^T-(\d+) d .*/, 'T-$1 d')) : '—'}</b><span>${esc(l.mission)}</span><small>${esc(l.rocket)} · ${esc(l.provider)} · ${esc(l.place || l.pad)}<br><i style="color:${col};font-style:normal">${esc(st)}</i> · ${esc(precise(l) ? local(l.net) : when(l))}</small></button>`; };
-    card.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ff9f5c">Next ${rows.length} launches · ${this.src === 'live' ? 'live' : 'updated every 6 hours'}</div><h2>Launches</h2>
+    card.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ff9f5c">${this.error ? 'Launch Library 2' : `Next ${rows.length} launches · ${this.src === 'live' ? 'live' : this.stale ? 'an older copy: the live schedule was unreachable' : 'updated every 6 hours'}`}</div><h2>Launches</h2>
       ${this.error ? `<p class="note">${esc(this.error)}</p>` : `<p class="note">Every orbital launch on the books, from every country. Orange markers on the globe are the pads. Times are yours.</p><div class="cjl">${rows.map(row).join('') || '<p class="note">None listed.</p>'}</div>`}`;
     card.querySelector('.x').onclick = () => this.close();
     card.querySelectorAll('.lc').forEach(b => { b.onclick = () => this.show(rows[+b.dataset.i]); });
     this.tick = setInterval(() => { if (!card.classList.contains('show') || !card.querySelector('.lc')) return clearInterval(this.tick); card.querySelectorAll('[data-cd]').forEach(el => { const l = rows[+el.dataset.cd]; if (precise(l)) el.textContent = countdown(l.net, Date.now()).replace(/^T-(\d+) d .*/, 'T-$1 d'); }); }, 1000);
   },
   show(l) {
-    const card = $('#card'); state.selected = l; clearInterval(this.tick);
+    const card = $('#card'); hooks.clearSelection?.(); state.selected = l; clearInterval(this.tick);
     const [st, col] = STATUS[l.status] || [l.statusName || l.status || 'Scheduled', '#8b9bab'], row = (k, v) => v ? `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>` : '';
     const vids = l.webcasts.map(v => `<a class="chipbtn" href="${esc(v.url)}" target="_blank" rel="noopener" style="color:#ff6b6b" title="${esc(v.title)}">▶ ${l.live ? 'Live now' : 'Webcast'}</a>`).join('');
     card.innerHTML = `<button class="x" aria-label="Close">×</button><div class="k" style="--c:#ff9f5c">Rocket launch · <span style="color:${col}">${esc(st)}</span></div><h2>${esc(l.mission)}</h2>

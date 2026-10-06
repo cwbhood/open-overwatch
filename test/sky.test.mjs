@@ -82,7 +82,7 @@ test('meteors: the Perseids from London in August, the Geminids over New Year, n
   const per = showersFor(51.48, 0, Date.parse('2026-08-09T12:00:00Z')).find(s => s.name === 'Perseids');
   assert.ok(per && per.active && Math.round(per.days) === 3, JSON.stringify(per));
   assert.ok(per.radiantAlt > 50 && per.rate > 5 && per.ratePeak > per.rate && per.ratePeak < 100, per.text);
-  assert.match(per.text, /peaks in 3 days/);
+  assert.match(per.text, /peaks in 3 nights/); assert.equal(per.nights, 3);
   assert.ok(activeShowers(Date.parse('2027-01-02T00:00:00Z')).some(s => s.name === 'Quadrantids'));      // wraps past New Year
   assert.equal(showersFor(51.48, 0, Date.parse('2026-06-05T12:00:00Z'), { ahead: 10 }).length, 0);
   const south = showersFor(-33.9, 151.2, Date.parse('2026-12-13T08:00:00Z')).find(s => s.name === 'Ursids');   // Sydney: the Ursid radiant never rises
@@ -196,4 +196,36 @@ test('clouds: gaps in the forecast are unknown, not clear sky', async () => {
   const t0 = Date.parse('2026-10-05T18:00:00Z') / 1000, rows = hoursOf({ hourly: { time: [0, 1, 2, 3, 4, 5].map(i => t0 + i * 3600), cloud_cover: [90, null, null, null, 95, 92] } });
   assert.equal(rows.length, 3);
   const n = night(rows, (t0 + 0) * 1000, (t0 + 6 * 3600) * 1000); assert.ok(!n || !n.clear.length, JSON.stringify(n));
+});
+
+test('round 2 fixes: night window, meteor nights, Moon names, debris, short nights, ICS, flight numbers', async () => {
+  const { darkWindow, nextFullMoon, planetsTonight } = await import('../src/core/sky.js');
+  const { showersFor } = await import('../src/core/meteors.js');
+  const { explainSat } = await import('../src/core/explain.js');
+  const { hoursOf, night } = await import('../src/core/clouds.js');
+  const { makeIcs } = await import('../src/core/ics.js');
+  const { parseFlightQuery, matchesFlight } = await import('../src/core/flight.js');
+  // opened at 05:30 UTC in London in December (dark until ~07:30): the tail is skipped for the coming night
+  const w = darkWindow(51.5, -0.1, ms('2024-12-10T05:30:00Z'), { minLeft: 2 * 3600e3 });
+  assert.ok(w.start > ms('2024-12-10T15:00:00Z') && w.end > ms('2024-12-11T06:00:00Z'), JSON.stringify(w));
+  assert.equal(darkWindow(51.5, -0.1, ms('2024-12-10T05:30:00Z')).end < ms('2024-12-10T08:30:00Z'), true);   // without the option: the tail itself
+  assert.ok(planetsTonight(51.5, -0.1, ms('2024-12-10T05:30:00Z'), { minLeft: 2 * 3600e3 }).some(p => p.up));
+  // the Perseid peak night (Aug 12/13) is "tonight" from Honolulu (UTC-10) and from Tokyo (UTC+9)
+  // a UT peak date straddles two local nights: Greenwich gets both, Honolulu (UTC-10) the earlier, Tokyo (UTC+9) the later
+  for (const [lat, lon, t, want] of [[51.5, 0, '2026-08-11T20:00:00Z', 0], [51.5, 0, '2026-08-12T20:00:00Z', 0], [21.3, -157.9, '2026-08-12T07:00:00Z', 0], [21.3, -157.9, '2026-08-13T07:00:00Z', -1], [35.7, 139.7, '2026-08-12T11:00:00Z', 0], [35.7, 139.7, '2026-08-11T11:00:00Z', 1]]) {
+    const per = showersFor(lat, lon, ms(t)).find(s => s.name === 'Perseids'); assert.equal(per.nights, want, `${lon} ${t}: ${per.text}`);
+  }
+  assert.match(showersFor(21.3, -157.9, ms('2026-08-13T07:00:00Z')).find(s => s.name === 'Perseids').text, /peaked last night \(still near its best\)/);
+  // 2024: Harvest Moon Sep 18, Hunter's Oct 17, Corn Moon Aug 19 (not a second Harvest)
+  assert.equal(nextFullMoon(ms('2024-08-10T00:00:00Z')).name, 'Sturgeon Moon');   // August's, not a second Harvest
+  assert.equal(nextFullMoon(ms('2024-09-05T00:00:00Z')).name, 'Harvest Moon'); assert.equal(nextFullMoon(ms('2024-10-01T00:00:00Z')).name, "Hunter's Moon");
+  assert.match(explainSat({ name: 'ISS DEB' }), /debris/); assert.match(explainSat({ name: 'CZ-3B R/B' }), /rocket stage/); assert.match(explainSat({ name: 'STARLINK-30000 DEB', layer: 'debris' }), /debris/);
+  // a 90-minute midsummer night at 60 N, clear throughout
+  const t0 = ms('2026-06-21T22:30:00Z') / 1000, rows = hoursOf({ hourly: { time: [0, 1, 2, 3].map(i => t0 + i * 3600), cloud_cover: [5, 5, 5, 5] } });
+  assert.match(night(rows, t0 * 1000, t0 * 1000 + 90 * 60e3).text, /clear/i);
+  assert.ok(!/\r(?!\n)/.test(makeIcs([{ uid: 'x', start: 0, title: 'a\rb', details: 'c\rd' }])));
+  for (const q of ['AA1234', 'BA0123', 'B61234', 'ACA123']) assert.equal(parseFlightQuery(q).hex, '', q);
+  assert.deepEqual(parseFlightQuery('AA1234').callsigns, ['AAL1234', 'AA1234']);
+  assert.ok(!matchesFlight({ hex: 'aa1234', flight: 'N712AB' }, parseFlightQuery('AA1234')));
+  assert.equal(parseFlightQuery('3c6444').hex, '3c6444'); assert.equal(parseFlightQuery('abcdef').hex, '');   // a hex address needs a digit; "abcdef" is nothing
 });

@@ -104,6 +104,14 @@ check any new runtime asset is too (archived /v/<tag>/ copies fall back to the s
 - [x] tonight.html: the Tonight card without the 3D globe (src/sky/main.js wires light feeds into src/globe/tonight.js, which
       no longer imports the globe; core/observer.js replaces Cesium for passes). Phone profile: card 1.2 s, full answer 1.7 s
       after location. Landing page and the app shortcut link here
+- [x] Bug hunt rounds 1-2 (2026-10-05/06): 24 + 56 confirmed defects fixed (three reviewers, then a 213-agent workflow:
+      10 finders, 3 verifiers per finding, a seeded second round). Headline fixes: a ticket number like AA1234 was read as
+      a hex address; "tonight" opened pre-dawn described the minutes to dawn; meteor peak nights were a day off west of
+      UTC+6; cards overwrote each other; look-up leaked models, buildings and clicks; the build's launch/crew copies
+      were all-or-nothing; the site build now keeps the last good copy of any feed it can't refresh (see NOTES.md)
+- [ ] Live site 2026-10-06: data/tle/ is empty since the 06:28 UTC build (CelesTrak timed out on GitHub's runner); the
+      next scheduled build (12:23 UTC) or a manual "Website" run restores it; with this branch's build_site.py a repeat
+      would keep the previous copy instead
 - [ ] Real-phone check: share sheet with a file (iOS Safari, Android Chrome), notifications on Android, .ics on iPhone
 
 ## Rules of thumb

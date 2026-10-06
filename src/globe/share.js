@@ -11,6 +11,8 @@ import { Weather } from './weather.js';
 import { Country } from './country.js';
 import { select, PRESETS } from './ui.js';
 import { Flight } from './flight.js';
+import { Launches } from './launches.js';
+import { Eclipses } from './eclipses.js';
 import { encodeView, decodeView, decodeExtras } from '../core/viewlink.js';
 
 const r = (v, n) => +v.toFixed(n);
@@ -36,7 +38,12 @@ export const Share = {
   /** Apply a link's hash (called once, after the boot screen is gone). Returns true if there was one. */
   async restore() {
     const v = decodeView(location.hash), x = decodeExtras(location.hash);
-    if (!v) { if (x.go) { const b = document.querySelector(`#band [data-go="${x.go}"]`); if (b) b.click(); else PRESETS[x.go](); } if (x.flight) Flight.find(x.flight); return !!(x.go || x.flight); }
+    if (!v) {
+      if (x.go === 'launches' && x.id) Launches.openList(x.id);   // tonight.html hands over one launch or eclipse
+      else if (x.go === 'eclipses' && x.id) Eclipses.openList(x.id);
+      else if (x.go) { const b = document.querySelector(`#band [data-go="${x.go}"]`); if (b) b.click(); else PRESETS[x.go](); }
+      if (x.flight) Flight.find(x.flight); return !!(x.go || x.flight);
+    }
     if (v.layers) { const on = new Set(v.layers); for (const l of LAYERS) l.on = on.has(l.id); syncDock(); hooks.applyVisibility(); }
     if (v.time) Time.setJd(v.time.jd, v.time.rate);
     camera.setView({ destination: C.Cartesian3.fromDegrees(v.lon, v.lat, Math.max(150, v.height)), orientation: { heading: C.Math.toRadians(v.heading), pitch: C.Math.toRadians(v.pitch), roll: 0 } });

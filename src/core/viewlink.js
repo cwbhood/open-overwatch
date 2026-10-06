@@ -1,6 +1,6 @@
 // A shared view as a URL hash, and back. Pure functions (the globe's share.js reads and applies them):
 //   #c=lon,lat,height,heading,pitch  &l=layer,ids,on  &w=ir,wind  &t=julianDate,rate  &k=ISO2  &f=CALLSIGN (a flight to find)
-//   #go=tonight opens a panel by itself (no camera needed): see GO
+//   #go=tonight opens a panel by itself (no camera needed): see GO; &id= names one launch (LL2 id) or eclipse (date) in it
 
 const r = (v, n) => +Number(v).toFixed(n);
 const FLIGHT = /^[A-Za-z0-9]{2,8}$/;
@@ -9,8 +9,8 @@ export const GO = Object.freeze(['tonight', 'flight', 'search', 'launches', 'cre
 
 /** The parts of a hash that work without a camera: { go: 'tonight' | null, flight: 'BAW123' | null }. */
 export function decodeExtras(hash) {
-  const p = new URLSearchParams(String(hash || '').replace(/^#/, '')), go = p.get('go'), f = p.get('f');
-  return { go: GO.includes(go) ? go : null, flight: f && FLIGHT.test(f) ? f.toUpperCase() : null };
+  const p = new URLSearchParams(String(hash || '').replace(/^#/, '')), go = p.get('go'), f = p.get('f'), id = p.get('id');
+  return { go: GO.includes(go) ? go : null, flight: f && FLIGHT.test(f) ? f.toUpperCase() : null, id: id && /^[\w.-]{1,40}$/.test(id) ? id : null };
 }
 
 /** view: { lon, lat, height, heading, pitch (degrees, metres), layers: [ids], weather: [ids] | null, time: { jd, rate } | null, country: 'JP' | null } */

@@ -16,12 +16,10 @@ import { msFromJd } from '../core/time.js';
 
 const sats = { list: [], byId: new Map() };
 const tles = createTleSource({ fetchText: (url, o) => getText(url, o), cache: bigStore, onSite: ON_SITE });
-sats.ready = (async () => {   // stations first (the ISS answers most questions), then the rest
-  for (const g of ['stations', 'visual', 'starlink']) {
-    try { for (const t of parseTle((await tles.load(g)).txt)) if (!sats.byId.has(t.id)) { const s = { kind: 'sat', ...t, layer: g }; sats.list.push(s); sats.byId.set(t.id, s); } }
-    catch (e) { console.warn('satellites', g, e.message); }
-  }
-})();
+sats.ready = Promise.all(['stations', 'visual', 'starlink'].map(async g => {   // the three groups in parallel: one round trip, not three
+  try { for (const t of parseTle((await tles.load(g)).txt)) if (!sats.byId.has(t.id)) { const s = { kind: 'sat', ...t, layer: g }; sats.list.push(s); sats.byId.set(t.id, s); } }
+  catch (e) { console.warn('satellites', g, e.message); }
+}));
 
 let aurora = null;
 const auroraGrid = async () => {
@@ -37,7 +35,11 @@ const countryName = async (lon, lat) => {
 let launchList = null;
 const launches = () => launchList || (launchList = (async () => {
   let d = await fetchAsset('data/launches.json', 'json').catch(() => null);
-  if (!d || !d.results) { const r = await fetch('https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=30&mode=normal&hide_recent_previous=true'); if (!r.ok) throw new Error('HTTP ' + r.status); d = await r.json(); }
+  const stale = d && d.results && (!d.t || Date.now() - d.t > 36 * 3600e3);   // the site copy is rebuilt every 6 h
+  if (!d || !d.results || stale) {
+    try { const r = await fetch('https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=30&mode=normal&hide_recent_previous=true'); if (!r.ok) throw new Error('HTTP ' + r.status); d = await r.json(); }
+    catch (e) { if (!stale) throw e; }
+  }
   return upcoming((d.results || []).map(fromLL2).filter(Boolean), Date.now());
 })().catch(e => { launchList = null; throw e; }));
 
@@ -55,8 +57,8 @@ async function nextEclipse(lat, lon) {
 
 Tonight.use({
   sats, auroraGrid, countryName, launches,
-  showLaunch: () => { location.href = 'globe.html#go=launches'; },
-  nextEclipse, watchEclipse: () => { location.href = 'globe.html#go=eclipses'; },
+  showLaunch: l => { location.href = 'globe.html#go=launches&id=' + encodeURIComponent(l.id); },
+  nextEclipse, watchEclipse: e => { location.href = 'globe.html#go=eclipses&id=' + encodeURIComponent(e.date); },
 });
 Tonight.open();
 Tonight.peek().catch(() => {});

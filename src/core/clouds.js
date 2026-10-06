@@ -33,7 +33,8 @@ export function night(hours, start, end, { time = ms => new Date(ms).toISOString
     else if (cur) { clear.push(cur); cur = null; }
   }
   if (cur) clear.push(cur);
-  const good = clear.filter(c => c.to - c.from >= 2 * HOUR), whole = good.length === 1 && good[0].to - good[0].from >= (end - start) - 1.5 * HOUR;
+  const need = Math.min(2 * HOUR, 0.6 * (end - start));   // midsummer at 60 N: the whole dark window may be under 2 h
+  const good = clear.filter(c => c.to - c.from >= need), whole = good.length === 1 && good[0].to - good[0].from >= (end - start) - 1.5 * HOUR;
   let text;
   if (whole) text = mean < 15 ? 'Clear all night: a great night to look up.' : 'Mostly clear all night.';
   else if (good.length) {
