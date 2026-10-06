@@ -82,7 +82,7 @@ export const Launches = {
     card.classList.add('show'); card.querySelector('.x').onclick = () => this.close();
     $('#lcFly').onclick = () => { release(); camera.flyTo({ destination: C.Cartesian3.fromDegrees(l.lon, l.lat - 0.22, 22000), orientation: { heading: 0, pitch: C.Math.toRadians(-38), roll: 0 }, duration: 3 }); };
     $('#lcAll').onclick = () => this.openList();
-    const title = `${l.rocket} launch: ${l.mission}`, details = `${l.provider} · ${[l.pad, l.place].filter(Boolean).join(', ')}${l.webcasts[0] ? '\nWebcast: ' + l.webcasts[0].url : ''}\nhttps://cwbhood.github.io/open-overwatch/globe.html#go=launches`;
+    const title = `${l.rocket} launch: ${l.mission}`, details = `${l.provider} · ${[l.pad, l.place].filter(Boolean).join(', ')}${l.webcasts[0] ? '\nWebcast: ' + l.webcasts[0].url : ''}\nhttps://destinjones.github.io/open-overwatch/globe.html#go=launches`;
     if ($('#lcRem')) $('#lcRem').onclick = () => Alerts.remind({ tag: 'launch-' + l.id, at: l.net - 10 * 60e3, title: `${l.rocket} launches in 10 minutes`, body: `${l.mission} from ${l.place || l.pad}` });
     if ($('#lcCal')) $('#lcCal').onclick = () => Alerts.calendar([{ uid: `oo-launch-${l.id}@open-overwatch`, start: l.net, end: l.net + 30 * 60e3, title, details, alarmMin: 15 }], 'launch.ics');
     this.tick = setInterval(() => { const el = $('#lcCd'); if (!el || state.selected !== l) return clearInterval(this.tick); if (precise(l)) el.textContent = countdown(l.net, Date.now()); }, 1000);

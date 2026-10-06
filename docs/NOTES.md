@@ -35,7 +35,7 @@ Detail that used to live in CLAUDE.md. Read the section you need before touching
   flipped vs the OpenGL convention (verified with direction-coded faces; star positions checked against Orion/Sgr).
   camera.setView({orientation:{direction, up}}) far out in space can come back upside down; check camera.upWC.
   TLEs: the website build mirrors every CelesTrak group the apps use to /data/tle/<group>.txt (build_site.py; the Website
-  workflow also runs every 6 h). Both apps read that copy first on cwbhood.github.io and fall back to it elsewhere.
+  workflow also runs every 6 h). Both apps read that copy first on destinjones.github.io and fall back to it elsewhere.
   CelesTrak firewalled this PC's network on 2026-10-01 after many headless renders (fresh profile = no cache each run);
   globe_shot.mjs now blocks the live feed hosts. Never point automated runs at CelesTrak.
 - `solar.html` — Solar System → Local Group view on Three.js 0.186 (importmap, CDN), one scene in AU with a log depth
@@ -58,7 +58,7 @@ Detail that used to live in CLAUDE.md. Read the section you need before touching
   notes, verified issues (with line numbers) and a feed-liveness check of every external endpoint.
 
 ## Publishing
-Repo github.com/cwbhood/open-overwatch (public); site https://cwbhood.github.io/open-overwatch/, built by the "Website"
+Repo github.com/destinjones/open-overwatch (public); site https://destinjones.github.io/open-overwatch/, built by the "Website"
 workflow (.github/workflows/pages.yml -> .github/build_site.py): main at the root, every annotated v* tag frozen under
 /v/<tag>/, and versions.json for the landing page's version picker and history (#launch). The /v/<tag>/ copies only
 contain build_site.py's APP_PATHS: add every new runtime asset there (the Launch button opens /v/<latest>/), or

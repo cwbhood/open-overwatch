@@ -18,8 +18,8 @@ git commit -m "v%VER%: %MSG%" || goto :fail
 git tag -a "v%VER%" -m "%MSG%" || goto :fail
 git push origin main --follow-tags || goto :fail
 echo.
-echo Done. Site:     https://cwbhood.github.io/open-overwatch/
-echo       Release:  https://github.com/cwbhood/open-overwatch/releases/tag/v%VER%
+echo Done. Site:     https://destinjones.github.io/open-overwatch/
+echo       Release:  https://github.com/destinjones/open-overwatch/releases/tag/v%VER%
 pause
 goto :eof
 :fail

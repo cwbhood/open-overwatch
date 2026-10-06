@@ -6,9 +6,9 @@ type: software
 authors:
   - family-names: Jones
     given-names: Destin
-    website: "https://cwbhood.github.io/open-overwatch/about.html"
-repository-code: "https://github.com/cwbhood/open-overwatch"
-url: "https://cwbhood.github.io/open-overwatch/"
+    website: "https://destinjones.github.io/open-overwatch/about.html"
+repository-code: "https://github.com/destinjones/open-overwatch"
+url: "https://destinjones.github.io/open-overwatch/"
 license: MIT
 date-released: 2026-10-04
 keywords:

@@ -42,7 +42,7 @@ export const Sats = {
   tles: createTleSource({
     fetchText: (url, { timeout }) => Net.text(url, /celestrak\.org/.test(url) ? { throttle: 'celestrak', gap: 2000, timeout } : { timeout }),
     cache: { get: k => Store.get(k, null), set: (k, v) => Store.set(k, v) || (Log.warn(`Could not cache ${k} (browser storage full). CelesTrak allows one download per group every 2 h, so avoid reloading the page repeatedly with this group on.`), false) },
-    onSite: location.hostname === 'cwbhood.github.io',
+    onSite: location.hostname === 'destinjones.github.io',
   }),
   async loadGroup(g) {
     const res = await this.tles.load(g);

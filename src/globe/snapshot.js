@@ -8,7 +8,7 @@ import { Time } from './time.js';
 import { LookUp } from './lookup.js';
 import { Share } from './share.js';
 
-const SITE = 'cwbhood.github.io/open-overwatch';
+const SITE = 'destinjones.github.io/open-overwatch';
 const EMBLEM = loadImage('brand/emblem/emblem-256.png').catch(() => null);   // ready before the tap: share sheets want the tap's activation
 
 function frame() {

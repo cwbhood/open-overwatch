@@ -209,7 +209,7 @@ function draw(initial) {
   c.querySelectorAll('[data-lch]').forEach(b => { b.onclick = () => { S.open = false; D.showLaunch(S.launches[+b.dataset.lch].l); }; });
   c.querySelectorAll('[data-met]').forEach(b => { b.onclick = () => {
     const m = showers[+b.dataset.met], night = showersFor(lat, lon, m.peakMs - 12 * HOUR, { time }).find(x => x.name === m.name), at = (night && night.bestMs) || m.peakMs;
-    Alerts.calendar([{ uid: `oo-${m.name.replace(/\W+/g, '')}-${new Date(m.peakMs).getUTCFullYear()}@open-overwatch`, start: at - HOUR, end: at + HOUR, title: `${m.name} meteor shower: look up (radiant ${m.dir})`, details: `${m.text}\nFrom ${m.parent}, hitting the air at ${m.kms} km/s. Get away from lights, give your eyes 20 minutes, lie back.\nhttps://cwbhood.github.io/open-overwatch/globe.html#go=tonight`, alarmMin: 30 }], `${m.name.toLowerCase().replace(/\W+/g, '-')}.ics`);
+    Alerts.calendar([{ uid: `oo-${m.name.replace(/\W+/g, '')}-${new Date(m.peakMs).getUTCFullYear()}@open-overwatch`, start: at - HOUR, end: at + HOUR, title: `${m.name} meteor shower: look up (radiant ${m.dir})`, details: `${m.text}\nFrom ${m.parent}, hitting the air at ${m.kms} km/s. Get away from lights, give your eyes 20 minutes, lie back.\nhttps://destinjones.github.io/open-overwatch/globe.html#go=tonight`, alarmMin: 30 }], `${m.name.toLowerCase().replace(/\W+/g, '-')}.ics`);
   }; });
   c.querySelector('#tnAur').onclick = async () => {
     if (watching) { try { localStorage.removeItem('oo3d.auroraWatch'); } catch (e) { /* private mode */ } toast('Aurora alerts off'); return render(); }
@@ -218,7 +218,7 @@ function draw(initial) {
     toast('Aurora alerts on: checked every 10 minutes while this page is open, once a night at most', 5000); render(); Tonight.watchAurora(); Tonight.checkAurora();
   };
   c.querySelector('#tnShare').onclick = async () => {
-    const url = 'https://cwbhood.github.io/open-overwatch/globe.html#go=tonight', text = S.summary + '\nSee yours:';
+    const url = 'https://destinjones.github.io/open-overwatch/globe.html#go=tonight', text = S.summary + '\nSee yours:';
     if (navigator.share) { try { await navigator.share({ title: "Tonight's sky", text, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
     try { await navigator.clipboard.writeText(text + ' ' + url); toast('Copied: paste it into a message', 3000); } catch (e) { window.prompt('Copy this:', text + ' ' + url); }
   };
@@ -284,7 +284,7 @@ function bindPasses(c) {
     if (p.rise - 60e3 <= now) { toast(p.set > now ? `${p.short} is up now: look ${compass(p.azRise)} to ${compass(p.azSet)}!` : `${p.short} has already passed`, 6000); return; }
     if (p.rise - 10 * 60e3 <= now) { Alerts.remind({ tag: `pass-${p.id}-${Math.round(p.rise / 60e3)}`, at: p.rise - 60e3, title: `${p.short} in 1 minute`, body: describePass(p.short, p, { time }) }); return; }   // closer than 10 minutes: a minute's warning
     Alerts.remind({ tag: `pass-${p.id}-${Math.round(p.rise / 60e3)}`, at: p.rise - 10 * 60e3, title: `${p.short} in 10 minutes`, body: describePass(p.short, p, { time }) }); }; });
-  c.querySelectorAll('[data-cal]').forEach(b => { b.onclick = () => { const p = S.passes[+b.dataset.cal]; Alerts.calendar([{ uid: `oo-${p.id}-${Math.round(p.rise / 60e3)}@open-overwatch`, start: p.rise, end: p.set, title: `${p.short} passes over: look ${compass(p.azRise)}`, details: describePass(p.name, p, { time }) + '\nhttps://cwbhood.github.io/open-overwatch/globe.html#go=tonight', alarmMin: 10 }], `${p.short.toLowerCase().replace(/\W+/g, '-')}-pass.ics`); }; });
+  c.querySelectorAll('[data-cal]').forEach(b => { b.onclick = () => { const p = S.passes[+b.dataset.cal]; Alerts.calendar([{ uid: `oo-${p.id}-${Math.round(p.rise / 60e3)}@open-overwatch`, start: p.rise, end: p.set, title: `${p.short} passes over: look ${compass(p.azRise)}`, details: describePass(p.name, p, { time }) + '\nhttps://destinjones.github.io/open-overwatch/globe.html#go=tonight', alarmMin: 10 }], `${p.short.toLowerCase().replace(/\W+/g, '-')}-pass.ics`); }; });
 }
 
 /**

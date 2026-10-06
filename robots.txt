@@ -4,4 +4,4 @@ Allow: /
 Disallow: /v/
 Disallow: /data/
 
-Sitemap: https://cwbhood.github.io/open-overwatch/sitemap.xml
+Sitemap: https://destinjones.github.io/open-overwatch/sitemap.xml

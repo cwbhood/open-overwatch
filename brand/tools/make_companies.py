@@ -12,7 +12,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 CACHE = HERE.parent / 'source' / 'companies'
-UA = 'open-overwatch/0.9 (https://github.com/cwbhood/open-overwatch)'
+UA = 'open-overwatch/0.9 (https://github.com/destinjones/open-overwatch)'
 BANDS = [(1_000_000, 10**9), (300_000, 1_000_000), (150_000, 300_000), (80_000, 150_000), (50_000, 80_000), (30_000, 50_000), (20_000, 30_000)]
 Q = '''SELECT ?c ?cLabel ?e ?eDate ?coord ?countryLabel ?indLabel ?exLabel ?inc WHERE {
  ?c p:P1128 ?es . ?es ps:P1128 ?e . FILTER(?e >= %d && ?e < %d) OPTIONAL { ?es pq:P585 ?eDate }

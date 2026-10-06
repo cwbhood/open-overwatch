@@ -47,7 +47,7 @@ def extract(ref, paths, dest, skip):
     return len(members)
 
 
-SITE = 'https://cwbhood.github.io/open-overwatch/'
+SITE = 'https://destinjones.github.io/open-overwatch/'
 
 
 def last_good(rel, timeout=30):
@@ -55,7 +55,7 @@ def last_good(rel, timeout=30):
     GitHub's runners did that on 2026-10-06: every group FAILED and the deploy wiped the mirror) must not take the
     previous good copy down with it: visitors would otherwise go to the source directly, 20 downloads each."""
     try:
-        req = urllib.request.Request(SITE + rel, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
+        req = urllib.request.Request(SITE + rel, headers={'User-Agent': 'open-overwatch site build (github.com/destinjones/open-overwatch)'})
         return urllib.request.urlopen(req, timeout=timeout).read()
     except Exception:
         return None
@@ -84,7 +84,7 @@ def mirror_tles(dest):
         try:
             if down:
                 raise TimeoutError('skipped: CelesTrak timed out earlier in this build')
-            req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
+            req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/destinjones/open-overwatch)'})
             txt = urllib.request.urlopen(req, timeout=90).read().decode('utf-8', 'replace')
             n = sum(1 for l in txt.splitlines() if l.startswith('1 '))
             if n == 0:
@@ -116,7 +116,7 @@ def mirror_socrates(path):
     upcoming ones as JSON, in the shape src/core/socrates.js parseSocrates() returns (the globe reads this file)."""
     import csv, datetime
     try:
-        req = urllib.request.Request(SOCRATES_CSV, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
+        req = urllib.request.Request(SOCRATES_CSV, headers={'User-Agent': 'open-overwatch site build (github.com/destinjones/open-overwatch)'})
         rows = list(csv.DictReader(io.StringIO(urllib.request.urlopen(req, timeout=120).read().decode('utf-8', 'replace'))))
         now = datetime.datetime.now(datetime.timezone.utc)
 
@@ -157,7 +157,7 @@ def mirror_wind(path):
             part = pts[i:i + 306]
             url = ('https://api.open-meteo.com/v1/forecast?latitude=' + ','.join(str(a) for a, b in part) + '&longitude=' + ','.join(str(b) for a, b in part)
                    + '&current=wind_speed_10m,wind_direction_10m,temperature_2m&wind_speed_unit=ms')
-            req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
+            req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/destinjones/open-overwatch)'})
             rows = json.load(urllib.request.urlopen(req, timeout=120))
             if not isinstance(rows, list):
                 raise ValueError(str(rows)[:120])
@@ -194,7 +194,7 @@ def mirror_news(path, countries_path):
                + '&mode=artlist&format=json&maxrecords=10&timespan=1d&sort=hybridrel')
         time.sleep(7)
         try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'})
+            req = urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/destinjones/open-overwatch)'})
             txt = urllib.request.urlopen(req, timeout=15).read().decode('utf-8', 'replace')
             d = json.loads(txt) if txt.strip().startswith('{') else None
             if d is None: raise ValueError(txt.strip()[:60])
@@ -216,7 +216,7 @@ def mirror_flybys(path):
     API, public domain; it sends no CORS headers, hence this copy) -> data/flybys.json: {t, rows: [{des, name, tca, au, minAu, kms, h, km}]}."""
     try:
         url = 'https://ssd-api.jpl.nasa.gov/cad.api?dist-max=0.05&date-min=now&date-max=%2B60&sort=date&fullname=true&diameter=true'
-        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'}), timeout=60))
+        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/destinjones/open-overwatch)'}), timeout=60))
         f = d['fields']; rows = []
         for r in d['data']:
             x = dict(zip(f, r))
@@ -256,7 +256,7 @@ def mirror_launches(path):
     every visitor asking directly would soon be refused) -> data/launches.json: {t, source, results: [trimmed LL2 launches]}."""
     try:
         url = 'https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=40&mode=detailed&hide_recent_previous=true'
-        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'}), timeout=90))
+        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/destinjones/open-overwatch)'}), timeout=90))
         rows = []
         for r in d.get('results', []):
             k = _keep(r, LL2_KEEP)   # one odd record is dropped or trimmed, never the whole file
@@ -278,7 +278,7 @@ def mirror_astronauts(path):
     the launches) -> data/astronauts.json: {t, source, results: [trimmed LL2 astronauts]} (src/core/crew.js reads them)."""
     try:
         url = 'https://ll.thespacedevs.com/2.3.0/astronauts/?in_space=true&mode=normal&limit=60'
-        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/cwbhood/open-overwatch)'}), timeout=90))
+        d = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'open-overwatch site build (github.com/destinjones/open-overwatch)'}), timeout=90))
         keep = {'name': 1, 'type': {'name': 1}, 'agency': {'abbrev': 1, 'name': 1}, 'nationality': [{'alpha_2_code': 1}], 'time_in_space': 1, 'last_flight': 1, 'wiki': 1}
         rows = [k for k in (_keep(r, keep) for r in d.get('results', [])) if k.get('name')]   # odd shapes become {} / [], never an exception
         os.makedirs(os.path.dirname(path), exist_ok=True)
