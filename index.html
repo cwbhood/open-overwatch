@@ -95,9 +95,14 @@ nav .links a:hover{color:var(--ink)}
   background:linear-gradient(90deg,rgba(4,6,10,.92) 0%,rgba(4,6,10,.55) 38%,rgba(4,6,10,0) 62%),
              linear-gradient(0deg,var(--bg) 0%,rgba(4,6,10,0) 28%)}
 .hero .wrap{width:100%;max-width:none;padding-bottom:clamp(40px,9vh,110px);padding-top:120px}
-.hero h1{font-size:clamp(64px,10.5vw,168px);text-shadow:0 0 60px rgba(4,6,10,.7)}
+.hero h1{font-size:clamp(52px,7.4vw,124px);line-height:.95;max-width:11.5em;text-shadow:0 0 60px rgba(4,6,10,.7)}
+.hero h1 .glow{display:block}
 .hero h1 .glow{color:var(--accent);text-shadow:0 0 34px rgba(125,255,166,.55)}
-.hero .lede{margin:26px 0 34px;color:#c3cfdb}
+.hero .lede{margin:24px 0 18px;color:#c3cfdb}
+.trust{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:0 0 30px;padding:0}
+.trust li{font:500 12.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;border:1px solid rgba(125,255,166,.35);color:var(--accent);background:rgba(4,6,10,.55)}
+.cta-note{max-width:600px}
+.cta-note a{color:var(--ink-dim)}
 .cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
 .cta-note{font:13px/1.4 var(--mono);color:var(--ink-faint);margin-top:16px;letter-spacing:.04em}
 .hud{position:absolute;inset:84px var(--gut) 26px;pointer-events:none;z-index:-1}
@@ -126,21 +131,54 @@ nav .links a:hover{color:var(--ink)}
   .hero-media img{object-position:50% 20%}
   .hero::before{background:linear-gradient(0deg,var(--bg) 0%,var(--bg) calc(100% - 100svh),rgba(4,6,10,.9) calc(100% - 52svh),rgba(4,6,10,0) calc(100% - 30svh))}
   .hero .wrap{padding-top:50svh}
-  .hero h1{font-size:clamp(56px,17vw,96px)}
+  .hero h1{font-size:clamp(44px,12.5vw,72px)}
   .hud{display:none}
   .brand{font-size:17px;gap:9px}
   .brand img{width:28px;height:28px}
 }
 
-/* ---- stat strip */
-.stats{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:linear-gradient(180deg,#060a10,#04060a)}
-.stats .wrap{display:grid;grid-template-columns:repeat(5,1fr)}
-.stat{padding:30px 18px;border-left:1px solid var(--line)}
+/* ---- proof: the real sweep */
+.proof{padding-bottom:clamp(60px,9vw,110px)}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{padding:30px 18px 32px;border-left:1px solid var(--line)}
 .stat:first-child{border-left:0;padding-left:0}
 .stat b{display:block;font:900 clamp(40px,4.6vw,64px)/1 var(--display);letter-spacing:.02em}
-.stat span{font:12px/1.4 var(--mono);color:var(--ink-dim);letter-spacing:.12em;text-transform:uppercase}
-.stats-note{font:12px var(--mono);color:var(--ink-faint);padding:0 0 22px;letter-spacing:.06em}
-@media (max-width:860px){.stats .wrap{grid-template-columns:repeat(2,1fr)} .stat{border-left:0;padding-left:0;border-top:1px solid var(--line)} .stat:nth-child(-n+2){border-top:0}}
+.stat span{display:block;margin-top:8px;font:12px/1.4 var(--mono);color:var(--ink);letter-spacing:.12em;text-transform:uppercase}
+.stat em{display:block;margin-top:6px;font-style:normal;font-size:15px;line-height:1.4;color:var(--ink-dim)}
+@media (max-width:860px){.stats{grid-template-columns:repeat(2,1fr)} .stat{border-left:0;padding-left:0;border-top:1px solid var(--line)} .stat:nth-child(-n+2){border-top:0}}
+
+/* ---- the fantasy */
+.feel{padding-top:0}
+.clipnote{font:12.5px/1.5 var(--mono);color:var(--ink-faint);margin:22px 0 0;letter-spacing:.04em}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:clamp(60px,9vw,110px)}
+.duo article{background:var(--bg);border:1px solid var(--line-strong);padding:clamp(24px,3.4vw,40px);display:grid;gap:14px;align-content:start;position:relative}
+.duo article::before{content:"";position:absolute;inset:-1px -1px auto;height:2px;background:var(--c)}
+.duo .eyebrow{color:var(--c)}
+.duo h3{font-size:clamp(30px,3.4vw,44px)}
+.duo p{margin:0;color:var(--ink-dim)} .duo p b{color:var(--ink);font-weight:600}
+.duo .row{display:flex;gap:10px;flex-wrap:wrap} .duo .btn{justify-self:start}
+@media (max-width:820px){.duo{grid-template-columns:1fr}}
+
+/* ---- the villain */
+.why{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:radial-gradient(ellipse at 20% 0%,#0b1119 0%,var(--bg) 60%)}
+.why h2{max-width:13em;margin-top:22px}
+.asks{margin:34px 0 0;font:600 clamp(20px,2.3vw,30px)/1.5 var(--body);color:var(--ink-faint);max-width:30em}
+.asks s{text-decoration-color:var(--emg);text-decoration-thickness:2px;margin-right:.35em}
+.none{margin:14px 0 56px;font:900 clamp(30px,3.6vw,48px)/1.05 var(--display);text-transform:uppercase;color:var(--accent);letter-spacing:.02em}
+.polite{margin:40px 0 0;color:var(--ink-faint);font-size:15.5px;max-width:52em}
+.polite a{color:var(--ink-dim)}
+
+/* ---- what you don't get */
+.nope{margin-top:48px;border:1px solid var(--line-strong);padding:clamp(22px,3vw,34px)}
+.nope h3{font-size:26px;margin-bottom:14px}
+.nope ul{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.nope li{color:var(--ink-dim);padding-left:26px;position:relative;font-size:16px}
+.nope li::before{content:"—";position:absolute;left:0;color:var(--ink-faint);font-family:var(--mono)}
+.nope li b{color:var(--ink);font-weight:600}
+
+/* ---- momentum */
+.build h2{margin:22px 0 22px}
+.build .lede{max-width:760px}
 
 /* ---- sections */
 section{padding:clamp(80px,12vw,150px) 0}
@@ -261,9 +299,19 @@ code{font:14px var(--mono);background:var(--panel-2);border:1px solid var(--line
 .final img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 100%;z-index:-1;opacity:.85}
 .final::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,var(--bg) 0%,rgba(4,6,10,.2) 45%,rgba(4,6,10,.6) 100%);z-index:-1}
 .final{isolation:isolate}
-.final img.emblem{width:120px;margin:0 auto 26px;filter:drop-shadow(0 0 40px rgba(125,255,166,.35))}
-.final h2{font-size:clamp(52px,8vw,120px)}
-.final .cta{justify-content:center;margin-top:36px}
+.final img.emblem{width:120px;margin-left:auto;margin-right:auto;margin-bottom:26px;filter:drop-shadow(0 0 40px rgba(125,255,166,.35))}
+.final .ways-h{font-size:clamp(40px,5.6vw,76px);margin:20px 0 44px}
+.ways{display:grid;grid-template-columns:1fr 1fr;gap:18px;text-align:left;max-width:1000px;margin:0 auto}
+.ways article{border:1px solid var(--line-strong);background:rgba(6,9,14,.82);backdrop-filter:blur(8px);padding:clamp(24px,3vw,34px);display:grid;gap:12px;align-content:start;position:relative}
+.ways article::before{content:"";position:absolute;inset:-1px -1px auto;height:2px;background:var(--accent)}
+.ways .sub{margin:0;font:12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.ways p{margin:0;color:var(--ink-dim);font-size:16px}
+.ways .stack{display:grid;gap:10px;margin-top:6px} .ways .stack .btn{justify-content:center}
+.ways .fine{font-size:13.5px;color:var(--ink-faint)}
+@media (max-width:820px){.ways{grid-template-columns:1fr}}
+.final .table{max-width:1000px;margin:18px auto 0;text-align:left;background:rgba(6,9,14,.82)}
+.final img.emblem{margin-top:clamp(80px,11vw,140px)}
+.final h2.eyes{font-size:clamp(64px,11vw,168px);text-shadow:0 0 60px rgba(125,255,166,.25)}
 footer{border-top:1px solid var(--line);padding:40px 0 60px;font-size:14px;color:var(--ink-faint)}
 footer .wrap{display:grid;grid-template-columns:1fr 1fr;gap:30px}
 footer p{margin:0 0 8px}
@@ -275,12 +323,11 @@ footer a{color:var(--ink-dim)}
 .rv.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.scan,.dot{animation:none}html{scroll-behavior:auto}}
 
-.maker{border-top:1px solid var(--line);padding:clamp(54px,8vw,96px) 0}
-.maker .wrap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(20px,4vw,48px);align-items:center}
+.maker{margin-top:clamp(60px,9vw,100px);padding-top:clamp(40px,6vw,64px);border-top:1px solid var(--line);display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(20px,4vw,48px);align-items:center}
 .maker img{width:clamp(110px,16vw,180px);height:auto;aspect-ratio:4/5;object-fit:cover;border:1px solid var(--line-strong)}
 .maker h2{font-size:clamp(34px,5vw,60px);margin:14px 0 14px} .maker p{color:var(--ink-dim);max-width:40em;margin:0 0 10px}
 .maker .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
-@media (max-width:560px){.maker .wrap{grid-template-columns:1fr}}
+@media (max-width:560px){.maker{grid-template-columns:1fr}}
 
 .notices{display:block !important;margin-top:34px;padding-top:30px;border-top:1px solid var(--line)}
 .notices-h{font:900 22px/1 var(--display) !important;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-dim);margin:0 0 18px !important}
@@ -301,7 +348,7 @@ footer a{color:var(--ink-dim)}
 <nav id="nav">
   <div class="wrap">
     <a class="brand" href="#top"><img src="brand/emblem/emblem-256.png" alt="">Open Overwatch</a>
-    <div class="links"><a href="#features">Features</a><a href="#launch">Versions</a><a href="#live">Live</a><a href="#fleet">Fleet</a><a href="#get">Download</a><a href="about.html">About</a><a class="gh" href="https://github.com/destinjones/open-overwatch">GitHub</a></div>
+    <div class="links"><a href="#proof">Proof</a><a href="#live">Live</a><a href="#why">Why</a><a href="#features">Layers</a><a href="#launch">Versions</a><a href="#get">Download</a><a href="about.html">About</a><a class="gh" href="https://github.com/destinjones/open-overwatch">GitHub</a></div>
     <a class="btn small primary" href="#launch">Launch map</a>
   </div>
 </nav>
@@ -318,19 +365,19 @@ footer a{color:var(--ink-dim)}
   <div class="hud"><i></i><i></i><i></i><i></i></div>
   <div class="scan"></div>
   <div class="wrap">
-    <div class="eyebrow rv">Live situation map · open data · free</div>
-    <h1 class="rv">The whole<br>planet, <span class="glow">live.</span></h1>
-    <p class="lede rv">Aircraft, military flights, satellites, ships, storms, quakes and street cameras, all on one dark ops-room screen, straight from public feeds. No account, no tracking, no install needed.</p>
+    <div class="eyebrow rv">Thursday 1 Oct 2026 · 21:13 UTC</div>
+    <h1 class="rv">11,737 planes in the air. <span class="glow">Watch every one.</span></h1>
+    <p class="lede rv">Open Overwatch is a live map of everything moving on Earth: aircraft, satellites, ships, storms and quakes, pulled from public feeds and drawn in your browser.</p>
+    <ul class="trust rv" aria-label="What it doesn't ask for">
+      <li>No account</li><li>No install</li><li>No tracking</li><li>Open source, MIT</li>
+    </ul>
     <div class="cta rv">
       <a class="btn primary" href="open-overwatch.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 12 18 6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
         Launch the live map</a>
-      <a class="btn" href="#get">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 20h16"/></svg>
-        Download full version</a>
+      <a class="btn" href="globe.html">Try the 3D globe</a>
     </div>
-    <p class="cta-note rv">Runs in any browser · the download adds live aircraft tracking · <a href="#launch">every version</a></p>
-    <p class="cta-note rv"><a href="tonight.html">What's above me tonight? →</a> the space station, Starlink trains, planets and aurora over you, with reminders</p>
+    <p class="cta-note rv">That count is one real sweep of the map. Satellites, ships, storms and quakes run right here; live planes need the <a href="#get">free download</a>, a tiny helper on your own machine.</p>
 
     <aside class="feed rv" aria-live="polite">
       <header><span><span class="dot"></span>Live feed</span><b id="utc">--:--:-- UTC</b></header>
@@ -342,55 +389,88 @@ footer a{color:var(--ink-dim)}
   </div>
 </header>
 
-<div class="stats">
+<section class="proof" id="proof">
   <div class="wrap">
-    <div class="stat rv"><b data-n="11737" style="color:var(--civ)">0</b><span>aircraft tracked</span></div>
-    <div class="stat rv"><b data-n="248" style="color:var(--mil)">0</b><span>military flights</span></div>
-    <div class="stat rv"><b data-n="205" style="color:var(--sat)">0</b><span>satellites propagated</span></div>
-    <div class="stat rv"><b data-n="44" style="color:var(--qk)">0</b><span>quakes in 24 h</span></div>
-    <div class="stat rv"><b data-n="10" style="color:var(--evt)">0</b><span>active storms</span></div>
+    <div class="head">
+      <div class="eyebrow rv">Not a demo</div>
+      <h2 class="rv">That wasn't a mock-up.<br>It was a Thursday night.</h2>
+      <p class="lede rv">Every number below is what the map was actually showing at 21:13 UTC on 1 October 2026. Nothing staged, nothing rounded. Open it now and you get tonight's numbers instead.</p>
+    </div>
+    <div class="stats">
+      <div class="stat rv"><b data-n="11737" style="color:var(--civ)">0</b><span>aircraft</span><em>transponders on, every one of them clickable</em></div>
+      <div class="stat rv"><b data-n="248" style="color:var(--mil)">0</b><span>military flights</span><em>tankers, transports and fighters, worldwide</em></div>
+      <div class="stat rv"><b data-n="205" style="color:var(--sat)">0</b><span>satellites</span><em>orbits worked out in your browser</em></div>
+      <div class="stat rv"><b data-n="44" style="color:var(--qk)">0</b><span>earthquakes</span><em>M2.5 and up, in the past 24 hours</em></div>
+      <div class="stat rv"><b data-n="10" style="color:var(--evt)">0</b><span>storms</span><em>tropical systems turning at the same moment</em></div>
+    </div>
   </div>
-  <div class="wrap stats-note">One real sweep of the app, 1 Oct 2026, 21:13 UTC.</div>
-</div>
+</section>
 
-<section id="launch">
+<section id="live" class="feel">
+  <div class="wrap demo">
+    <div>
+      <div class="eyebrow rv">What it feels like</div>
+      <h2 class="rv">Pick a dot.<br>Follow it.</h2>
+      <p class="lede rv">It feels like sitting in an ops room you weren't meant to find. Click a plane and you get its callsign, altitude and type. Click a satellite and its ground track unrolls across the map. Click a traffic camera in London or Singapore and you see that street's latest frame.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-clip="air_world" style="--c:var(--civ)"><span class="n">01</span><span class="tx"><b>Every aircraft on Earth</b><span class="d">11,737 transponders in one sweep.</span><span class="bar"><i></i></span></span></button>
+        <button class="tab" role="tab" data-clip="mil" style="--c:var(--mil)"><span class="n">02</span><span class="tx"><b>Military air picture</b><span class="d">Tankers, transports and fighters, worldwide.</span><span class="bar"><i></i></span></span></button>
+        <button class="tab" role="tab" data-clip="space" style="--c:var(--sat)"><span class="n">03</span><span class="tx"><b>The ISS, right now</b><span class="d">Orbit, footprint and ground track at 27,575 km/h.</span><span class="bar"><i></i></span></span></button>
+        <button class="tab" role="tab" data-clip="hazards" style="--c:var(--qk)"><span class="n">04</span><span class="tx"><b>Storms &amp; quakes</b><span class="d">Hurricane tracks over live radar.</span><span class="bar"><i></i></span></span></button>
+        <button class="tab" role="tab" data-clip="ui" style="--c:var(--accent)"><span class="n">05</span><span class="tx"><b>The console</b><span class="d">Counters, search and alerts.</span><span class="bar"><i></i></span></span></button>
+      </div>
+      <p class="clipnote rv">Recorded from the app, not mocked up. Same screen on your phone and your desktop.</p>
+    </div>
+    <div class="phone rv"><div class="notch"></div><div class="screen">
+      <video id="phoneVid" muted playsinline preload="none" poster="brand/lander/clips/air_world.jpg"></video>
+    </div></div>
+  </div>
+  <div class="wrap duo">
+    <article class="rv" style="--c:var(--sat)">
+      <div class="eyebrow">Tonight above you</div>
+      <h3>Then step outside.</h3>
+      <p>The space station crosses your sky a few minutes at a time. <b>Tonight above you</b> tells you when, in plain words: space station and Starlink passes, the planets and the Moon, meteor showers, aurora, cloud cover and rocket launches, with reminders so you're outside at the right minute.</p>
+      <a class="btn small" href="tonight.html">What's above me tonight?</a>
+    </article>
+    <article class="rv" style="--c:var(--accent)">
+      <div class="eyebrow">Keep zooming</div>
+      <h3>Your street is the near end.</h3>
+      <p>The 3D globe and the Solar System view zoom out from a street past the planets and 1.5 million asteroids, then 6,339 exoplanets, nearby stars and 43,000 galaxies, out to the cosmic web.</p>
+      <div class="row"><a class="btn small" href="globe.html">3D globe</a><a class="btn small" href="solar.html">Solar System</a></div>
+    </article>
+  </div>
+</section>
+
+<section class="why" id="why">
   <div class="wrap">
-    <div class="eyebrow rv">Launch in your browser</div>
-    <h2 class="rv">Pick a version.<br>Hit launch.</h2>
-    <div class="launch rv">
-      <div>
-        <label class="lab" for="verSel">Version</label>
-        <select id="verSel" aria-describedby="verNotes"><option value="">Current</option></select>
-        <p class="vnotes" id="verNotes">The newest version is selected. Every earlier release stays online, exactly as it shipped.</p>
-      </div>
-      <div class="lbtns">
-        <a class="btn primary" id="goMap" href="open-overwatch.html">Launch the live map</a>
-        <a class="btn" id="goGlobe" href="globe.html">Launch the 3D globe <span class="mono" style="color:var(--ink-faint)">beta</span></a>
-        <a class="btn" id="goSolar" href="solar.html">Explore the Solar System <span class="mono" style="color:var(--ink-faint)">new</span></a>
-        <p class="lnote">Runs right here, no install: satellites, quakes, storms, ships, news and cameras. Live aircraft need the <a href="#get">download</a> (a tiny local helper).</p>
-      </div>
+    <div class="eyebrow rv">Why this exists</div>
+    <h2 class="rv">Most trackers want something from you.</h2>
+    <p class="asks rv"><s>An email.</s> <s>A cookie banner.</s> <s>An analytics pixel.</s> <s>A subscription for the “pro” layers.</s></p>
+    <p class="none rv">Open Overwatch asks for none of it.</p>
+    <div class="pillars">
+      <div class="rv"><b>No account</b><p>No sign-up, no email, no cookies, no analytics. Your settings stay in your own browser's storage.</p></div>
+      <div class="rv"><b>No server of ours</b><p>The site is static files on GitHub Pages. There's no Open Overwatch database, so there's no record of you to sell.</p></div>
+      <div class="rv"><b>Code you can read</b><p>No build step, MIT licence. Plain HTML and JavaScript: read it, fork it, host it anywhere.</p></div>
+      <div class="rv"><b>Open data only</b><p>USGS, NOAA, NASA, CelesTrak, GDACS, adsb.lol and other public and volunteer feeds. Nothing scraped, nothing secret.</p></div>
     </div>
-    <div class="vh rv">
-      <div class="vhh">Version history</div>
-      <div id="verList"><div class="vrow muted">Loading versions…</div></div>
-    </div>
+    <p class="polite rv">It's polite to those feeds too: it rate-limits itself, caches orbits for two hours and backs off when a source struggles. And the <a href="#legal">notices</a> list exactly which services your browser talks to.</p>
   </div>
 </section>
 
 <section id="features">
   <div class="wrap">
     <div class="head">
-      <div class="eyebrow rv">What you see</div>
-      <h2 class="rv">Everything moving.<br>One screen.</h2>
-      <p class="lede rv">Layers you switch on and off like an air-traffic controller. Click anything for the full picture: callsign, altitude, orbit, magnitude, wind speed, live camera frame.</p>
+      <div class="eyebrow rv">What you get</div>
+      <h2 class="rv">Every layer is free.<br>There is no pro tier.</h2>
+      <p class="lede rv">Switch layers on and off like an air-traffic controller. These six carry the map; the rest are a click away.</p>
     </div>
     <div class="grid">
-      <article class="card rv" style="--c:var(--civ)"><span class="tag">AIR</span><img src="brand/lander/icons/aircraft.webp" alt="" loading="lazy"><h3>Aircraft</h3><p>Every ADS-B transponder in range, worldwide. Civil, military and emergency squawks, each colour-coded, with trails and type.</p></article>
-      <article class="card rv" style="--c:var(--sat)"><span class="tag">SPACE</span><img src="brand/lander/icons/satellite.webp" alt="" loading="lazy"><h3>Satellites</h3><p>Orbits computed in your browser from CelesTrak data with SGP4: the ISS, Tiangong, weather sats and GPS, with ground tracks.</p></article>
-      <article class="card rv" style="--c:var(--ship)"><span class="tag">SEA</span><img src="brand/lander/icons/ship.webp" alt="" loading="lazy"><h3>Ships</h3><p>AIS vessel positions: the Baltic out of the box, the whole world's shipping with a free aisstream.io key.</p></article>
+      <article class="card rv" style="--c:var(--civ)"><span class="tag">AIR</span><img src="brand/lander/icons/aircraft.webp" alt="" loading="lazy"><h3>Aircraft</h3><p>Every ADS-B transponder the volunteer networks can hear. Civil, military and emergency squawks, each in its own colour, with trails.</p></article>
+      <article class="card rv" style="--c:var(--sat)"><span class="tag">SPACE</span><img src="brand/lander/icons/satellite.webp" alt="" loading="lazy"><h3>Satellites</h3><p>The ISS, Tiangong, weather satellites and GPS, their orbits computed in your browser from CelesTrak data, with ground tracks.</p></article>
+      <article class="card rv" style="--c:var(--ship)"><span class="tag">SEA</span><img src="brand/lander/icons/ship.webp" alt="" loading="lazy"><h3>Ships</h3><p>AIS positions for the Baltic out of the box. Add a free aisstream.io key and you get the world's shipping.</p></article>
       <article class="card rv" style="--c:var(--qk)"><span class="tag">GROUND</span><img src="brand/lander/icons/quake.webp" alt="" loading="lazy"><h3>Earthquakes</h3><p>USGS quakes as they're reported, sized by magnitude, plus GDACS disaster alerts and NASA natural events.</p></article>
-      <article class="card rv" style="--c:var(--evt)"><span class="tag">WEATHER</span><img src="brand/lander/icons/storm.webp" alt="" loading="lazy"><h3>Storms</h3><p>Hurricanes and typhoons with forecast cones, precipitation radar, severe-weather alerts and the aurora forecast.</p></article>
-      <article class="card rv" style="--c:var(--emg)"><span class="tag">EYES</span><img src="brand/lander/icons/camera.webp" alt="" loading="lazy"><h3>Cameras</h3><p>Public traffic cameras from London, New York, California, Singapore and Finland. Click one for the latest frame.</p></article>
+      <article class="card rv" style="--c:var(--evt)"><span class="tag">WEATHER</span><img src="brand/lander/icons/storm.webp" alt="" loading="lazy"><h3>Storms</h3><p>Hurricanes and typhoons, precipitation radar, severe-weather alerts and the aurora forecast, on the same screen.</p></article>
+      <article class="card rv" style="--c:var(--emg)"><span class="tag">EYES</span><img src="brand/lander/icons/camera.webp" alt="" loading="lazy"><h3>Cameras</h3><p>Public traffic cameras in London, New York, California, Singapore and Finland. Click one for its latest frame.</p></article>
     </div>
     <div class="more rv">
       <span class="chip" style="--c:var(--emg)">Emergency squawk alerts</span>
@@ -403,35 +483,23 @@ footer a{color:var(--ink-dim)}
       <span class="chip" style="--c:#b48cff">Generative soundtrack</span>
       <span class="chip" style="--c:var(--ink)">Daily brief</span>
     </div>
-  </div>
-</section>
-
-<section id="live" style="padding-top:0">
-  <div class="wrap demo">
-    <div>
-      <div class="eyebrow rv">Recorded live, not mocked up</div>
-      <h2 class="rv">See it<br>in motion.</h2>
-      <p class="lede rv">Real captures from the app. Same screen on your phone and your desktop.</p>
-      <div class="tabs" role="tablist">
-        <button class="tab" role="tab" data-clip="air_world" style="--c:var(--civ)"><span class="n">01</span><span class="tx"><b>Every aircraft on Earth</b><span class="d">11,737 transponders in one sweep.</span><span class="bar"><i></i></span></span></button>
-        <button class="tab" role="tab" data-clip="mil" style="--c:var(--mil)"><span class="n">02</span><span class="tx"><b>Military air picture</b><span class="d">Tankers, transports and fighters, worldwide.</span><span class="bar"><i></i></span></span></button>
-        <button class="tab" role="tab" data-clip="space" style="--c:var(--sat)"><span class="n">03</span><span class="tx"><b>The ISS, right now</b><span class="d">Orbit, footprint and ground track at 27,575 km/h.</span><span class="bar"><i></i></span></span></button>
-        <button class="tab" role="tab" data-clip="hazards" style="--c:var(--qk)"><span class="n">04</span><span class="tx"><b>Storms &amp; quakes</b><span class="d">Hurricane tracks over live radar.</span><span class="bar"><i></i></span></span></button>
-        <button class="tab" role="tab" data-clip="ui" style="--c:var(--accent)"><span class="n">05</span><span class="tx"><b>The console</b><span class="d">Counters, search and alerts.</span><span class="bar"><i></i></span></span></button>
-      </div>
+    <div class="nope rv">
+      <h3>What you don't get</h3>
+      <ul>
+        <li><b>Live planes in the browser version.</b> The flight networks refuse requests from web pages, so aircraft need the free download, which runs a tiny relay on your machine.</li>
+        <li><b>Guarantees.</b> Every dot comes from someone else's feed. It can be late or wrong, and transponder positions can be spoofed.</li>
+        <li><b>Something to navigate by.</b> This is for curiosity, not for flying, sailing or emergencies.</li>
+      </ul>
     </div>
-    <div class="phone rv"><div class="notch"></div><div class="screen">
-      <video id="phoneVid" muted playsinline preload="none" poster="brand/lander/clips/air_world.jpg"></video>
-    </div></div>
   </div>
 </section>
 
 <section class="fleet" id="fleet">
   <div class="wrap">
     <div class="head" style="text-align:center;justify-items:center;margin-bottom:10px">
-      <div class="eyebrow rv">Built in Blender</div>
-      <h2 class="rv">Meet the fleet.</h2>
-      <p class="lede rv">Hand-modelled spacecraft for the new 3D globe view. Drag to orbit, scroll to zoom.</p>
+      <div class="eyebrow rv">Meet the fleet</div>
+      <h2 class="rv">Every spacecraft here was built by hand in Blender.</h2>
+      <p class="lede rv">They fly in the 3D globe view. Drag to orbit, scroll to zoom.</p>
     </div>
     <div class="viewer rv">
       <div class="ring"></div>
@@ -445,77 +513,76 @@ footer a{color:var(--ink-dim)}
   </div>
 </section>
 
-<section id="get">
-  <div class="wrap split">
-    <div>
-      <div class="eyebrow rv">Get it</div>
-      <h2 class="rv">Two ways<br>in.</h2>
-      <p class="lede rv">The web version runs right here. The download adds a tiny local helper. A few feeds (the ADS-B aircraft networks, OpenSky, NOAA hurricane cones, some cameras) refuse requests from web pages, and the helper relays just those.</p>
-      <ol class="steps rv">
-        <li><div><b>Download &amp; unzip</b><p>One folder, about 7 MB. Nothing to install.</p></div></li>
-        <li><div><b>Double-click the launcher</b><p><code>Start Open Overwatch.bat</code> on Windows, or <code>python3 serve.py</code> / <code>node serve.js</code> on Mac and Linux.</p></div></li>
-        <li><div><b>Watch the world</b><p>Your browser opens the map at <code>127.0.0.1:8787</code>. Every layer lights up.</p></div></li>
-      </ol>
-    </div>
-    <div class="rv">
-      <div class="dl">
-        <h3>Open Overwatch</h3>
-        <div class="ver" id="ver">Latest release · Windows · macOS · Linux</div>
-        <a class="btn primary" id="dlBtn" href="https://github.com/destinjones/open-overwatch/releases/latest/download/open-overwatch.zip">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 20h16"/></svg>Download .zip</a>
-        <div style="height:12px"></div>
-        <a class="btn" href="#launch">Open in browser instead</a>
-        <ul>
-          <li>Needs Python 3 or Node 18+ for the helper</li>
-          <li>Updates: grab the new zip, same folder</li>
-          <li>Source &amp; changelog on <a href="https://github.com/destinjones/open-overwatch">GitHub</a></li>
-        </ul>
-      </div>
-      <div class="table rv">
-        <div class="h">Layer</div><div class="h">Web</div><div class="h">Download</div>
-        <div>Satellites, quakes, storms, ships</div><div class="y">●</div><div class="y">●</div>
-        <div>News, radar, aurora, cameras</div><div class="y">●</div><div class="y">●</div>
-        <div>Live aircraft &amp; military flights</div><div class="n">—</div><div class="y">●</div>
-        <div>Hurricane cones, NYC cams</div><div class="n">—</div><div class="y">●</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section style="padding-top:0">
+<section id="launch" class="build">
   <div class="wrap">
-    <div class="pillars">
-      <div class="rv"><b>Open data only</b><p>USGS, NOAA, NASA, CelesTrak, GDACS, adsb.lol and other public and volunteer feeds. Nothing scraped, nothing secret.</p></div>
-      <div class="rv"><b>No account</b><p>No sign-up, no cookies, no analytics. Your settings stay in your browser.</p></div>
-      <div class="rv"><b>One file</b><p>The whole app is a single HTML page. Read it, fork it, host it anywhere.</p></div>
-      <div class="rv"><b>Plays nice</b><p>It rate-limits itself, caches orbits for two hours and backs off when a feed struggles.</p></div>
+    <div class="eyebrow rv">Built in the open</div>
+    <h2 class="rv">Fourteen releases in six days.</h2>
+    <p class="lede rv">Version 0.5 went live on 1 October. By 6 October it was 0.9.2.5, picking up a 3D globe, a Solar System view out to the cosmic web, Tonight above you, rocket launch countdowns, people in space and flight search along the way. You're not downloading a finished product. You're joining a build, and every step of it is public.</p>
+    <div class="launch rv">
+      <div>
+        <label class="lab" for="verSel">Every release stays online, exactly as it shipped</label>
+        <select id="verSel" aria-describedby="verNotes"><option value="">Current</option></select>
+        <p class="vnotes" id="verNotes">The newest version is selected. Every earlier release stays online, exactly as it shipped.</p>
+      </div>
+      <div class="lbtns">
+        <a class="btn primary" id="goMap" href="open-overwatch.html">Launch the live map</a>
+        <a class="btn" id="goGlobe" href="globe.html">Launch the 3D globe <span class="mono" style="color:var(--ink-faint)">beta</span></a>
+        <a class="btn" id="goSolar" href="solar.html">Explore the Solar System <span class="mono" style="color:var(--ink-faint)">new</span></a>
+        <p class="lnote">Pick an old version and launch it to see how far it has come. Full notes are on <a href="https://github.com/destinjones/open-overwatch/releases">the changelog</a>.</p>
+      </div>
+    </div>
+    <div class="vh rv">
+      <div class="vhh">Version history</div>
+      <div id="verList"><div class="vrow muted">Loading versions…</div></div>
+    </div>
+    <div class="maker rv" id="maker" aria-labelledby="maker-h">
+      <img src="brand/about/destin-320.webp" width="320" height="400" loading="lazy" alt="Portrait of Destin Jones, creator of Open Overwatch">
+      <div>
+        <div class="eyebrow">Who's building it</div>
+        <h2 id="maker-h">One person and an AI, in public.</h2>
+        <p>I'm Destin Jones. I vibe code Open Overwatch with Claude as my building partner: I describe what I want and test the results, and Claude writes most of the code. Everything ships in the open under the MIT licence, so please <a href="https://github.com/destinjones/open-overwatch/fork">fork it</a> and build anything you like with it.</p>
+        <p>Also by me: <a href="https://destinjones.github.io/godot-open-rts/">Ironbound</a>, a free open source real-time strategy game where your city builds itself, and <a href="https://destinjones.github.io/carfinder/">CarFinder</a>, every new car on sale in 11 countries with what it really costs.</p>
+        <div class="row"><a class="btn small primary" href="about.html">About the creator</a><a class="btn small" href="https://destinjones.github.io/godot-open-rts/">Ironbound, the RTS</a><a class="btn small" href="https://destinjones.github.io/carfinder/">CarFinder</a><a class="btn small" href="https://github.com/destinjones">GitHub</a></div>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="final">
+<section class="final" id="get">
   <img class="bg" src="brand/hero/hero-wide.webp" alt="" loading="lazy">
   <div class="wrap">
+    <div class="eyebrow rv" style="justify-content:center">Get in</div>
+    <h2 class="rv ways-h">Two ways in. Both free.</h2>
+    <div class="ways">
+      <article class="rv">
+        <h3>In your browser</h3>
+        <p class="sub">Right now, nothing to install.</p>
+        <p>Satellites, ships, storms, quakes, news, radar and cameras, plus the 3D globe and the Solar System.</p>
+        <div class="stack">
+          <a class="btn primary" href="open-overwatch.html">Launch the live map</a>
+          <a class="btn" href="globe.html">Try the 3D globe</a>
+        </div>
+      </article>
+      <article class="rv">
+        <h3>On your machine</h3>
+        <p class="sub" id="ver">Latest release · Windows · macOS · Linux</p>
+        <p>Adds live aircraft and military flights. About 70 MB. Unzip it, then double-click <code>Start Open Overwatch.bat</code> on Windows, or run <code>python3 serve.py</code> or <code>node serve.js</code> on Mac and Linux. Your browser opens the map at <code>127.0.0.1:8787</code> and every layer lights up.</p>
+        <div class="stack">
+          <a class="btn primary" id="dlBtn" href="https://github.com/destinjones/open-overwatch/releases/latest/download/open-overwatch.zip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 20h16"/></svg>Download .zip</a>
+        </div>
+        <p class="fine">Needs Python 3 or Node 18+ for the helper. To update, grab the new zip.</p>
+      </article>
+    </div>
+    <div class="table rv">
+      <div class="h">Layer</div><div class="h">Browser</div><div class="h">Download</div>
+      <div>Satellites, quakes, storms, ships</div><div class="y">●</div><div class="y">●</div>
+      <div>News, radar, aurora, cameras</div><div class="y">●</div><div class="y">●</div>
+      <div>Live aircraft &amp; military flights</div><div class="n">—</div><div class="y">●</div>
+      <div>Hurricane cones, NYC cams</div><div class="n">—</div><div class="y">●</div>
+    </div>
     <img class="emblem rv" src="brand/emblem/emblem-512.png" alt="">
-    <h2 class="rv">Eyes on.</h2>
-    <div class="cta rv">
-      <a class="btn primary" href="open-overwatch.html">Launch the live map</a>
-      <a class="btn" href="globe.html">Try the 3D globe <span class="mono" style="color:var(--ink-faint)">beta</span></a>
-      <a class="btn" href="solar.html">Explore the Solar System <span class="mono" style="color:var(--ink-faint)">new</span></a>
-    </div>
-  </div>
-</section>
-
-<section class="maker" id="maker" aria-labelledby="maker-h">
-  <div class="wrap">
-    <img src="brand/about/destin-320.webp" width="320" height="400" loading="lazy" alt="Portrait of Destin Jones, creator of Open Overwatch">
-    <div>
-      <div class="eyebrow">Made in the open</div>
-      <h2 id="maker-h">By Destin Jones</h2>
-      <p>Open Overwatch is a free, open source project that I vibe code with Claude as my building partner: I describe what I want and test the results, and Claude writes most of the code. Everything ships in the open under the MIT licence, so please <a href="https://github.com/destinjones/open-overwatch/fork">fork it</a> and build anything you like with it.</p>
-      <p>Also by me: <a href="https://destinjones.github.io/godot-open-rts/">Ironbound</a>, a free open source real-time strategy game where your city builds itself, and <a href="https://destinjones.github.io/carfinder/">CarFinder</a>, every new car on sale in 11 countries with what it really costs.</p>
-      <div class="row"><a class="btn small primary" href="about.html">About the creator</a><a class="btn small" href="https://destinjones.github.io/godot-open-rts/">Ironbound, the RTS</a><a class="btn small" href="https://destinjones.github.io/carfinder/">CarFinder</a><a class="btn small" href="https://github.com/destinjones">GitHub</a></div>
-    </div>
+    <h2 class="rv eyes">Eyes on.</h2>
   </div>
 </section>
 
